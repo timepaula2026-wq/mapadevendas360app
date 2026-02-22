@@ -1,10 +1,27 @@
-import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Youtube, FileText, File, Upload, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Trash2, Youtube, FileText, File, Upload, Loader2, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface SectionContent {
   id: string;
@@ -14,7 +31,33 @@ interface SectionContent {
   type: string;
   url: string | null;
   youtube_id: string | null;
+  sort_order: number | null;
 }
+
+// Sortable item component
+const SortableItem = ({ item, onDelete, sectionId }: { item: SectionContent; onDelete: (id: string, sectionId: string) => void; sectionId: string }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-1.5">
+      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none">
+        <GripVertical className="w-3.5 h-3.5" />
+      </button>
+      {item.type === "youtube" ? <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" /> :
+       item.type === "pdf" ? <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" /> :
+       <File className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+      <span className="text-foreground text-xs truncate flex-1">{item.title}</span>
+      <button onClick={() => onDelete(item.id, sectionId)} className="text-muted-foreground hover:text-destructive shrink-0">
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+};
 
 const SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante" },
@@ -41,6 +84,11 @@ const AdminSections = () => {
   const [contentUrl, setContentUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const fetchSectionContents = async (sectionId: string) => {
     const { data } = await supabase
@@ -146,6 +194,25 @@ const AdminSections = () => {
     setContentType("youtube");
   };
 
+  const handleDragEnd = async (event: DragEndEvent, sectionId: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const items = sectionContents[sectionId] || [];
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    const reordered = arrayMove(items, oldIndex, newIndex);
+
+    // Optimistic update
+    setSectionContents((prev) => ({ ...prev, [sectionId]: reordered }));
+
+    // Persist new order
+    const updates = reordered.map((item, index) =>
+      supabase.from("section_contents").update({ sort_order: index }).eq("id", item.id)
+    );
+    await Promise.all(updates);
+  };
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground mb-3">
@@ -174,18 +241,16 @@ const AdminSections = () => {
 
           {expandedSection === section.id && (
             <div className="border-t border-border p-3 space-y-2">
-              {/* Content list */}
-              {sectionContents[section.id]?.map((c) => (
-                <div key={c.id} className="flex items-center gap-2 py-1.5">
-                  {c.type === "youtube" ? <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" /> :
-                   c.type === "pdf" ? <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" /> :
-                   <File className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-                  <span className="text-foreground text-xs truncate flex-1">{c.title}</span>
-                  <button onClick={() => handleDeleteContent(c.id, section.id)} className="text-muted-foreground hover:text-destructive shrink-0">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
+              {/* Content list with drag-and-drop */}
+              {(sectionContents[section.id]?.length ?? 0) > 0 && (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, section.id)}>
+                  <SortableContext items={sectionContents[section.id]?.map((c) => c.id) || []} strategy={verticalListSortingStrategy}>
+                    {sectionContents[section.id]?.map((c) => (
+                      <SortableItem key={c.id} item={c} onDelete={handleDeleteContent} sectionId={section.id} />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              )}
 
               {sectionContents[section.id]?.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-2">Nenhum conteúdo</p>
