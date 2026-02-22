@@ -1,24 +1,39 @@
 import { useState } from "react";
-import { Plus, BookOpen, Sparkles } from "lucide-react";
-import { useTrainingStore } from "@/store/trainingStore";
+import { Plus, BookOpen, Sparkles, LogOut, Loader2 } from "lucide-react";
+import { useTrainings } from "@/hooks/useTrainings";
+import { useAuth } from "@/hooks/useAuth";
 import TrainingCard from "@/components/TrainingCard";
 import CreateTrainingModal from "@/components/CreateTrainingModal";
 
 const Index = () => {
-  const { trainings, addTraining } = useTrainingStore();
+  const { trainings, loading, addTraining } = useTrainings();
+  const { signOut } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
 
   const totalProgress = trainings.length > 0
     ? Math.round(trainings.reduce((sum, t) => sum + t.progress, 0) / trainings.length)
     : 0;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="px-5 pt-12 pb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-xs font-semibold text-primary uppercase tracking-widest">Treinamentos</span>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Treinamentos</span>
+          </div>
+          <button onClick={signOut} className="text-muted-foreground hover:text-foreground transition-colors">
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
         <h1 className="text-3xl font-extrabold text-foreground leading-tight">
           Sua jornada de<br />
@@ -70,7 +85,7 @@ const Index = () => {
       <CreateTrainingModal
         open={showCreate}
         onClose={() => setShowCreate(false)}
-        onCreate={(data) => addTraining({ ...data, contents: [] })}
+        onCreate={(data) => addTraining(data)}
       />
     </div>
   );

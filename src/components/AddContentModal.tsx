@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Youtube, FileText, File } from "lucide-react";
-import { ContentItem } from "@/types/training";
+import { ContentItem } from "@/hooks/useTrainings";
 
 interface AddContentModalProps {
   open: boolean;
