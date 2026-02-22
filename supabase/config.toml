@@ -2,3 +2,6 @@ project_id = "vwhudpigipdlzkzypxfu"
 
 [functions.chat-ademicon]
 verify_jwt = false
+
+[functions.generate-creative]
+verify_jwt = false

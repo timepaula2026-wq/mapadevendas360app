@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Send, Bot, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; imageUrl?: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-ademicon`;
+const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-creative`;
 
 async function streamChat({
   messages,
@@ -28,7 +30,7 @@ async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages: messages.map(({ role, content }) => ({ role, content })) }),
   });
 
   if (!resp.ok) {
@@ -66,6 +68,24 @@ async function streamChat({
     }
   }
   onDone();
+}
+
+async function generateCreativeImage(prompt: string): Promise<{ imageUrl: string; text: string }> {
+  const resp = await fetch(IMAGE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ prompt }),
+  });
+
+  if (!resp.ok) {
+    const data = await resp.json().catch(() => ({}));
+    throw new Error(data.error || "Erro ao gerar imagem");
+  }
+
+  return resp.json();
 }
 
 const FAQ_CATEGORIES = [
@@ -107,12 +127,22 @@ const FAQ_CATEGORIES = [
   },
 ];
 
+const IMAGE_SUGGESTIONS = [
+  "Post para Instagram de carta de crédito de imóvel R$300mil",
+  "Story promocional de consórcio de automóvel",
+  "Banner para carta contemplada com lance embutido",
+  "Post de oportunidade de investimento via consórcio",
+];
+
+type ChatMode = "chat" | "image";
+
 const ChatBot = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
+  const [mode, setMode] = useState<ChatMode>("chat");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -124,6 +154,10 @@ const ChatBot = () => {
     if (!text || loading) return;
     setInput("");
 
+    if (mode === "image") {
+      return sendImage(text);
+    }
+
     const userMsg: Msg = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
@@ -133,7 +167,7 @@ const ChatBot = () => {
       assistantSoFar += chunk;
       setMessages((prev) => {
         const last = prev[prev.length - 1];
-        if (last?.role === "assistant") {
+        if (last?.role === "assistant" && !last.imageUrl) {
           return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
         }
         return [...prev, { role: "assistant", content: assistantSoFar }];
@@ -151,6 +185,26 @@ const ChatBot = () => {
     });
   };
 
+  const sendImage = async (text: string) => {
+    const userMsg: Msg = { role: "user", content: `🎨 ${text}` };
+    setMessages((prev) => [...prev, userMsg]);
+    setLoading(true);
+
+    try {
+      const { imageUrl, text: description } = await generateCreativeImage(text);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: description || "Aqui está seu criativo! 🎨", imageUrl },
+      ]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao gerar imagem";
+      toast.error(msg);
+      setMessages((prev) => [...prev, { role: "assistant", content: `❌ ${msg}` }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -158,20 +212,43 @@ const ChatBot = () => {
         <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <div className="w-8 h-8 rounded-full gradient-gold flex items-center justify-center">
             <Bot className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-sm font-bold text-foreground">Assistente Ademicon</h1>
-            <p className="text-[10px] text-muted-foreground">Tire suas dúvidas sobre consórcio</p>
+            <p className="text-[10px] text-muted-foreground">
+              {mode === "chat" ? "Tire suas dúvidas" : "Gere criativos de vendas"}
+            </p>
           </div>
+        </div>
+        {/* Mode toggle */}
+        <div className="flex gap-1 bg-secondary rounded-full p-0.5">
+          <button
+            onClick={() => setMode("chat")}
+            className={`p-1.5 rounded-full transition-colors ${
+              mode === "chat" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+            title="Chat"
+          >
+            <MessageSquare className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setMode("image")}
+            className={`p-1.5 rounded-full transition-colors ${
+              mode === "image" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+            title="Gerar Imagem"
+          >
+            <ImageIcon className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
-        {messages.length === 0 && (
+        {messages.length === 0 && mode === "chat" && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-20">
             <div className="w-16 h-16 rounded-full gradient-gold flex items-center justify-center shadow-glow">
               <Bot className="w-8 h-8 text-primary-foreground" />
@@ -209,6 +286,29 @@ const ChatBot = () => {
           </div>
         )}
 
+        {messages.length === 0 && mode === "image" && (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-20">
+            <div className="w-16 h-16 rounded-full gradient-gold flex items-center justify-center shadow-glow">
+              <ImageIcon className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">Criativos de Vendas 🎨</h2>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              Descreva o criativo que deseja e a IA vai gerar uma imagem profissional para suas vendas de carta de crédito!
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3 justify-center max-w-sm">
+              {IMAGE_SUGGESTIONS.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => setInput(q)}
+                  className="text-xs px-3 py-1.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-2 mb-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             {msg.role === "assistant" && (
@@ -225,12 +325,34 @@ const ChatBot = () => {
                   : "bg-secondary text-secondary-foreground rounded-bl-md"
               }`}
             >
-              {msg.role === "assistant" ? (
+              {msg.imageUrl && (
+                <div className="mb-2">
+                  <img
+                    src={msg.imageUrl}
+                    alt="Criativo gerado"
+                    className="rounded-xl max-w-full w-full"
+                    loading="lazy"
+                  />
+                  <a
+                    href={msg.imageUrl}
+                    download="criativo-ademicon.png"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                  >
+                    📥 Baixar imagem
+                  </a>
+                </div>
+              )}
+              {msg.role === "assistant" && !msg.imageUrl ? (
                 <div className="prose prose-sm prose-invert max-w-none [&>p]:m-0 [&>ul]:my-1 [&>ol]:my-1">
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
                 </div>
               ) : (
-                msg.content
+                !msg.imageUrl && msg.content
+              )}
+              {msg.imageUrl && msg.content && (
+                <p className="mt-1 text-xs text-muted-foreground">{msg.content}</p>
               )}
             </div>
             {msg.role === "user" && (
@@ -251,7 +373,12 @@ const ChatBot = () => {
               </AvatarFallback>
             </Avatar>
             <div className="bg-secondary rounded-2xl rounded-bl-md px-4 py-3">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  {mode === "image" ? "Gerando criativo..." : "Pensando..."}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -268,7 +395,7 @@ const ChatBot = () => {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Digite sua pergunta..."
+            placeholder={mode === "image" ? "Descreva o criativo que deseja..." : "Digite sua pergunta..."}
             className="flex-1 bg-secondary border-border rounded-full text-sm"
             disabled={loading}
           />
@@ -278,7 +405,7 @@ const ChatBot = () => {
             className="rounded-full shrink-0"
             disabled={loading || !input.trim()}
           >
-            <Send className="w-4 h-4" />
+            {mode === "image" ? <ImageIcon className="w-4 h-4" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
       </div>
