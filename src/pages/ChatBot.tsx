@@ -154,7 +154,9 @@ const ChatBot = () => {
     if (!text || loading) return;
     setInput("");
 
-    if (mode === "image") {
+    // Auto-detect image requests even in chat mode
+    const imageKeywords = /\b(gere|gerar|crie|criar|faça|fazer|imagem|criativo|post|banner|story|arte)\b/i;
+    if (mode === "image" || (imageKeywords.test(text) && /\b(imagem|criativo|post|banner|story|arte)\b/i.test(text))) {
       return sendImage(text);
     }
 
