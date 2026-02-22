@@ -68,11 +68,51 @@ async function streamChat({
   onDone();
 }
 
+const FAQ_CATEGORIES = [
+  {
+    label: "🏠 Consórcio",
+    questions: [
+      "O que é consórcio?",
+      "Como funciona a contemplação?",
+      "Vantagens vs financiamento",
+      "Quais modalidades existem?",
+    ],
+  },
+  {
+    label: "💰 Vendas",
+    questions: [
+      "Como registrar uma venda?",
+      "Como funciona o CRM?",
+      "Dicas para fechar mais vendas",
+      "Como apresentar produtos ao cliente?",
+    ],
+  },
+  {
+    label: "📈 Carreira",
+    questions: [
+      "Como funciona o plano de carreira?",
+      "Quais são os níveis de progressão?",
+      "Como subir de nível?",
+      "O que é a Jornada Impacto?",
+    ],
+  },
+  {
+    label: "📱 App",
+    questions: [
+      "Quais ferramentas estão disponíveis?",
+      "Como usar a Trilha do Iniciante?",
+      "Como acompanhar liberação de crédito?",
+      "Como gerenciar minha equipe?",
+    ],
+  },
+];
+
 const ChatBot = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -140,8 +180,23 @@ const ChatBot = () => {
             <p className="text-sm text-muted-foreground max-w-xs">
               Sou o assistente virtual da Ademicon. Pergunte sobre consórcios, produtos ou funcionalidades do app!
             </p>
-            <div className="flex flex-wrap gap-2 mt-2 justify-center">
-              {["O que é consórcio?", "Como funciona a contemplação?", "Vantagens vs financiamento"].map((q) => (
+            <div className="flex gap-2 mt-3 justify-center flex-wrap">
+              {FAQ_CATEGORIES.map((cat, i) => (
+                <button
+                  key={cat.label}
+                  onClick={() => setActiveCategory(i)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    activeCategory === i
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-muted-foreground hover:text-foreground hover:border-primary"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 justify-center max-w-sm">
+              {FAQ_CATEGORIES[activeCategory].questions.map((q) => (
                 <button
                   key={q}
                   onClick={() => { setInput(q); }}
