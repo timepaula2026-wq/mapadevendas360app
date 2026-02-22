@@ -97,6 +97,45 @@ export type Database = {
         }
         Relationships: []
       }
+      section_contents: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          section_id: string
+          sort_order: number | null
+          title: string
+          type: string
+          url: string | null
+          user_id: string
+          youtube_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          section_id: string
+          sort_order?: number | null
+          title: string
+          type?: string
+          url?: string | null
+          user_id: string
+          youtube_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          section_id?: string
+          sort_order?: number | null
+          title?: string
+          type?: string
+          url?: string | null
+          user_id?: string
+          youtube_id?: string | null
+        }
+        Relationships: []
+      }
       trainings: {
         Row: {
           category: string | null

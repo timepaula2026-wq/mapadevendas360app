@@ -1,11 +1,6 @@
-import { ArrowLeft, Users, UserPlus, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const members = [
-  { name: "Ana Costa", role: "Consultor Prata", sales: 22 },
-  { name: "Pedro Oliveira", role: "Consultor Bronze", sales: 11 },
-  { name: "Julia Mendes", role: "Consultor Iniciante", sales: 3 },
-];
+import SectionContentList from "@/components/SectionContentList";
 
 const GestaoEquipe = () => {
   const navigate = useNavigate();
@@ -25,29 +20,7 @@ const GestaoEquipe = () => {
       </div>
 
       <div className="px-5 mt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-foreground">Membros ({members.length})</h2>
-          <button className="flex items-center gap-1 text-xs text-primary font-medium">
-            <UserPlus className="w-4 h-4" /> Convidar
-          </button>
-        </div>
-        <div className="space-y-3">
-          {members.map((m, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold text-muted-foreground">{m.name[0]}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{m.name}</p>
-                <p className="text-xs text-muted-foreground">{m.role}</p>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <TrendingUp className="w-3 h-3" />
-                {m.sales} vendas
-              </div>
-            </div>
-          ))}
-        </div>
+        <SectionContentList sectionId="equipe" />
       </div>
     </div>
   );

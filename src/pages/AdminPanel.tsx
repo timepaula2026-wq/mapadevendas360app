@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import AdminSections from "@/components/AdminSections";
 
 interface Training {
   id: string;
@@ -263,9 +264,12 @@ const AdminPanel = () => {
 
       <div className="p-4 max-w-2xl mx-auto">
         <Tabs defaultValue="trainings">
-          <TabsList className="w-full mb-4">
+          <TabsList className="w-full mb-4 flex-wrap h-auto gap-1">
             <TabsTrigger value="trainings" className="flex-1 gap-1">
               <BookOpen className="w-4 h-4" /> Treinamentos
+            </TabsTrigger>
+            <TabsTrigger value="sections" className="flex-1 gap-1">
+              <Grid3X3 className="w-4 h-4" /> Seções
             </TabsTrigger>
             <TabsTrigger value="users" className="flex-1 gap-1">
               <Users className="w-4 h-4" /> Usuários
@@ -437,6 +441,11 @@ const AdminPanel = () => {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          {/* ===== SECTIONS TAB ===== */}
+          <TabsContent value="sections">
+            <AdminSections />
           </TabsContent>
 
           {/* ===== USERS TAB ===== */}

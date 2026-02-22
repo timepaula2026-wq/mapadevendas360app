@@ -1,5 +1,6 @@
 import { ArrowLeft, BarChart3, TrendingUp, DollarSign, Target, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SectionContentList from "@/components/SectionContentList";
 
 const stats = [
   { label: "Vendas do Mês", value: "R$ 0", icon: DollarSign, color: "text-emerald-500" },
@@ -36,10 +37,8 @@ const CentralVendas = () => {
       </div>
 
       <div className="px-5 mt-6">
-        <div className="bg-card border border-border rounded-xl p-6 text-center">
-          <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Nenhum dado de vendas ainda.<br />Comece a registrar suas vendas!</p>
-        </div>
+        <h2 className="text-sm font-semibold text-foreground mb-3">Conteúdos</h2>
+        <SectionContentList sectionId="vendas" />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { ArrowLeft, Trophy, Star, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SectionContentList from "@/components/SectionContentList";
 
 const levels = [
   { name: "Consultor Iniciante", requirement: "0 - 5 vendas", current: true },
@@ -40,6 +41,11 @@ const PlanoCarreira = () => {
             {!l.current && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
           </div>
         ))}
+      </div>
+
+      <div className="px-5 mt-6">
+        <h2 className="text-sm font-semibold text-foreground mb-3">Conteúdos</h2>
+        <SectionContentList sectionId="carreira" />
       </div>
     </div>
   );
