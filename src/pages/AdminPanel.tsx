@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, Users, BookOpen, Layers } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -27,6 +27,14 @@ interface ContentItem {
   youtube_id: string | null;
 }
 
+interface UserProfile {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  approved: boolean;
+  created_at: string;
+}
+
 const AdminPanel = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -48,6 +56,12 @@ const AdminPanel = () => {
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "file">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [trainingContents, setTrainingContents] = useState<Record<string, ContentItem[]>>({});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Users
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   const categories = ["Vendas", "Desenvolvimento", "Design", "Marketing", "Produtos", "Geral"];
 
@@ -59,7 +73,10 @@ const AdminPanel = () => {
   }, [isAdmin, adminLoading, navigate]);
 
   useEffect(() => {
-    if (isAdmin) fetchTrainings();
+    if (isAdmin) {
+      fetchTrainings();
+      fetchUsers();
+    }
   }, [isAdmin]);
 
   const fetchTrainings = async () => {
@@ -73,6 +90,17 @@ const AdminPanel = () => {
     setLoading(false);
   };
 
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) toast.error("Erro ao carregar usuários");
+    else setUsers((data as UserProfile[]) || []);
+    setUsersLoading(false);
+  };
+
   const fetchContents = async (trainingId: string) => {
     const { data } = await supabase
       .from("content_items")
@@ -84,7 +112,6 @@ const AdminPanel = () => {
 
   const handleSaveTraining = async () => {
     if (!title.trim() || !user) return;
-
     if (editingId) {
       const { error } = await supabase
         .from("trainings")
@@ -99,7 +126,6 @@ const AdminPanel = () => {
       if (error) toast.error("Erro ao criar");
       else toast.success("Treinamento criado!");
     }
-
     resetForm();
     fetchTrainings();
   };
@@ -107,10 +133,7 @@ const AdminPanel = () => {
   const handleDeleteTraining = async (id: string) => {
     const { error } = await supabase.from("trainings").delete().eq("id", id);
     if (error) toast.error("Erro ao excluir");
-    else {
-      toast.success("Excluído!");
-      fetchTrainings();
-    }
+    else { toast.success("Excluído!"); fetchTrainings(); }
   };
 
   const handleEditTraining = (t: Training) => {
@@ -134,19 +157,60 @@ const AdminPanel = () => {
     return match ? match[1] : null;
   };
 
+  const handleFileUpload = async (file: globalThis.File, trainingId: string) => {
+    if (!user) return;
+    setUploading(true);
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${trainingId}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("training-files")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error("Erro ao fazer upload: " + uploadError.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("training-files")
+      .getPublicUrl(filePath);
+
+    const { error } = await supabase.from("content_items").insert({
+      training_id: trainingId,
+      user_id: user.id,
+      title: contentTitle.trim() || file.name,
+      type: "pdf",
+      url: urlData.publicUrl,
+    });
+
+    if (error) toast.error("Erro ao salvar conteúdo");
+    else {
+      toast.success("PDF enviado com sucesso!");
+      setContentTitle("");
+      setShowContentForm(null);
+      fetchContents(trainingId);
+    }
+    setUploading(false);
+  };
+
   const handleAddContent = async (trainingId: string) => {
     if (!contentTitle.trim() || !user) return;
 
-    const item: any = {
+    if (contentType === "pdf" && fileInputRef.current?.files?.[0]) {
+      await handleFileUpload(fileInputRef.current.files[0], trainingId);
+      return;
+    }
+
+    const { error } = await supabase.from("content_items").insert({
       training_id: trainingId,
       user_id: user.id,
       title: contentTitle.trim(),
       type: contentType,
       url: contentUrl || null,
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
-    };
-
-    const { error } = await supabase.from("content_items").insert(item);
+    });
     if (error) toast.error("Erro ao adicionar conteúdo");
     else {
       toast.success("Conteúdo adicionado!");
@@ -160,9 +224,18 @@ const AdminPanel = () => {
   const handleDeleteContent = async (contentId: string, trainingId: string) => {
     const { error } = await supabase.from("content_items").delete().eq("id", contentId);
     if (error) toast.error("Erro ao excluir");
+    else { toast.success("Conteúdo removido!"); fetchContents(trainingId); }
+  };
+
+  const handleApproveUser = async (userId: string, approve: boolean) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ approved: approve })
+      .eq("user_id", userId);
+    if (error) toast.error("Erro ao atualizar usuário");
     else {
-      toast.success("Conteúdo removido!");
-      fetchContents(trainingId);
+      toast.success(approve ? "Usuário aprovado!" : "Acesso revogado!");
+      fetchUsers();
     }
   };
 
@@ -178,14 +251,13 @@ const AdminPanel = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="flex items-center gap-3 px-4 pt-10 pb-4 border-b border-border bg-card/80 backdrop-blur-lg">
         <button onClick={() => navigate("/")} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
           <h1 className="text-lg font-bold text-foreground">Painel Administrativo</h1>
-          <p className="text-xs text-muted-foreground">Gerenciar treinamentos e conteúdos</p>
+          <p className="text-xs text-muted-foreground">Gerenciar treinamentos, conteúdos e usuários</p>
         </div>
       </header>
 
@@ -195,28 +267,26 @@ const AdminPanel = () => {
             <TabsTrigger value="trainings" className="flex-1 gap-1">
               <BookOpen className="w-4 h-4" /> Treinamentos
             </TabsTrigger>
+            <TabsTrigger value="users" className="flex-1 gap-1">
+              <Users className="w-4 h-4" /> Usuários
+            </TabsTrigger>
             <TabsTrigger value="stats" className="flex-1 gap-1">
               <Layers className="w-4 h-4" /> Resumo
             </TabsTrigger>
           </TabsList>
 
+          {/* ===== TRAININGS TAB ===== */}
           <TabsContent value="trainings">
-            {/* Add button */}
             <Button onClick={() => { resetForm(); setShowForm(true); }} className="w-full mb-4 gap-2">
               <Plus className="w-4 h-4" /> Novo Treinamento
             </Button>
 
-            {/* Create/Edit Form */}
             {showForm && (
               <div className="bg-card border border-border rounded-xl p-4 mb-4 space-y-3">
                 <h3 className="font-semibold text-sm text-foreground">
                   {editingId ? "Editar Treinamento" : "Novo Treinamento"}
                 </h3>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Título do treinamento"
-                />
+                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título do treinamento" />
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -248,7 +318,6 @@ const AdminPanel = () => {
               </div>
             )}
 
-            {/* Training list */}
             <div className="space-y-3">
               {trainings.map((t) => (
                 <div key={t.id} className="bg-card border border-border rounded-xl p-4">
@@ -270,7 +339,6 @@ const AdminPanel = () => {
                     </div>
                   </div>
 
-                  {/* Contents section */}
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium text-muted-foreground">Conteúdos</span>
@@ -285,7 +353,6 @@ const AdminPanel = () => {
                       </button>
                     </div>
 
-                    {/* Content items */}
                     {trainingContents[t.id]?.map((c) => (
                       <div key={c.id} className="flex items-center gap-2 py-1.5 text-sm">
                         {c.type === "youtube" ? <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" /> :
@@ -299,23 +366,19 @@ const AdminPanel = () => {
                     ))}
 
                     {!trainingContents[t.id] && (
-                      <button
-                        onClick={() => fetchContents(t.id)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
+                      <button onClick={() => fetchContents(t.id)} className="text-xs text-muted-foreground hover:text-foreground">
                         Carregar conteúdos...
                       </button>
                     )}
 
-                    {/* Add content form */}
                     {showContentForm === t.id && (
                       <div className="mt-2 p-3 bg-secondary rounded-lg space-y-2">
                         <div className="flex gap-1">
-                          {[
+                          {([
                             { type: "youtube" as const, icon: Youtube, label: "YouTube" },
-                            { type: "pdf" as const, icon: FileText, label: "PDF" },
-                            { type: "file" as const, icon: File, label: "Arquivo" },
-                          ].map(({ type, icon: Icon, label }) => (
+                            { type: "pdf" as const, icon: Upload, label: "PDF" },
+                            { type: "file" as const, icon: File, label: "Link" },
+                          ]).map(({ type, icon: Icon, label }) => (
                             <button
                               key={type}
                               onClick={() => setContentType(type)}
@@ -335,19 +398,31 @@ const AdminPanel = () => {
                           placeholder="Título do conteúdo"
                           className="h-8 text-xs"
                         />
-                        <Input
-                          value={contentUrl}
-                          onChange={(e) => setContentUrl(e.target.value)}
-                          placeholder={contentType === "youtube" ? "URL do YouTube" : "URL do arquivo"}
-                          className="h-8 text-xs"
-                        />
+                        {contentType === "pdf" ? (
+                          <div className="space-y-1">
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept=".pdf"
+                              className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                            />
+                            <p className="text-[10px] text-muted-foreground">Selecione um arquivo PDF para upload</p>
+                          </div>
+                        ) : (
+                          <Input
+                            value={contentUrl}
+                            onChange={(e) => setContentUrl(e.target.value)}
+                            placeholder={contentType === "youtube" ? "URL do YouTube" : "URL do arquivo"}
+                            className="h-8 text-xs"
+                          />
+                        )}
                         <Button
                           onClick={() => handleAddContent(t.id)}
-                          disabled={!contentTitle.trim()}
+                          disabled={!contentTitle.trim() || uploading}
                           size="sm"
-                          className="w-full text-xs"
+                          className="w-full text-xs gap-1"
                         >
-                          Adicionar
+                          {uploading ? <><Loader2 className="w-3 h-3 animate-spin" /> Enviando...</> : "Adicionar"}
                         </Button>
                       </div>
                     )}
@@ -364,6 +439,68 @@ const AdminPanel = () => {
             </div>
           </TabsContent>
 
+          {/* ===== USERS TAB ===== */}
+          <TabsContent value="users">
+            {usersLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Aprove ou revogue o acesso dos usuários cadastrados.
+                </p>
+                {users.map((u) => (
+                  <div key={u.id} className="bg-card border border-border rounded-xl p-3 flex items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {u.display_name || "Sem nome"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Cadastro: {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {u.approved ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 font-medium mr-1">
+                          Aprovado
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 font-medium mr-1">
+                          Pendente
+                        </span>
+                      )}
+                      {!u.approved ? (
+                        <button
+                          onClick={() => handleApproveUser(u.user_id, true)}
+                          className="p-1.5 text-green-500 hover:bg-green-500/10 rounded"
+                          title="Aprovar"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleApproveUser(u.user_id, false)}
+                          className="p-1.5 text-destructive hover:bg-destructive/10 rounded"
+                          title="Revogar acesso"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {users.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Users className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">Nenhum usuário cadastrado</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ===== STATS TAB ===== */}
           <TabsContent value="stats">
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-card border border-border rounded-xl p-4 text-center">
@@ -377,6 +514,18 @@ const AdminPanel = () => {
                   {Object.values(trainingContents).reduce((sum, arr) => sum + arr.length, 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">Conteúdos</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-4 text-center">
+                <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
+                <p className="text-2xl font-bold text-foreground">{users.length}</p>
+                <p className="text-xs text-muted-foreground">Usuários</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-4 text-center">
+                <CheckCircle className="w-6 h-6 mx-auto mb-2 text-green-500" />
+                <p className="text-2xl font-bold text-foreground">
+                  {users.filter((u) => u.approved).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Aprovados</p>
               </div>
             </div>
           </TabsContent>
