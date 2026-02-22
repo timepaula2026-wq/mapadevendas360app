@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Menu, Search, LogOut, Loader2 } from "lucide-react";
+import { Menu, Search, LogOut, Loader2, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useNavigate } from "react-router-dom";
 import BannerCarousel from "@/components/BannerCarousel";
 import IconGrid from "@/components/IconGrid";
 import BottomNav from "@/components/BottomNav";
 
 const Index = () => {
   const { signOut, loading } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
 
   if (loading) {
@@ -26,6 +30,11 @@ const Index = () => {
         </button>
         <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <button onClick={() => navigate("/admin")} className="text-primary hover:text-primary/80">
+              <Shield className="w-5 h-5" />
+            </button>
+          )}
           <button className="text-muted-foreground hover:text-foreground">
             <Search className="w-5 h-5" />
           </button>
