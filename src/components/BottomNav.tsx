@@ -1,5 +1,5 @@
-import { Home, PlusCircle, Headphones, Menu, Search, LogOut } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { Home, PlusCircle, Headphones, Bot } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface BottomNavProps {
   activeTab: string;
@@ -8,18 +8,24 @@ interface BottomNavProps {
 
 const tabs = [
   { id: "home", label: "Home", icon: Home },
+  { id: "chatbot", label: "Assistente IA", icon: Bot, route: "/chatbot" },
   { id: "add", label: "Novidades", icon: PlusCircle },
   { id: "support", label: "Suporte", icon: Headphones },
 ];
 
 const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
+  const navigate = useNavigate();
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border">
       <div className="flex items-center justify-around max-w-md mx-auto py-2">
-        {tabs.map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon, route }) => (
           <button
             key={id}
-            onClick={() => onTabChange(id)}
+            onClick={() => {
+              if (route) navigate(route);
+              else onTabChange(id);
+            }}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
               activeTab === id
                 ? "text-primary"
