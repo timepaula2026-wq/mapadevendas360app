@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { useApprovalCheck } from "@/hooks/useApprovalCheck";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import TrainingsList from "./pages/TrainingsList";
 import TrainingDetail from "./pages/TrainingDetail";
@@ -28,12 +30,33 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return (
+  const { approved, loading: approvalLoading } = useApprovalCheck();
+
+  if (loading || approvalLoading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <Loader2 className="w-8 h-8 text-primary animate-spin" />
     </div>
   );
   if (!user) return <Navigate to="/auth" replace />;
+  if (approved === false) return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+      <div className="bg-card border border-border rounded-2xl p-8 max-w-sm w-full space-y-4">
+        <div className="w-16 h-16 mx-auto rounded-full bg-yellow-500/10 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-yellow-500" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground">Aguardando aprovação</h2>
+        <p className="text-sm text-muted-foreground">
+          Seu cadastro foi recebido e está aguardando aprovação do administrador. Você receberá acesso em breve.
+        </p>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="text-sm text-primary hover:underline"
+        >
+          Sair
+        </button>
+      </div>
+    </div>
+  );
   return <>{children}</>;
 };
 
