@@ -1,13 +1,6 @@
 import { ArrowLeft, Wrench, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const tools = [
-  { name: "WhatsApp Business", description: "Gerencie conversas com clientes" },
-  { name: "Planilha de Controle", description: "Acompanhe seus resultados" },
-  { name: "Gerador de Links", description: "Crie links personalizados" },
-  { name: "Calculadora de Comissão", description: "Calcule seus ganhos" },
-  { name: "Modelo de Propostas", description: "Templates prontos para usar" },
-];
+import SectionContentList from "@/components/SectionContentList";
 
 const Ferramentas = () => {
   const navigate = useNavigate();
@@ -26,19 +19,8 @@ const Ferramentas = () => {
         <p className="text-white/70 text-sm mt-2">Ferramentas essenciais para o seu dia a dia.</p>
       </div>
 
-      <div className="px-5 mt-6 space-y-3">
-        {tools.map((t, i) => (
-          <div key={i} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <Wrench className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">{t.name}</p>
-              <p className="text-xs text-muted-foreground">{t.description}</p>
-            </div>
-            <ExternalLink className="w-4 h-4 text-muted-foreground" />
-          </div>
-        ))}
+      <div className="px-5 mt-6">
+        <SectionContentList sectionId="ferramentas" />
       </div>
     </div>
   );

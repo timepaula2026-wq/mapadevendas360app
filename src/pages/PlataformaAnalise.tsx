@@ -1,5 +1,6 @@
-import { ArrowLeft, BookOpen, BarChart2 } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SectionContentList from "@/components/SectionContentList";
 
 const PlataformaAnalise = () => {
   const navigate = useNavigate();
@@ -19,10 +20,7 @@ const PlataformaAnalise = () => {
       </div>
 
       <div className="px-5 mt-6">
-        <div className="bg-card border border-border rounded-xl p-6 text-center">
-          <BarChart2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Dados insuficientes para gerar relatórios.<br />Continue registrando suas atividades!</p>
-        </div>
+        <SectionContentList sectionId="analise" />
       </div>
     </div>
   );
