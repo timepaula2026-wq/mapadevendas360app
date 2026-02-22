@@ -1,18 +1,13 @@
 import { useState } from "react";
-import { Plus, BookOpen, Sparkles, LogOut, Loader2 } from "lucide-react";
-import { useTrainings } from "@/hooks/useTrainings";
+import { Menu, Search, LogOut, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import TrainingCard from "@/components/TrainingCard";
-import CreateTrainingModal from "@/components/CreateTrainingModal";
+import BannerCarousel from "@/components/BannerCarousel";
+import IconGrid from "@/components/IconGrid";
+import BottomNav from "@/components/BottomNav";
 
 const Index = () => {
-  const { trainings, loading, addTraining } = useTrainings();
-  const { signOut } = useAuth();
-  const [showCreate, setShowCreate] = useState(false);
-
-  const totalProgress = trainings.length > 0
-    ? Math.round(trainings.reduce((sum, t) => sum + t.progress, 0) / trainings.length)
-    : 0;
+  const { signOut, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState("home");
 
   if (loading) {
     return (
@@ -23,70 +18,35 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <header className="px-5 pt-12 pb-6">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Treinamentos</span>
-          </div>
-          <button onClick={signOut} className="text-muted-foreground hover:text-foreground transition-colors">
+    <div className="min-h-screen bg-background pb-20">
+      {/* Top bar */}
+      <header className="flex items-center justify-between px-5 pt-10 pb-4">
+        <button className="text-muted-foreground hover:text-foreground">
+          <Menu className="w-6 h-6" />
+        </button>
+        <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
+        <div className="flex items-center gap-3">
+          <button className="text-muted-foreground hover:text-foreground">
+            <Search className="w-5 h-5" />
+          </button>
+          <button onClick={signOut} className="text-muted-foreground hover:text-foreground">
             <LogOut className="w-5 h-5" />
           </button>
         </div>
-        <h1 className="text-3xl font-extrabold text-foreground leading-tight">
-          Sua jornada de<br />
-          <span className="text-gradient-gold">aprendizado</span>
-        </h1>
       </header>
 
-      {/* Stats */}
-      <div className="px-5 mb-6">
-        <div className="glass-card rounded-xl p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shadow-glow">
-            <BookOpen className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground">{trainings.length} treinamento{trainings.length !== 1 ? "s" : ""}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full gradient-gold rounded-full transition-all duration-700" style={{ width: `${totalProgress}%` }} />
-              </div>
-              <span className="text-xs font-semibold text-primary">{totalProgress}%</span>
-            </div>
-          </div>
-        </div>
+      {/* Banner */}
+      <div className="px-4 mb-5">
+        <BannerCarousel />
       </div>
 
-      {/* Training list */}
-      <div className="px-5 space-y-3">
-        {trainings.map((training, i) => (
-          <TrainingCard key={training.id} training={training} index={i} />
-        ))}
-
-        {trainings.length === 0 && (
-          <div className="text-center py-16 animate-fade-in">
-            <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhum treinamento ainda</p>
-            <p className="text-sm text-muted-foreground mt-1">Crie seu primeiro treinamento</p>
-          </div>
-        )}
+      {/* Icon Grid */}
+      <div className="px-4">
+        <IconGrid />
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={() => setShowCreate(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 gradient-gold rounded-full flex items-center justify-center shadow-glow hover:scale-105 transition-transform z-40"
-      >
-        <Plus className="w-6 h-6 text-primary-foreground" />
-      </button>
-
-      <CreateTrainingModal
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-        onCreate={(data) => addTraining(data)}
-      />
+      {/* Bottom Nav */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 };
