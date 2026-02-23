@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      banner_slides: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          id: string
+          image_url: string | null
+          link_type: string
+          link_url: string | null
+          sort_order: number | null
+          title: string | null
+          type: string
+          video_url: string | null
+          youtube_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link_type?: string
+          link_url?: string | null
+          sort_order?: number | null
+          title?: string | null
+          type?: string
+          video_url?: string | null
+          youtube_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link_type?: string
+          link_url?: string | null
+          sort_order?: number | null
+          title?: string | null
+          type?: string
+          video_url?: string | null
+          youtube_id?: string | null
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string

@@ -1,71 +1,197 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 interface BannerSlide {
   id: string;
-  title: string;
-  subtitle: string;
-  gradient: string;
+  title: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  youtube_id: string | null;
+  type: string;
+  link_type: string;
+  link_url: string | null;
+  sort_order: number | null;
 }
 
-const slides: BannerSlide[] = [
-  {
-    id: "1",
-    title: "Bem-vindo ao App",
-    subtitle: "Sua plataforma completa de treinamentos",
-    gradient: "from-primary/80 to-amber-700/80",
-  },
-  {
-    id: "2",
-    title: "Novos Conteúdos",
-    subtitle: "Confira os treinamentos disponíveis",
-    gradient: "from-red-600/80 to-red-900/80",
-  },
-  {
-    id: "3",
-    title: "Acompanhe seu Progresso",
-    subtitle: "Evolua na sua jornada de aprendizado",
-    gradient: "from-emerald-600/80 to-emerald-900/80",
-  },
-];
-
 const BannerCarousel = () => {
+  const [slides, setSlides] = useState<BannerSlide[]>([]);
   const [current, setCurrent] = useState(0);
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchSlides = async () => {
+      const { data } = await supabase
+        .from("banner_slides")
+        .select("*")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
+      if (data && data.length > 0) setSlides(data);
+    };
+    fetchSlides();
+  }, []);
+
+  // Auto-advance only when not playing video
+  useEffect(() => {
+    if (slides.length <= 1 || playingVideo) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [slides.length, playingVideo]);
+
+  const handleClick = useCallback((slide: BannerSlide) => {
+    if (slide.type === "video" && slide.youtube_id) {
+      setPlayingVideo(slide.youtube_id);
+      return;
+    }
+    if (slide.link_type === "internal" && slide.link_url) {
+      navigate(slide.link_url);
+    } else if (slide.link_type === "external" && slide.link_url) {
+      window.open(slide.link_url, "_blank");
+    }
+  }, [navigate]);
+
+  // Fallback static slides when no DB slides exist
+  if (slides.length === 0) {
+    const fallback = [
+      { id: "1", title: "Bem-vindo ao App", gradient: "from-primary/80 to-amber-700/80", subtitle: "Sua plataforma completa de treinamentos" },
+      { id: "2", title: "Novos Conteúdos", gradient: "from-red-600/80 to-red-900/80", subtitle: "Confira os treinamentos disponíveis" },
+      { id: "3", title: "Acompanhe seu Progresso", gradient: "from-emerald-600/80 to-emerald-900/80", subtitle: "Evolua na sua jornada de aprendizado" },
+    ];
+    return (
+      <FallbackCarousel slides={fallback} current={current} setCurrent={setCurrent} />
+    );
+  }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl aspect-[16/9] max-h-[200px]">
+    <div className="relative w-full overflow-hidden rounded-xl aspect-[16/9] max-h-[200px] bg-card">
+      {/* Video overlay */}
+      {playingVideo && (
+        <div className="absolute inset-0 z-20 bg-black rounded-xl">
+          <iframe
+            src={`https://www.youtube.com/embed/${playingVideo}?autoplay=1`}
+            className="w-full h-full rounded-xl"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+          <button
+            onClick={() => setPlayingVideo(null)}
+            className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold z-30"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {slides.map((slide, i) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-700 bg-gradient-to-br ${slide.gradient} flex flex-col justify-end p-5 ${
-            i === current ? "opacity-100" : "opacity-0"
+          onClick={() => handleClick(slide)}
+          className={`absolute inset-0 transition-opacity duration-700 cursor-pointer ${
+            i === current ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <h2 className="text-xl font-extrabold text-white drop-shadow-lg">{slide.title}</h2>
-          <p className="text-sm text-white/80 mt-1">{slide.subtitle}</p>
+          {slide.type === "image" && slide.image_url ? (
+            <img
+              src={slide.image_url}
+              alt={slide.title || "Banner"}
+              className="w-full h-full object-cover"
+            />
+          ) : slide.type === "video" && slide.youtube_id ? (
+            <div className="w-full h-full relative">
+              <img
+                src={`https://img.youtube.com/vi/${slide.youtube_id}/hqdefault.jpg`}
+                alt={slide.title || "Vídeo"}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                  <Play className="w-6 h-6 text-foreground fill-current ml-0.5" />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/80 to-amber-700/80" />
+          )}
+
+          {/* Title overlay */}
+          {slide.title && (
+            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+              <h2 className="text-base font-bold text-white drop-shadow-lg">{slide.title}</h2>
+            </div>
+          )}
         </div>
       ))}
 
-      {/* Dots */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-        {slides.map((_, i) => (
+      {/* Arrows */}
+      {slides.length > 1 && !playingVideo && (
+        <>
           <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-2 h-2 rounded-full transition-all ${
-              i === current ? "bg-white w-5" : "bg-white/40"
-            }`}
-          />
-        ))}
-      </div>
+            onClick={(e) => { e.stopPropagation(); setCurrent((prev) => (prev - 1 + slides.length) % slides.length); }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setCurrent((prev) => (prev + 1) % slides.length); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </>
+      )}
+
+      {/* Dots */}
+      {slides.length > 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
+              className={`w-2 h-2 rounded-full transition-all ${
+                i === current ? "bg-white w-5" : "bg-white/40"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
+
+// Fallback when no slides in DB
+const FallbackCarousel = ({ slides, current, setCurrent }: {
+  slides: { id: string; title: string; gradient: string; subtitle: string }[];
+  current: number;
+  setCurrent: (n: number) => void;
+}) => (
+  <div className="relative w-full overflow-hidden rounded-xl aspect-[16/9] max-h-[200px]">
+    {slides.map((slide, i) => (
+      <div
+        key={slide.id}
+        className={`absolute inset-0 transition-opacity duration-700 bg-gradient-to-br ${slide.gradient} flex flex-col justify-end p-5 ${
+          i === current ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <h2 className="text-xl font-extrabold text-white drop-shadow-lg">{slide.title}</h2>
+        <p className="text-sm text-white/80 mt-1">{slide.subtitle}</p>
+      </div>
+    ))}
+    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+      {slides.map((_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrent(i)}
+          className={`w-2 h-2 rounded-full transition-all ${
+            i === current ? "bg-white w-5" : "bg-white/40"
+          }`}
+        />
+      ))}
+    </div>
+  </div>
+);
 
 export default BannerCarousel;
