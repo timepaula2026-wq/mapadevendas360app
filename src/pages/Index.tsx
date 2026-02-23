@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import BannerCarousel from "@/components/BannerCarousel";
 import IconGrid from "@/components/IconGrid";
 import BottomNav from "@/components/BottomNav";
+import NotificationBell from "@/components/NotificationBell";
 
 const Index = () => {
   const { signOut, loading } = useAuth();
@@ -35,6 +36,7 @@ const Index = () => {
               <Shield className="w-5 h-5" />
             </button>
           )}
+          <NotificationBell />
           <button className="text-muted-foreground hover:text-foreground">
             <Search className="w-5 h-5" />
           </button>
