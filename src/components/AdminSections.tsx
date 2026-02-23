@@ -71,6 +71,7 @@ const SECTIONS = [
   { id: "equipe", label: "Gestão de Equipe" },
   { id: "cliente", label: "Área do Cliente" },
   { id: "analise", label: "Plataforma de Análise" },
+  { id: "presenca", label: "Presença Treinamentos" },
 ];
 
 const AdminSections = () => {

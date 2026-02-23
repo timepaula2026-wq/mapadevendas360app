@@ -13,6 +13,7 @@ import {
   BookOpen,
   ShoppingCart,
   CalendarDays,
+  ClipboardCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -39,6 +40,7 @@ const gridItems: GridItem[] = [
   { id: "analise", label: "Plataforma de Análise", icon: BookOpen, color: "from-slate-600 to-slate-800", route: "/analise" },
   { id: "loja", label: "Loja", icon: ShoppingCart, color: "from-emerald-600 to-emerald-800", route: "/loja" },
   { id: "locacao", label: "Locação de Materiais", icon: CalendarDays, color: "from-amber-600 to-amber-800", route: "/locacao" },
+  { id: "presenca", label: "Presença Treinamentos", icon: ClipboardCheck, color: "from-blue-600 to-blue-800", route: "/presenca-treinamentos" },
 ];
 
 const IconGrid = () => {
