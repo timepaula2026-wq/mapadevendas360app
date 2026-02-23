@@ -11,6 +11,8 @@ import {
   Globe,
   BarChart3,
   BookOpen,
+  ShoppingCart,
+  CalendarDays,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -35,6 +37,8 @@ const gridItems: GridItem[] = [
   { id: "equipe", label: "Gestão de Equipe", icon: Users, color: "from-slate-600 to-slate-800", route: "/equipe" },
   { id: "cliente", label: "Área do Cliente", icon: Globe, color: "from-emerald-600 to-emerald-800", route: "/cliente" },
   { id: "analise", label: "Plataforma de Análise", icon: BookOpen, color: "from-slate-600 to-slate-800", route: "/analise" },
+  { id: "loja", label: "Loja", icon: ShoppingCart, color: "from-emerald-600 to-emerald-800", route: "/loja" },
+  { id: "locacao", label: "Locação de Materiais", icon: CalendarDays, color: "from-amber-600 to-amber-800", route: "/locacao" },
 ];
 
 const IconGrid = () => {
