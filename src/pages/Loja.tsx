@@ -177,8 +177,11 @@ const Loja = () => {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{product?.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        R$ {(product?.price || 0).toFixed(2)} un.
+                      </p>
                       <p className="text-xs text-primary font-semibold">
-                        R$ {((product?.price || 0) * item.quantity).toFixed(2)}
+                        Subtotal: R$ {((product?.price || 0) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
