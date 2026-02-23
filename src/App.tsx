@@ -25,6 +25,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Loja from "./pages/Loja";
 import Locacao from "./pages/Locacao";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -71,6 +72,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/trainings" element={<ProtectedRoute><TrainingsList /></ProtectedRoute>} />
             <Route path="/training/:id" element={<ProtectedRoute><TrainingDetail /></ProtectedRoute>} />
