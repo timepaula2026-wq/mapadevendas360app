@@ -26,6 +26,7 @@ import Loja from "./pages/Loja";
 import Locacao from "./pages/Locacao";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import PresencaTreinamentos from "./pages/PresencaTreinamentos";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
             <Route path="/loja" element={<ProtectedRoute><Loja /></ProtectedRoute>} />
             <Route path="/locacao" element={<ProtectedRoute><Locacao /></ProtectedRoute>} />
+            <Route path="/presenca-treinamentos" element={<ProtectedRoute><PresencaTreinamentos /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
