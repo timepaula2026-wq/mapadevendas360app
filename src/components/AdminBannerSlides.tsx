@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Image, Youtube, ExternalLink, ArrowRight, Loader2, GripVertical } from "lucide-react";
+import { Plus, Trash2, Image, Youtube, ExternalLink, ArrowRight, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 interface BannerSlide {
@@ -40,11 +40,13 @@ const AdminBannerSlides = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   // Form state
   const [type, setType] = useState<"image" | "video">("image");
   const [title, setTitle] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState<globalThis.File | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [linkType, setLinkType] = useState<"none" | "internal" | "external">("none");
   const [linkUrl, setLinkUrl] = useState("");
@@ -70,12 +72,33 @@ const AdminBannerSlides = () => {
 
   const handleSave = async () => {
     setSaving(true);
+    let finalImageUrl: string | null = null;
+
+    // Upload image file if present
+    if (type === "image" && imageFile) {
+      setUploading(true);
+      const ext = imageFile.name.split(".").pop();
+      const filePath = `${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("banner-images")
+        .upload(filePath, imageFile);
+      if (uploadError) {
+        toast.error("Erro ao fazer upload: " + uploadError.message);
+        setSaving(false);
+        setUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("banner-images").getPublicUrl(filePath);
+      finalImageUrl = urlData.publicUrl;
+      setUploading(false);
+    }
+
     const ytId = type === "video" ? extractYoutubeId(youtubeUrl) : null;
 
     const { error } = await supabase.from("banner_slides").insert({
       title: title.trim() || null,
       type,
-      image_url: type === "image" ? imageUrl.trim() : null,
+      image_url: finalImageUrl,
       youtube_id: ytId,
       video_url: type === "video" ? youtubeUrl.trim() : null,
       link_type: linkType,
@@ -108,10 +131,20 @@ const AdminBannerSlides = () => {
     setShowForm(false);
     setType("image");
     setTitle("");
-    setImageUrl("");
+    setImageFile(null);
+    setImagePreview(null);
     setYoutubeUrl("");
     setLinkType("none");
     setLinkUrl("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   if (loading) {
@@ -151,7 +184,28 @@ const AdminBannerSlides = () => {
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título (opcional)" className="h-9 text-sm" />
 
           {type === "image" ? (
-            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="URL da imagem" className="h-9 text-sm" />
+            <div className="space-y-2">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary/50 transition-colors"
+              >
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Preview" className="w-full h-24 object-cover rounded-lg" />
+                ) : (
+                  <>
+                    <Upload className="w-6 h-6 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Clique para selecionar uma imagem</p>
+                  </>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
           ) : (
             <Input value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="URL do YouTube" className="h-9 text-sm" />
           )}
@@ -196,7 +250,7 @@ const AdminBannerSlides = () => {
           )}
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving || (type === "image" && !imageUrl.trim()) || (type === "video" && !youtubeUrl.trim())} className="flex-1">
+            <Button onClick={handleSave} disabled={saving || uploading || (type === "image" && !imageFile) || (type === "video" && !youtubeUrl.trim())} className="flex-1">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar"}
             </Button>
             <Button variant="outline" onClick={resetForm}>Cancelar</Button>
