@@ -2,8 +2,22 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Mail, Lock, User, Loader2 } from "lucide-react";
+import { Sparkles, Mail, Lock, User, Loader2, Phone, Building2, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const UNITS = [
+  "Araucária",
+  "Araçatuba",
+  "Almirante Tamandaré",
+  "Colombo",
+  "Paranaguá",
+  "Palácio do Café",
+  "Praça do Japão",
+  "Pinheiros",
+  "Poços de Caldas",
+  "São João da Boa Vista",
+  "Digital",
+];
 
 const Auth = () => {
   const { user, loading, signIn, signUp } = useAuth();
@@ -12,6 +26,10 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [unit, setUnit] = useState("");
+  const [customUnit, setCustomUnit] = useState("");
+  const [unitStartDate, setUnitStartDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -41,6 +59,13 @@ const Auth = () => {
     setSubmitting(false);
   };
 
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -51,7 +76,34 @@ const Auth = () => {
         toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
       }
     } else {
-      const { error } = await signUp(email, password, displayName);
+      if (!displayName.trim()) {
+        toast({ title: "Erro", description: "Preencha o nome completo.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      if (phone.replace(/\D/g, "").length < 10) {
+        toast({ title: "Erro", description: "Preencha o telefone com DDD.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      const finalUnit = unit === "outra" ? customUnit.trim() : unit;
+      if (!finalUnit) {
+        toast({ title: "Erro", description: "Selecione uma unidade.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      if (!unitStartDate) {
+        toast({ title: "Erro", description: "Informe a data de início na unidade.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+
+      const { error } = await signUp(email, password, {
+        displayName: displayName.trim(),
+        phone: phone.replace(/\D/g, ""),
+        unit: finalUnit,
+        unitStartDate,
+      });
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
       } else {
@@ -61,6 +113,8 @@ const Auth = () => {
 
     setSubmitting(false);
   };
+
+  const inputClass = "w-full bg-secondary rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50";
 
   if (forgotMode) {
     return (
@@ -85,7 +139,7 @@ const Auth = () => {
                 onChange={(e) => setForgotEmail(e.target.value)}
                 placeholder="Seu e-mail"
                 required
-                className="w-full bg-secondary rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className={inputClass}
               />
             </div>
             <button
@@ -125,18 +179,81 @@ const Auth = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {!isLogin && (
-            <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Seu nome"
-                className="w-full bg-secondary rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
+            <>
+              {/* Nome completo */}
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Nome completo"
+                  required
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Telefone com DDD */}
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
+                  placeholder="Telefone com DDD"
+                  required
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Unidade */}
+              <div className="relative">
+                <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <select
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  required
+                  className={`${inputClass} appearance-none`}
+                >
+                  <option value="">Selecione a unidade</option>
+                  {UNITS.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                  <option value="outra">Outra</option>
+                </select>
+              </div>
+
+              {unit === "outra" && (
+                <div className="relative">
+                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={customUnit}
+                    onChange={(e) => setCustomUnit(e.target.value)}
+                    placeholder="Digite o nome da unidade"
+                    required
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Data de início na unidade */}
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="date"
+                  value={unitStartDate}
+                  onChange={(e) => setUnitStartDate(e.target.value)}
+                  required
+                  className={`${inputClass} [color-scheme:dark]`}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                  Início na unidade
+                </span>
+              </div>
+            </>
           )}
 
           <div className="relative">
@@ -147,7 +264,7 @@ const Auth = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="E-mail"
               required
-              className="w-full bg-secondary rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className={inputClass}
             />
           </div>
 
@@ -160,7 +277,7 @@ const Auth = () => {
               placeholder="Senha"
               required
               minLength={6}
-              className="w-full bg-secondary rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className={inputClass}
             />
           </div>
 

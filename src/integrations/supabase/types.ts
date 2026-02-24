@@ -324,6 +324,10 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          last_active_at: string | null
+          phone: string | null
+          unit: string | null
+          unit_start_date: string | null
           updated_at: string
           user_id: string
         }
@@ -333,6 +337,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_active_at?: string | null
+          phone?: string | null
+          unit?: string | null
+          unit_start_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -342,6 +350,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_active_at?: string | null
+          phone?: string | null
+          unit?: string | null
+          unit_start_date?: string | null
           updated_at?: string
           user_id?: string
         }
