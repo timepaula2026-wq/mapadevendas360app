@@ -141,6 +141,27 @@ export type Database = {
           },
         ]
       }
+      icon_grid_order: {
+        Row: {
+          id: string
+          sort_order: number
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          id: string
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
       notification_reads: {
         Row: {
           id: string
