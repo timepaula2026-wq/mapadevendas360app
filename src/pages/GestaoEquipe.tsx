@@ -1,4 +1,4 @@
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Users, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
 
@@ -19,7 +19,20 @@ const GestaoEquipe = () => {
         <p className="text-white/70 text-sm mt-2">Gerencie e acompanhe o desempenho do seu time.</p>
       </div>
 
-      <div className="px-5 mt-6">
+      <div className="px-5 mt-6 space-y-4">
+        <button
+          onClick={() => navigate("/analise")}
+          className="w-full bg-card border border-border rounded-xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
+        >
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-foreground">Plataforma de Análise</p>
+            <p className="text-xs text-muted-foreground">Análises e relatórios da equipe</p>
+          </div>
+        </button>
+
         <SectionContentList sectionId="equipe" />
       </div>
     </div>

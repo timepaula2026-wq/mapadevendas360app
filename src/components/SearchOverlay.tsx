@@ -15,6 +15,7 @@ const GRID_SECTIONS = [
   { id: "jornada", label: "Jornada Impacto", route: "/jornada" },
   { id: "equipe", label: "Gestão de Equipe", route: "/equipe" },
   { id: "cliente", label: "Área do Cliente", route: "/cliente" },
+  { id: "administrativo", label: "Administrativo", route: "/administrativo" },
   { id: "analise", label: "Plataforma de Análise", route: "/analise" },
   { id: "loja", label: "Loja", route: "/loja" },
   { id: "locacao", label: "Locação de Materiais", route: "/locacao" },
