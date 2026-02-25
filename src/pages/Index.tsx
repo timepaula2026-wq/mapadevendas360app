@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { Menu, Search, Shield, Loader2 } from "lucide-react";
+import { Menu, Search, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import BannerCarousel from "@/components/BannerCarousel";
@@ -12,7 +11,6 @@ import ProfileSidebar from "@/components/ProfileSidebar";
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,11 +42,6 @@ const Index = () => {
         </button>
         <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
         <div className="flex items-center gap-1">
-          {isAdmin && (
-            <button onClick={() => navigate("/admin")} className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
-              <Shield className="w-5 h-5" />
-            </button>
-          )}
           <div className="w-9 h-9 flex items-center justify-center"><NotificationBell /></div>
           <button className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
             <Search className="w-5 h-5" />
