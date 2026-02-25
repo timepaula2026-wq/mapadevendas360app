@@ -8,12 +8,14 @@ import IconGrid from "@/components/IconGrid";
 import BottomNav from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import SearchOverlay from "@/components/SearchOverlay";
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Track last active
   useEffect(() => {
@@ -34,6 +36,8 @@ const Index = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Profile Sidebar */}
       <ProfileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {/* Search Overlay */}
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 pt-10 pb-4">
@@ -43,7 +47,7 @@ const Index = () => {
         <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
         <div className="flex items-center gap-1">
           <div className="w-9 h-9 flex items-center justify-center"><NotificationBell /></div>
-          <button className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
+          <button onClick={() => setSearchOpen(true)} className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
             <Search className="w-5 h-5" />
           </button>
         </div>
