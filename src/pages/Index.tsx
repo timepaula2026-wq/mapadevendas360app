@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, Search, LogOut, Loader2, Shield } from "lucide-react";
+import { Menu, Search, Shield, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,12 +8,14 @@ import BannerCarousel from "@/components/BannerCarousel";
 import IconGrid from "@/components/IconGrid";
 import BottomNav from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
+import ProfileSidebar from "@/components/ProfileSidebar";
 
 const Index = () => {
-  const { user, signOut, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Track last active
   useEffect(() => {
@@ -32,9 +34,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* Profile Sidebar */}
+      <ProfileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 pt-10 pb-4">
-        <button className="text-muted-foreground hover:text-foreground">
+        <button onClick={() => setSidebarOpen(true)} className="text-muted-foreground hover:text-foreground">
           <Menu className="w-6 h-6" />
         </button>
         <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
@@ -47,9 +52,6 @@ const Index = () => {
           <NotificationBell />
           <button className="text-muted-foreground hover:text-foreground">
             <Search className="w-5 h-5" />
-          </button>
-          <button onClick={signOut} className="text-muted-foreground hover:text-foreground">
-            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </header>
