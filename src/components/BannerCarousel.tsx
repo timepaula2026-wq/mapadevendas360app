@@ -67,7 +67,7 @@ const BannerCarousel = () => {
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl aspect-[16/9] max-h-[260px] bg-card">
+    <div className="relative w-full overflow-hidden rounded-xl aspect-[16/8] max-h-[320px] bg-card">
       {/* Video overlay */}
       {playingVideo && (
         <div className="absolute inset-0 z-20 bg-black rounded-xl">
@@ -168,7 +168,7 @@ const FallbackCarousel = ({ slides, current, setCurrent }: {
   current: number;
   setCurrent: (n: number) => void;
 }) => (
-  <div className="relative w-full overflow-hidden rounded-xl aspect-[16/9] max-h-[260px]">
+  <div className="relative w-full overflow-hidden rounded-xl aspect-[16/8] max-h-[320px]">
     {slides.map((slide, i) => (
       <div
         key={slide.id}
