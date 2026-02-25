@@ -43,14 +43,14 @@ const Index = () => {
           <Menu className="w-6 h-6" />
         </button>
         <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {isAdmin && (
-            <button onClick={() => navigate("/admin")} className="text-primary hover:text-primary/80">
+            <button onClick={() => navigate("/admin")} className="p-1.5 text-primary hover:text-primary/80">
               <Shield className="w-5 h-5" />
             </button>
           )}
-          <NotificationBell />
-          <button className="text-muted-foreground hover:text-foreground">
+          <div className="p-1.5"><NotificationBell /></div>
+          <button className="p-1.5 text-muted-foreground hover:text-foreground">
             <Search className="w-5 h-5" />
           </button>
         </div>
