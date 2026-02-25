@@ -1,6 +1,25 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, X, FileText, Video, Link2, Loader2 } from "lucide-react";
+import { Search, X, FileText, Video, Link2, Loader2, LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+
+const GRID_SECTIONS = [
+  { id: "trilha", label: "Trilha do Iniciante", route: "/trilha" },
+  { id: "vendas", label: "Central de Vendas & CRM", route: "/vendas" },
+  { id: "ferramentas", label: "Acessos de Ferramentas", route: "/ferramentas" },
+  { id: "treinamentos", label: "Treinamentos", route: "/trainings" },
+  { id: "carreira", label: "Plano de Carreira", route: "/carreira" },
+  { id: "apresentacao", label: "Apresentação de Produtos", route: "/apresentacao" },
+  { id: "sorteios", label: "Sorteios & Comunicados", route: "/sorteios" },
+  { id: "credito", label: "Liberação de Crédito", route: "/credito" },
+  { id: "jornada", label: "Jornada Impacto", route: "/jornada" },
+  { id: "equipe", label: "Gestão de Equipe", route: "/equipe" },
+  { id: "cliente", label: "Área do Cliente", route: "/cliente" },
+  { id: "analise", label: "Plataforma de Análise", route: "/analise" },
+  { id: "loja", label: "Loja", route: "/loja" },
+  { id: "locacao", label: "Locação de Materiais", route: "/locacao" },
+  { id: "presenca", label: "Presença Treinamentos", route: "/presenca-treinamentos" },
+];
 
 interface SearchResult {
   id: string;
@@ -9,6 +28,7 @@ interface SearchResult {
   section: string;
   url?: string | null;
   youtube_id?: string | null;
+  route?: string | null;
 }
 
 interface SearchOverlayProps {
@@ -17,6 +37,7 @@ interface SearchOverlayProps {
 }
 
 const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,24 +74,41 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
           .limit(10),
       ]);
 
-      const mapped: SearchResult[] = [
-        ...(sectionRes.data || []).map((r) => ({
+      const mapped: SearchResult[] = [];
+
+      // Search grid sections locally
+      const lowerQuery = query.toLowerCase();
+      GRID_SECTIONS.filter((s) => s.label.toLowerCase().includes(lowerQuery)).forEach((s) => {
+        mapped.push({
+          id: `section-${s.id}`,
+          title: s.label,
+          type: "section",
+          section: "Aba",
+          route: s.route,
+        });
+      });
+
+      // DB results
+      (sectionRes.data || []).forEach((r) => {
+        mapped.push({
           id: r.id,
           title: r.title,
           type: r.type,
           section: "Seção",
           url: r.url,
           youtube_id: r.youtube_id,
-        })),
-        ...(contentRes.data || []).map((r) => ({
+        });
+      });
+      (contentRes.data || []).forEach((r) => {
+        mapped.push({
           id: r.id,
           title: r.title,
           type: r.type,
           section: "Treinamento",
           url: r.url,
           youtube_id: r.youtube_id,
-        })),
-      ];
+        });
+      });
 
       setResults(mapped);
       setLoading(false);
@@ -80,13 +118,16 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
   }, [query]);
 
   const getIcon = (type: string) => {
+    if (type === "section") return <LayoutGrid className="w-4 h-4 text-primary" />;
     if (type === "video") return <Video className="w-4 h-4 text-primary" />;
     if (type === "pdf" || type === "document") return <FileText className="w-4 h-4 text-primary" />;
     return <Link2 className="w-4 h-4 text-primary" />;
   };
 
   const handleOpen = (result: SearchResult) => {
-    if (result.youtube_id) {
+    if (result.route) {
+      navigate(result.route);
+    } else if (result.youtube_id) {
       window.open(`https://www.youtube.com/watch?v=${result.youtube_id}`, "_blank");
     } else if (result.url) {
       window.open(result.url, "_blank");

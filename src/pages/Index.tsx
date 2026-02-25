@@ -44,7 +44,7 @@ const Index = () => {
         <button onClick={() => setSidebarOpen(true)} className="text-white/80 hover:text-white">
           <Menu className="w-6 h-6" />
         </button>
-        <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
+        <h1 className="text-xl font-bold text-gradient-gold">Mapa de Vendas</h1>
         <div className="flex items-center gap-1">
           <div className="w-9 h-9 flex items-center justify-center"><NotificationBell /></div>
           <button onClick={() => setSearchOpen(true)} className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
