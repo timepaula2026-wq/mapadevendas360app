@@ -18,6 +18,7 @@ import Sorteios from "./pages/Sorteios";
 import LiberacaoCredito from "./pages/LiberacaoCredito";
 import JornadaImpacto from "./pages/JornadaImpacto";
 import GestaoEquipe from "./pages/GestaoEquipe";
+import Administrativo from "./pages/Administrativo";
 import AreaCliente from "./pages/AreaCliente";
 import PlataformaAnalise from "./pages/PlataformaAnalise";
 import ChatBot from "./pages/ChatBot";
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="/credito" element={<ProtectedRoute><LiberacaoCredito /></ProtectedRoute>} />
             <Route path="/jornada" element={<ProtectedRoute><JornadaImpacto /></ProtectedRoute>} />
             <Route path="/equipe" element={<ProtectedRoute><GestaoEquipe /></ProtectedRoute>} />
+            <Route path="/administrativo" element={<ProtectedRoute><Administrativo /></ProtectedRoute>} />
             <Route path="/cliente" element={<ProtectedRoute><AreaCliente /></ProtectedRoute>} />
             <Route path="/analise" element={<ProtectedRoute><PlataformaAnalise /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute><ChatBot /></ProtectedRoute>} />

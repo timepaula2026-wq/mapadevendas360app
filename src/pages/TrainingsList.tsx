@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, BookOpen, ArrowLeft, Loader2 } from "lucide-react";
+import { Plus, BookOpen, ArrowLeft, Loader2, ClipboardCheck } from "lucide-react";
 import { useTrainings } from "@/hooks/useTrainings";
 import { useNavigate } from "react-router-dom";
 import TrainingCard from "@/components/TrainingCard";
@@ -50,6 +50,22 @@ const TrainingsList = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Quick link to Presença */}
+      <div className="px-5 mb-4">
+        <button
+          onClick={() => navigate("/presenca-treinamentos")}
+          className="w-full bg-card border border-border rounded-xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
+        >
+          <div className="w-10 h-10 rounded-lg gradient-gold flex items-center justify-center shrink-0">
+            <ClipboardCheck className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-foreground">Presença Treinamentos</p>
+            <p className="text-xs text-muted-foreground">Registrar e consultar presenças</p>
+          </div>
+        </button>
       </div>
 
       {/* Training list */}

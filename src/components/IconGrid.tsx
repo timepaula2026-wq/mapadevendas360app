@@ -11,10 +11,7 @@ import {
   Users,
   Globe,
   BarChart3,
-  BookOpen,
-  ShoppingCart,
-  CalendarDays,
-  ClipboardCheck,
+  Briefcase,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,14 +36,11 @@ const ALL_ITEMS: Record<string, GridItem> = {
   jornada: { id: "jornada", label: "Jornada Impacto", icon: MapPin, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/jornada" },
   equipe: { id: "equipe", label: "Gestão de Equipe", icon: Users, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/equipe" },
   cliente: { id: "cliente", label: "Área do Cliente", icon: Globe, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/cliente" },
-  analise: { id: "analise", label: "Plataforma de Análise", icon: BookOpen, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/analise" },
-  loja: { id: "loja", label: "Loja", icon: ShoppingCart, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/loja" },
-  locacao: { id: "locacao", label: "Locação de Materiais", icon: CalendarDays, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/locacao" },
-  presenca: { id: "presenca", label: "Presença Treinamentos", icon: ClipboardCheck, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/presenca-treinamentos" },
+  administrativo: { id: "administrativo", label: "Administrativo", icon: Briefcase, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/administrativo" },
 };
 
 // Default order fallback
-const DEFAULT_ORDER = ["trilha", "vendas", "ferramentas", "treinamentos", "carreira", "apresentacao", "sorteios", "credito", "jornada", "equipe", "cliente", "analise", "loja", "locacao", "presenca"];
+const DEFAULT_ORDER = ["trilha", "vendas", "ferramentas", "treinamentos", "carreira", "apresentacao", "sorteios", "credito", "jornada", "equipe", "cliente", "administrativo"];
 
 const IconGrid = () => {
   const navigate = useNavigate();
