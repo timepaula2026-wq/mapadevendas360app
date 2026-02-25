@@ -54,12 +54,12 @@ const Index = () => {
       </header>
 
       {/* Banner */}
-      <div className="px-4 mb-8">
+      <div className="px-4 mb-10">
         <BannerCarousel />
       </div>
 
       {/* Icon Grid */}
-      <div className="px-4 mt-4">
+      <div className="px-4 mt-2">
         <IconGrid />
       </div>
 
