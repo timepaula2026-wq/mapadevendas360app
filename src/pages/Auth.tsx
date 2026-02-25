@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Mail, Lock, User, Loader2, Phone, Building2, Calendar } from "lucide-react";
+import { Map, Mail, Lock, User, Loader2, Phone, Building2, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const UNITS = [
@@ -168,13 +168,13 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 gradient-gold rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
-            <Sparkles className="w-7 h-7 text-primary-foreground" />
+            <Map className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-extrabold text-foreground">
-            {isLogin ? "Bem-vindo de volta" : "Criar conta"}
+            {isLogin ? "Mapa de Vendas" : "Criar conta"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {isLogin ? "Entre para acessar seus treinamentos" : "Cadastre-se para começar"}
+            {isLogin ? "Acesse aqui sua plataforma de vendas" : "Cadastre-se para começar"}
           </p>
         </div>
 
