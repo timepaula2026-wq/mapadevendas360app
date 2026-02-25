@@ -28,21 +28,21 @@ interface GridItem {
 }
 
 const ALL_ITEMS: Record<string, GridItem> = {
-  trilha: { id: "trilha", label: "Trilha do Iniciante", icon: Rocket, color: "from-amber-500 to-amber-700", route: "/trilha" },
-  vendas: { id: "vendas", label: "Central de Vendas & CRM", icon: BarChart3, color: "from-amber-600 to-amber-800", route: "/vendas" },
-  ferramentas: { id: "ferramentas", label: "Acessos de Ferramentas", icon: Wrench, color: "from-zinc-600 to-zinc-800", route: "/ferramentas" },
-  treinamentos: { id: "treinamentos", label: "Treinamentos", icon: GraduationCap, color: "from-zinc-600 to-zinc-800", route: "/trainings" },
-  carreira: { id: "carreira", label: "Plano de Carreira", icon: Trophy, color: "from-amber-500 to-amber-700", route: "/carreira" },
-  apresentacao: { id: "apresentacao", label: "Apresentação de Produtos", icon: FileText, color: "from-zinc-600 to-zinc-800", route: "/apresentacao" },
-  sorteios: { id: "sorteios", label: "Sorteios & Comunicados", icon: Gift, color: "from-amber-600 to-amber-800", route: "/sorteios" },
-  credito: { id: "credito", label: "Liberação de Crédito", icon: CreditCard, color: "from-zinc-600 to-zinc-800", route: "/credito" },
-  jornada: { id: "jornada", label: "Jornada Impacto", icon: MapPin, color: "from-amber-500 to-amber-700", route: "/jornada" },
-  equipe: { id: "equipe", label: "Gestão de Equipe", icon: Users, color: "from-zinc-600 to-zinc-800", route: "/equipe" },
-  cliente: { id: "cliente", label: "Área do Cliente", icon: Globe, color: "from-amber-600 to-amber-800", route: "/cliente" },
-  analise: { id: "analise", label: "Plataforma de Análise", icon: BookOpen, color: "from-zinc-600 to-zinc-800", route: "/analise" },
-  loja: { id: "loja", label: "Loja", icon: ShoppingCart, color: "from-amber-500 to-amber-700", route: "/loja" },
-  locacao: { id: "locacao", label: "Locação de Materiais", icon: CalendarDays, color: "from-zinc-600 to-zinc-800", route: "/locacao" },
-  presenca: { id: "presenca", label: "Presença Treinamentos", icon: ClipboardCheck, color: "from-amber-600 to-amber-800", route: "/presenca-treinamentos" },
+  trilha: { id: "trilha", label: "Trilha do Iniciante", icon: Rocket, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/trilha" },
+  vendas: { id: "vendas", label: "Central de Vendas & CRM", icon: BarChart3, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/vendas" },
+  ferramentas: { id: "ferramentas", label: "Acessos de Ferramentas", icon: Wrench, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/ferramentas" },
+  treinamentos: { id: "treinamentos", label: "Treinamentos", icon: GraduationCap, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/trainings" },
+  carreira: { id: "carreira", label: "Plano de Carreira", icon: Trophy, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/carreira" },
+  apresentacao: { id: "apresentacao", label: "Apresentação de Produtos", icon: FileText, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/apresentacao" },
+  sorteios: { id: "sorteios", label: "Sorteios & Comunicados", icon: Gift, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/sorteios" },
+  credito: { id: "credito", label: "Liberação de Crédito", icon: CreditCard, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/credito" },
+  jornada: { id: "jornada", label: "Jornada Impacto", icon: MapPin, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/jornada" },
+  equipe: { id: "equipe", label: "Gestão de Equipe", icon: Users, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/equipe" },
+  cliente: { id: "cliente", label: "Área do Cliente", icon: Globe, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/cliente" },
+  analise: { id: "analise", label: "Plataforma de Análise", icon: BookOpen, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/analise" },
+  loja: { id: "loja", label: "Loja", icon: ShoppingCart, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/loja" },
+  locacao: { id: "locacao", label: "Locação de Materiais", icon: CalendarDays, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/locacao" },
+  presenca: { id: "presenca", label: "Presença Treinamentos", icon: ClipboardCheck, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/presenca-treinamentos" },
 };
 
 // Default order fallback
