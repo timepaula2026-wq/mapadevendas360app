@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, Search, LogOut, Loader2, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import BannerCarousel from "@/components/BannerCarousel";
 import IconGrid from "@/components/IconGrid";
@@ -9,10 +10,17 @@ import BottomNav from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
 
 const Index = () => {
-  const { signOut, loading } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
+
+  // Track last active
+  useEffect(() => {
+    if (user) {
+      supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("user_id", user.id).then(() => {});
+    }
+  }, [user]);
 
   if (loading) {
     return (

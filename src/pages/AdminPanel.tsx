@@ -38,6 +38,10 @@ interface UserProfile {
   display_name: string | null;
   approved: boolean;
   created_at: string;
+  phone: string | null;
+  unit: string | null;
+  unit_start_date: string | null;
+  last_active_at: string | null;
 }
 
 const AdminPanel = () => {
@@ -486,6 +490,17 @@ const AdminPanel = () => {
                       <p className="text-sm font-medium text-foreground truncate">
                         {u.display_name || "Sem nome"}
                       </p>
+                      {u.phone && (
+                        <p className="text-[10px] text-muted-foreground">📱 {u.phone}</p>
+                      )}
+                      {u.unit && (
+                        <p className="text-[10px] text-muted-foreground">📍 {u.unit}</p>
+                      )}
+                      {u.unit_start_date && (
+                        <p className="text-[10px] text-muted-foreground">
+                          📅 Início: {new Date(u.unit_start_date).toLocaleDateString("pt-BR")}
+                        </p>
+                      )}
                       <p className="text-[10px] text-muted-foreground">
                         Cadastro: {new Date(u.created_at).toLocaleDateString("pt-BR")}
                       </p>
