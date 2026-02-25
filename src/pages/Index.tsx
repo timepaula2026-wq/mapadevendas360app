@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import BannerCarousel from "@/components/BannerCarousel";
 import IconGrid from "@/components/IconGrid";
 import BottomNav from "@/components/BottomNav";
-import NotificationBell from "@/components/NotificationBell";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import SearchOverlay from "@/components/SearchOverlay";
 
@@ -46,7 +45,6 @@ const Index = () => {
         </button>
         <h1 className="text-xl font-bold text-gradient-gold">Mapa de Vendas</h1>
         <div className="flex items-center gap-1">
-          <div className="w-9 h-9 flex items-center justify-center"><NotificationBell /></div>
           <button onClick={() => setSearchOpen(true)} className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
             <Search className="w-5 h-5" />
           </button>
