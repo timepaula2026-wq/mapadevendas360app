@@ -1,7 +1,9 @@
-import { X, User } from "lucide-react";
+import { User, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface ProfileSidebarProps {
@@ -11,6 +13,8 @@ interface ProfileSidebarProps {
 
 const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<{
     display_name: string | null;
     phone: string | null;
@@ -74,6 +78,21 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
             </div>
           )}
         </div>
+
+        {isAdmin && (
+          <>
+            <div className="border-t border-border mx-4" />
+            <div className="px-5 py-4">
+              <button
+                onClick={() => { navigate("/admin"); onClose(); }}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Shield className="w-5 h-5" />
+                Painel Admin
+              </button>
+            </div>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );
