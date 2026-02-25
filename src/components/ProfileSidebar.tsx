@@ -1,4 +1,5 @@
-import { User, Shield } from "lucide-react";
+import { User, Shield, Bell } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +53,13 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
             {profile?.display_name || user?.email}
           </h2>
           <p className="text-xs text-muted-foreground mt-1">{user?.email}</p>
+        </div>
+
+        <div className="px-5 py-3">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors">
+            <NotificationBell />
+            <span className="text-sm font-medium text-foreground">Notificações</span>
+          </div>
         </div>
 
         <div className="border-t border-border mx-4" />
