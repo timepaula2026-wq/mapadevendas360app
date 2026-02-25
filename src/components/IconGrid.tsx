@@ -70,21 +70,21 @@ const IconGrid = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-4 gap-2.5">
+    <div className="grid grid-cols-4 gap-2">
       {orderedItems.map((item) => (
         <button
           key={item.id}
           onClick={() => item.route && navigate(item.route)}
-          className="flex flex-col items-center gap-1.5 group"
+          className="group"
         >
           <div
-            className={`w-full aspect-square rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg border border-white/5 group-hover:scale-105 transition-transform`}
+            className={`w-full aspect-square rounded-2xl bg-gradient-to-br ${item.color} flex flex-col items-center justify-center gap-1 shadow-md border border-white/5 group-hover:scale-[1.03] transition-transform p-1.5`}
           >
-            <item.icon className="w-7 h-7 text-white/90" />
+            <item.icon className="w-5 h-5 text-white/90 shrink-0" strokeWidth={1.5} />
+            <span className="text-[8px] font-medium text-white/80 text-center leading-tight line-clamp-2 px-0.5">
+              {item.label}
+            </span>
           </div>
-          <span className="text-[10px] font-medium text-muted-foreground text-center leading-tight line-clamp-2">
-            {item.label}
-          </span>
         </button>
       ))}
     </div>
