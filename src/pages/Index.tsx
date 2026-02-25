@@ -39,18 +39,18 @@ const Index = () => {
 
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 pt-10 pb-4">
-        <button onClick={() => setSidebarOpen(true)} className="text-muted-foreground hover:text-foreground">
+        <button onClick={() => setSidebarOpen(true)} className="text-white/80 hover:text-white">
           <Menu className="w-6 h-6" />
         </button>
         <h1 className="text-lg font-bold text-gradient-gold">Mapa de Vendas</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {isAdmin && (
-            <button onClick={() => navigate("/admin")} className="p-1.5 text-primary hover:text-primary/80">
+            <button onClick={() => navigate("/admin")} className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
               <Shield className="w-5 h-5" />
             </button>
           )}
-          <div className="p-1.5"><NotificationBell /></div>
-          <button className="p-1.5 text-muted-foreground hover:text-foreground">
+          <div className="w-9 h-9 flex items-center justify-center"><NotificationBell /></div>
+          <button className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
             <Search className="w-5 h-5" />
           </button>
         </div>
