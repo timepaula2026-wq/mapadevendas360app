@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          email: string | null
+          end_time: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          responsible: string
+          start_time: string
+          status: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          email?: string | null
+          end_time: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          responsible: string
+          start_time: string
+          status?: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          email?: string | null
+          end_time?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          responsible?: string
+          start_time?: string
+          status?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       banner_slides: {
         Row: {
           active: boolean | null
@@ -53,6 +104,42 @@ export type Database = {
           type?: string
           video_url?: string | null
           youtube_id?: string | null
+        }
+        Relationships: []
+      }
+      blocked_slots: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          end_time: string
+          id: string
+          reason: string | null
+          responsible: string | null
+          start_time: string
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date: string
+          end_time: string
+          id?: string
+          reason?: string | null
+          responsible?: string | null
+          start_time: string
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          end_time?: string
+          id?: string
+          reason?: string | null
+          responsible?: string | null
+          start_time?: string
+          unit?: string | null
         }
         Relationships: []
       }
@@ -435,6 +522,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      schedule_configs: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          day_of_week: number
+          end_time: string
+          id: string
+          responsible: string
+          service_type: string | null
+          slot_duration_minutes: number
+          start_time: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          responsible: string
+          service_type?: string | null
+          slot_duration_minutes?: number
+          start_time: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          responsible?: string
+          service_type?: string | null
+          slot_duration_minutes?: number
+          start_time?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       section_contents: {
         Row: {
