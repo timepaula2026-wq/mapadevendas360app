@@ -66,16 +66,40 @@ const Auth = () => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
+  const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
+
   const validateConsultor = async (emailToCheck: string): Promise<{ allowed: boolean; message: string } | null> => {
+    const normalizedEmail = emailToCheck.trim().toLowerCase();
+    const cacheKey = `consultor_validation_${normalizedEmail}`;
+
+    // Check local cache
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL_MS) {
+          console.log("Usando validação em cache para:", normalizedEmail);
+          return data as { allowed: boolean; message: string };
+        }
+        localStorage.removeItem(cacheKey);
+      }
+    } catch { /* ignore parse errors */ }
+
     try {
       const { data, error } = await supabase.functions.invoke("validate-consultor", {
-        body: { email: emailToCheck.trim().toLowerCase() },
+        body: { email: normalizedEmail },
       });
       if (error) {
         console.error("Erro ao validar consultor:", error);
         toast({ title: "Erro de validação", description: "Não foi possível validar seu cadastro. Tente novamente.", variant: "destructive" });
         return null;
       }
+
+      // Cache the result
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+      } catch { /* ignore storage errors */ }
+
       return data as { allowed: boolean; message: string };
     } catch (err) {
       console.error("Erro ao chamar validação:", err);
