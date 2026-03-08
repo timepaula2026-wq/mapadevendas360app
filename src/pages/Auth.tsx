@@ -66,9 +66,43 @@ const Auth = () => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
+  const validateConsultor = async (emailToCheck: string): Promise<{ allowed: boolean; message: string } | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("validate-consultor", {
+        body: { email: emailToCheck.trim().toLowerCase() },
+      });
+      if (error) {
+        console.error("Erro ao validar consultor:", error);
+        toast({ title: "Erro de validação", description: "Não foi possível validar seu cadastro. Tente novamente.", variant: "destructive" });
+        return null;
+      }
+      return data as { allowed: boolean; message: string };
+    } catch (err) {
+      console.error("Erro ao chamar validação:", err);
+      toast({ title: "Erro de validação", description: "Não foi possível validar seu cadastro. Tente novamente.", variant: "destructive" });
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+
+    // Validate consultant status for both login and signup
+    const validation = await validateConsultor(email);
+    if (!validation) {
+      setSubmitting(false);
+      return;
+    }
+    if (!validation.allowed) {
+      toast({
+        title: "Acesso bloqueado",
+        description: validation.message || "Seu cadastro não está autorizado. Entre em contato com o suporte.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+      return;
+    }
 
     if (isLogin) {
       const { error } = await signIn(email, password);
