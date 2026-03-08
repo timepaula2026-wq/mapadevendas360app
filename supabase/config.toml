@@ -1,1 +1,4 @@
 project_id = "iqdvawizxjglkdjyvhdr"
+
+[functions.validate-consultor]
+verify_jwt = false
