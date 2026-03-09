@@ -30,19 +30,40 @@ serve(async (req) => {
       headers: { 'Accept': 'application/json' },
     });
 
+    const contentType = response.headers.get("content-type") || "";
+    const responseText = await response.text();
+    console.log("Gestão360 status:", response.status, "content-type:", contentType);
+    console.log("Gestão360 response body (first 500 chars):", responseText.substring(0, 500));
+
+    if (!contentType.includes("application/json")) {
+      console.error("API returned non-JSON response (likely HTML login page)");
+      return new Response(
+        JSON.stringify({ allowed: true, status: "api_unavailable", message: "Serviço de validação indisponível. Acesso liberado temporariamente." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!response.ok) {
-      // API returned error or consultant not found
       if (response.status === 404) {
         return new Response(
           JSON.stringify({ allowed: false, status: "not_found", message: "Consultor não encontrado no sistema Gestão360." }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`Gestão360 API error [${response.status}]: ${await response.text()}`);
+      throw new Error(`Gestão360 API error [${response.status}]: ${responseText.substring(0, 200)}`);
     }
 
-    const data = await response.json();
-    console.log("Gestão360 response:", JSON.stringify(data));
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      console.error("Failed to parse JSON:", responseText.substring(0, 200));
+      return new Response(
+        JSON.stringify({ allowed: true, status: "parse_error", message: "Erro ao processar resposta. Acesso liberado temporariamente." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    console.log("Gestão360 parsed response:", JSON.stringify(data));
 
     // Extract status - try common response formats
     const status = (
