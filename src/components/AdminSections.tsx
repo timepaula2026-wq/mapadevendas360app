@@ -225,6 +225,7 @@ const AdminSections = () => {
     }
   };
 
+  const resetContentForm = () => {
     setShowForm(null);
     setContentTitle("");
     setContentDesc("");
