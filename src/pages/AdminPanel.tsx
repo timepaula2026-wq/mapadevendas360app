@@ -282,9 +282,6 @@ const AdminPanel = () => {
              <TabsTrigger value="users" className="flex-1 gap-1">
                <Users className="w-4 h-4" /> Usuários
              </TabsTrigger>
-             <TabsTrigger value="products" className="flex-1 gap-1">
-               <ShoppingCart className="w-4 h-4" /> Loja
-             </TabsTrigger>
              <TabsTrigger value="banner" className="flex-1 gap-1">
                <ImageIcon className="w-4 h-4" /> Banner
              </TabsTrigger>
