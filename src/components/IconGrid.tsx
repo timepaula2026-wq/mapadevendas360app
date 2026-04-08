@@ -67,7 +67,7 @@ const IconGrid = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-5 gap-2.5">
       {orderedItems.map((item) => (
         <button
           key={item.id}
@@ -75,10 +75,10 @@ const IconGrid = () => {
           className="group"
         >
           <div
-            className={`w-full aspect-square rounded-2xl bg-gradient-to-br ${item.color} flex flex-col items-center justify-center gap-2.5 shadow-lg shadow-black/20 border border-white/10 transition-all duration-200 p-3 group-hover:scale-105 group-hover:shadow-xl group-hover:shadow-primary/30 group-hover:brightness-110 group-active:scale-95 group-active:brightness-90`}
+            className={`w-full aspect-square rounded-xl bg-gradient-to-br ${item.color} flex flex-col items-center justify-center gap-1.5 shadow-lg shadow-black/20 border border-white/10 transition-all duration-200 p-2 group-hover:scale-105 group-hover:shadow-xl group-hover:brightness-110 group-active:scale-95 group-active:brightness-90`}
           >
-            <item.icon className="w-9 h-9 text-white shrink-0 transition-transform duration-200 group-hover:scale-110 drop-shadow-sm" strokeWidth={1.5} />
-            <span className="text-[11px] font-bold text-white/90 text-center leading-tight line-clamp-2 px-1 transition-colors group-hover:text-white drop-shadow-sm">
+            <item.icon className="w-10 h-10 text-white shrink-0 transition-transform duration-200 group-hover:scale-110 drop-shadow-sm" strokeWidth={1.4} />
+            <span className="text-[9px] font-bold text-white/90 text-center leading-tight line-clamp-2 px-0.5 drop-shadow-sm">
               {item.label}
             </span>
           </div>
