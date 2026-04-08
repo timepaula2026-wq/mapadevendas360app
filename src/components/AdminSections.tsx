@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Youtube, FileText, File, Upload, Loader2, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { Plus, Trash2, Youtube, FileText, File, Upload, Loader2, ChevronDown, ChevronRight, GripVertical, Pencil, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -35,12 +35,21 @@ interface SectionContent {
 }
 
 // Sortable item component
-const SortableItem = ({ item, onDelete, sectionId }: { item: SectionContent; onDelete: (id: string, sectionId: string) => void; sectionId: string }) => {
+const SortableItem = ({ item, onDelete, onRename, sectionId }: { item: SectionContent; onDelete: (id: string, sectionId: string) => void; onRename: (id: string, newTitle: string, sectionId: string) => void; sectionId: string }) => {
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(item.title);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const handleSave = () => {
+    if (editTitle.trim() && editTitle.trim() !== item.title) {
+      onRename(item.id, editTitle.trim(), sectionId);
+    }
+    setEditing(false);
   };
 
   return (
@@ -51,14 +60,34 @@ const SortableItem = ({ item, onDelete, sectionId }: { item: SectionContent; onD
       {item.type === "youtube" ? <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" /> :
        item.type === "pdf" ? <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" /> :
        <File className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-      <span className="text-foreground text-xs truncate flex-1">{item.title}</span>
-      <button onClick={() => onDelete(item.id, sectionId)} className="text-muted-foreground hover:text-destructive shrink-0">
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      {editing ? (
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <Input
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            className="h-6 text-xs flex-1"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setEditing(false); }}
+          />
+          <button onClick={handleSave} className="text-green-500 hover:text-green-600 shrink-0"><Check className="w-3.5 h-3.5" /></button>
+          <button onClick={() => setEditing(false)} className="text-muted-foreground hover:text-foreground shrink-0"><X className="w-3.5 h-3.5" /></button>
+        </div>
+      ) : (
+        <span className="text-foreground text-xs truncate flex-1">{item.title}</span>
+      )}
+      {!editing && (
+        <>
+          <button onClick={() => { setEditTitle(item.title); setEditing(true); }} className="text-muted-foreground hover:text-primary shrink-0">
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => onDelete(item.id, sectionId)} className="text-muted-foreground hover:text-destructive shrink-0">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </>
+      )}
     </div>
   );
 };
-
 const SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante" },
   { id: "vendas", label: "Central de Vendas & CRM" },
@@ -187,6 +216,15 @@ const AdminSections = () => {
     }
   };
 
+  const handleRenameContent = async (contentId: string, newTitle: string, sectionId: string) => {
+    const { error } = await supabase.from("section_contents").update({ title: newTitle }).eq("id", contentId);
+    if (error) toast.error("Erro ao renomear");
+    else {
+      toast.success("Título atualizado!");
+      fetchSectionContents(sectionId);
+    }
+  };
+
   const resetContentForm = () => {
     setShowForm(null);
     setContentTitle("");
@@ -247,7 +285,7 @@ const AdminSections = () => {
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, section.id)}>
                   <SortableContext items={sectionContents[section.id]?.map((c) => c.id) || []} strategy={verticalListSortingStrategy}>
                     {sectionContents[section.id]?.map((c) => (
-                      <SortableItem key={c.id} item={c} onDelete={handleDeleteContent} sectionId={section.id} />
+                      <SortableItem key={c.id} item={c} onDelete={handleDeleteContent} onRename={handleRenameContent} sectionId={section.id} />
                     ))}
                   </SortableContext>
                 </DndContext>
