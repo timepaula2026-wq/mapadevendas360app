@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Youtube, FileText, File, Upload, Loader2, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { Plus, Trash2, Youtube, FileText, File, Upload, Loader2, ChevronDown, ChevronRight, GripVertical, Pencil, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
