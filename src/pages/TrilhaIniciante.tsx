@@ -225,11 +225,11 @@ const TrilhaIniciante = () => {
       {viewerContent && (
         <ContentViewerModal
           open={viewerOpen}
-          onOpenChange={setViewerOpen}
+          onClose={() => setViewerOpen(false)}
           title={viewerContent.title}
           type={viewerContent.type}
-          url={viewerContent.url}
-          youtubeId={viewerContent.youtube_id}
+          url={viewerContent.url ?? null}
+          youtubeId={viewerContent.youtube_id ?? null}
         />
       )}
     </div>
