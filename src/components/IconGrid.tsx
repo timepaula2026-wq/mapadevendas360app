@@ -15,6 +15,7 @@ import {
   CalendarDays,
   MessageCircleHeart,
   DollarSign,
+  School,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,9 +44,10 @@ const ALL_ITEMS: Record<string, GridItem> = {
   agenda: { id: "agenda", label: "Agenda Online", icon: CalendarDays, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/agenda" },
   paula: { id: "paula", label: "Fale com a Paula", icon: MessageCircleHeart, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/fale-com-paula" },
   comissao: { id: "comissao", label: "Comissão", icon: DollarSign, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/comissao" },
+  lideres: { id: "lideres", label: "Escola de Líderes", icon: School, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/lideres" },
 };
 
-const DEFAULT_ORDER = ["trilha", "vendas", "ferramentas", "treinamentos", "carreira", "apresentacao", "sorteios", "credito", "jornada", "equipe", "cliente", "administrativo", "agenda", "paula", "comissao"];
+const DEFAULT_ORDER = ["trilha", "vendas", "ferramentas", "treinamentos", "carreira", "apresentacao", "sorteios", "credito", "jornada", "equipe", "cliente", "administrativo", "agenda", "paula", "comissao", "lideres"];
 
 const IconGrid = () => {
   const navigate = useNavigate();
@@ -69,7 +71,7 @@ const IconGrid = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-5 gap-2.5">
+    <div className="grid grid-cols-4 gap-3">
       {orderedItems.map((item) => (
         <button
           key={item.id}
