@@ -542,10 +542,7 @@ const AdminPanel = () => {
             )}
           </TabsContent>
 
-          {/* ===== PRODUCTS TAB ===== */}
-          <TabsContent value="products">
-            <AdminProducts />
-          </TabsContent>
+
 
           {/* ===== STATS TAB ===== */}
           <TabsContent value="stats">
