@@ -100,6 +100,7 @@ const App = () => (
             <Route path="/presenca-treinamentos" element={<ProtectedRoute><PresencaTreinamentos /></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
             <Route path="/agendar" element={<PublicBooking />} />
+            <Route path="/fale-com-paula" element={<ProtectedRoute><FaleComPaula /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
