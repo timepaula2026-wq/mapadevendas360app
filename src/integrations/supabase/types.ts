@@ -228,6 +228,30 @@ export type Database = {
           },
         ]
       }
+      feedback_messages: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          message: string
+          name: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+          name?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
       icon_grid_order: {
         Row: {
           id: string
