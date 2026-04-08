@@ -42,9 +42,10 @@ const ALL_ITEMS: Record<string, GridItem> = {
   administrativo: { id: "administrativo", label: "Gestão de Performance 360", icon: Briefcase, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/administrativo" },
   agenda: { id: "agenda", label: "Agenda Online", icon: CalendarDays, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/agenda" },
   paula: { id: "paula", label: "Fale com a Paula", icon: MessageCircleHeart, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/fale-com-paula" },
+  comissao: { id: "comissao", label: "Comissão", icon: DollarSign, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/comissao" },
 };
 
-const DEFAULT_ORDER = ["trilha", "vendas", "ferramentas", "treinamentos", "carreira", "apresentacao", "sorteios", "credito", "jornada", "equipe", "cliente", "administrativo", "agenda", "paula"];
+const DEFAULT_ORDER = ["trilha", "vendas", "ferramentas", "treinamentos", "carreira", "apresentacao", "sorteios", "credito", "jornada", "equipe", "cliente", "administrativo", "agenda", "paula", "comissao"];
 
 const IconGrid = () => {
   const navigate = useNavigate();
