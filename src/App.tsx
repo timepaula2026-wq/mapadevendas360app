@@ -32,6 +32,7 @@ import Agenda from "./pages/Agenda";
 import PublicBooking from "./pages/PublicBooking";
 import FaleComPaula from "./pages/FaleComPaula";
 import Comissao from "./pages/Comissao";
+import EscolaLideres from "./pages/EscolaLideres";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
