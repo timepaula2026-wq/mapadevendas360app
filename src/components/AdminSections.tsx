@@ -285,7 +285,7 @@ const AdminSections = () => {
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, section.id)}>
                   <SortableContext items={sectionContents[section.id]?.map((c) => c.id) || []} strategy={verticalListSortingStrategy}>
                     {sectionContents[section.id]?.map((c) => (
-                      <SortableItem key={c.id} item={c} onDelete={handleDeleteContent} sectionId={section.id} />
+                      <SortableItem key={c.id} item={c} onDelete={handleDeleteContent} onRename={handleRenameContent} sectionId={section.id} />
                     ))}
                   </SortableContext>
                 </DndContext>
