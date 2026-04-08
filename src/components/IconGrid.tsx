@@ -71,7 +71,7 @@ const IconGrid = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-5 gap-2.5">
+    <div className="grid grid-cols-4 gap-3">
       {orderedItems.map((item) => (
         <button
           key={item.id}
