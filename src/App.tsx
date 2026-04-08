@@ -104,6 +104,7 @@ const App = () => (
             <Route path="/agendar" element={<PublicBooking />} />
             <Route path="/fale-com-paula" element={<ProtectedRoute><FaleComPaula /></ProtectedRoute>} />
             <Route path="/comissao" element={<ProtectedRoute><Comissao /></ProtectedRoute>} />
+            <Route path="/lideres" element={<ProtectedRoute><EscolaLideres /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
