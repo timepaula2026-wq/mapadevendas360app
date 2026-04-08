@@ -31,6 +31,7 @@ import PresencaTreinamentos from "./pages/PresencaTreinamentos";
 import Agenda from "./pages/Agenda";
 import PublicBooking from "./pages/PublicBooking";
 import FaleComPaula from "./pages/FaleComPaula";
+import Comissao from "./pages/Comissao";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
