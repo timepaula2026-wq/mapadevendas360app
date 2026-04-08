@@ -216,7 +216,15 @@ const AdminSections = () => {
     }
   };
 
-  const resetContentForm = () => {
+  const handleRenameContent = async (contentId: string, newTitle: string, sectionId: string) => {
+    const { error } = await supabase.from("section_contents").update({ title: newTitle }).eq("id", contentId);
+    if (error) toast.error("Erro ao renomear");
+    else {
+      toast.success("Título atualizado!");
+      fetchSectionContents(sectionId);
+    }
+  };
+
     setShowForm(null);
     setContentTitle("");
     setContentDesc("");
