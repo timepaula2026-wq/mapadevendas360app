@@ -334,7 +334,7 @@ const Auth = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Senha"
               required
-              minLength={6}
+              minLength={4}
               className={inputClass}
             />
           </div>
