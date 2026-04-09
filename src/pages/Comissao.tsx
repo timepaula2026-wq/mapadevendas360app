@@ -72,6 +72,8 @@ const Comissao = () => {
     });
   };
 
+  const fmt = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   const gerarTexto = () => {
     if (!resultado) return "";
     let texto = `📊 Calculadora de Comissão\n`;
