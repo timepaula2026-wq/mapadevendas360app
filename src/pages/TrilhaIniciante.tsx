@@ -1,4 +1,4 @@
-import { ArrowLeft, Rocket, PlayCircle, Lock, Loader2, Plus, Trash2, Edit2, Youtube, FileText, File, Upload } from "lucide-react";
+import { ArrowLeft, Rocket, PlayCircle, Lock, Loader2, Plus, Trash2, Edit2, Youtube, FileText, File, Upload, FileSignature } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -143,6 +143,21 @@ const TrilhaIniciante = () => {
       </div>
 
       <div className="px-5 mt-6">
+        {/* Termo de Correspondente */}
+        <div
+          onClick={() => navigate("/termo-correspondente")}
+          className="flex items-center gap-4 p-4 rounded-xl border bg-card border-primary/30 cursor-pointer hover:bg-accent/50 transition-colors mb-4"
+        >
+          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <FileSignature className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Termo de Correspondente Comercial</p>
+            <p className="text-xs text-muted-foreground">Leia e assine o termo para iniciar</p>
+          </div>
+          <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+        </div>
+
         {isAdmin && (
           <Button onClick={() => { resetForm(); setShowForm(true); }} className="w-full mb-4 gap-2">
             <Plus className="w-4 h-4" /> Adicionar Módulo
