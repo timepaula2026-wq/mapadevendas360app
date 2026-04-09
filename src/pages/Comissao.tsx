@@ -194,6 +194,15 @@ const Comissao = () => {
                   </tbody>
                 </table>
               </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button onClick={compartilhar} variant="outline" className="flex-1 gap-2">
+                  <Share2 className="w-4 h-4" /> Compartilhar
+                </Button>
+                <Button onClick={imprimir} variant="outline" className="flex-1 gap-2">
+                  <Printer className="w-4 h-4" /> Imprimir
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
