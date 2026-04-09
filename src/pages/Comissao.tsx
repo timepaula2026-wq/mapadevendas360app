@@ -1,5 +1,6 @@
-import { ArrowLeft, DollarSign } from "lucide-react";
+import { ArrowLeft, DollarSign, Share2, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
