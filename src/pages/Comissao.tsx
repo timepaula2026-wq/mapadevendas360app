@@ -72,7 +72,50 @@ const Comissao = () => {
     });
   };
 
-  const fmt = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const gerarTexto = () => {
+    if (!resultado) return "";
+    let texto = `📊 Calculadora de Comissão\n`;
+    texto += `Plano: ${planoLabels[plano]}\nValor da Carta: R$ ${valorInput}\n\n`;
+    texto += `Comissão Bruta: R$ ${fmt(resultado.totalBruto)}\n`;
+    texto += `Impostos (2%): - R$ ${fmt(resultado.imposto)}\n`;
+    texto += `Líquido: R$ ${fmt(resultado.totalLiq)}\n\n`;
+    texto += resultado.parcelas.map(p => `${p.mes}º mês: Bruto R$ ${fmt(p.bruto)} | Líq R$ ${fmt(p.liquido)}`).join("\n");
+    return texto;
+  };
+
+  const compartilhar = async () => {
+    const texto = gerarTexto();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Comissão", text: texto });
+      } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(texto);
+      toast.success("Resultado copiado!");
+    }
+  };
+
+  const imprimir = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow || !resultado) return;
+    const rows = resultado.parcelas.map(p =>
+      `<tr><td>${p.mes}º</td><td>R$ ${fmt(p.bruto)}</td><td>R$ ${fmt(p.liquido)}</td></tr>`
+    ).join("");
+    printWindow.document.write(`<html><head><title>Comissão</title><style>
+      body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:12px}
+      th,td{border:1px solid #ccc;padding:8px;text-align:center}th{background:#f0f0f0}
+      .dest{color:#d9534f;font-weight:bold}
+    </style></head><body>
+      <h2>Calculadora de Comissão</h2>
+      <p><b>Plano:</b> ${planoLabels[plano]}<br><b>Valor da Carta:</b> R$ ${valorInput}</p>
+      <p><b>Comissão Bruta:</b> R$ ${fmt(resultado.totalBruto)}</p>
+      <p class="dest">Impostos (2%): - R$ ${fmt(resultado.imposto)}</p>
+      <p><b>Recebimento Líquido: R$ ${fmt(resultado.totalLiq)}</b></p>
+      <table><tr><th>Mês</th><th>Bruto</th><th>Líquido (-2%)</th></tr>${rows}</table>
+    </body></html>`);
+    printWindow.document.close();
+    printWindow.print();
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
