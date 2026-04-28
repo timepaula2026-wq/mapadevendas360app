@@ -26,7 +26,8 @@ export const useSectionContents = (sectionId: string) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    let active = true;
+    const fetchAll = async () => {
       const [{ data: contentsData }, { data: tabsData }] = await Promise.all([
         supabase
           .from("section_contents")
@@ -39,11 +40,31 @@ export const useSectionContents = (sectionId: string) => {
           .eq("section_id", sectionId)
           .order("sort_order", { ascending: true }),
       ]);
+      if (!active) return;
       setContents((contentsData as SectionContent[]) || []);
       setTabs((tabsData as SectionTab[]) || []);
       setLoading(false);
     };
-    fetch();
+    fetchAll();
+
+    const channel = supabase
+      .channel(`section-${sectionId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "section_tabs", filter: `section_id=eq.${sectionId}` },
+        () => fetchAll()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "section_contents", filter: `section_id=eq.${sectionId}` },
+        () => fetchAll()
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
   }, [sectionId]);
 
   return { contents, tabs, loading };
