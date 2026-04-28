@@ -446,6 +446,25 @@ const AdminSections = () => {
                             <File className="w-3 h-3 text-muted-foreground shrink-0" />
                           )}
                           <span className="text-[11px] flex-1 truncate">{c.title}</span>
+                          {(tabsBySection[section.id]?.length ?? 0) > 1 && (
+                            <select
+                              value=""
+                              onChange={(e) =>
+                                handleMoveContent(c.id, tab.id, e.target.value, section.id)
+                              }
+                              className="h-6 text-[10px] rounded border border-border bg-card px-1 max-w-[110px]"
+                              title="Mover para outra aba"
+                            >
+                              <option value="">Mover para...</option>
+                              {tabsBySection[section.id]
+                                ?.filter((t) => t.id !== tab.id)
+                                .map((t) => (
+                                  <option key={t.id} value={t.id}>
+                                    {t.title}
+                                  </option>
+                                ))}
+                            </select>
+                          )}
                           <button
                             onClick={() => handleDeleteContent(c.id, tab.id)}
                             className="text-muted-foreground hover:text-destructive"
