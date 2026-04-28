@@ -59,6 +59,7 @@ const AdminSections = () => {
   const [expandedTab, setExpandedTab] = useState<string | null>(null);
   const [tabsBySection, setTabsBySection] = useState<Record<string, SectionTab[]>>({});
   const [contentsByTab, setContentsByTab] = useState<Record<string, SectionContent[]>>({});
+  const [orphansBySection, setOrphansBySection] = useState<Record<string, SectionContent[]>>({});
   const [newTabTitle, setNewTabTitle] = useState<Record<string, string>>({});
   const [editingTab, setEditingTab] = useState<string | null>(null);
   const [editTabTitle, setEditTabTitle] = useState("");
@@ -81,6 +82,16 @@ const AdminSections = () => {
     setTabsBySection((prev) => ({ ...prev, [sectionId]: (data as SectionTab[]) || [] }));
   };
 
+  const fetchOrphans = async (sectionId: string) => {
+    const { data } = await supabase
+      .from("section_contents")
+      .select("*")
+      .eq("section_id", sectionId)
+      .is("tab_id", null)
+      .order("created_at", { ascending: true });
+    setOrphansBySection((prev) => ({ ...prev, [sectionId]: (data as SectionContent[]) || [] }));
+  };
+
   const fetchTabContents = async (tabId: string) => {
     const { data } = await supabase
       .from("section_contents")
@@ -96,6 +107,7 @@ const AdminSections = () => {
     } else {
       setExpandedSection(sectionId);
       if (!tabsBySection[sectionId]) fetchTabs(sectionId);
+      fetchOrphans(sectionId);
     }
   };
 
@@ -233,6 +245,29 @@ const AdminSections = () => {
     }
   };
 
+  const handleAssignOrphan = async (contentId: string, tabId: string, sectionId: string) => {
+    const { error } = await supabase
+      .from("section_contents")
+      .update({ tab_id: tabId })
+      .eq("id", contentId);
+    if (error) toast.error("Erro ao mover");
+    else {
+      toast.success("Movido para a aba!");
+      fetchOrphans(sectionId);
+      if (contentsByTab[tabId]) fetchTabContents(tabId);
+    }
+  };
+
+  const handleDeleteOrphan = async (contentId: string, sectionId: string) => {
+    if (!confirm("Excluir este conteúdo?")) return;
+    const { error } = await supabase.from("section_contents").delete().eq("id", contentId);
+    if (error) toast.error("Erro ao excluir");
+    else {
+      toast.success("Removido!");
+      fetchOrphans(sectionId);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground mb-3">
@@ -261,6 +296,51 @@ const AdminSections = () => {
 
           {expandedSection === section.id && (
             <div className="border-t border-border p-3 space-y-2">
+              {/* Conteúdos órfãos (sem aba) */}
+              {(orphansBySection[section.id]?.length ?? 0) > 0 && (
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-2 space-y-2 mb-2">
+                  <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                    {orphansBySection[section.id].length} conteúdo(s) sem aba — atribua a uma aba abaixo:
+                  </p>
+                  {orphansBySection[section.id].map((c) => (
+                    <div key={c.id} className="flex items-center gap-2 p-2 bg-card rounded">
+                      {c.type === "youtube" ? (
+                        <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                      ) : c.type === "pdf" ? (
+                        <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                      ) : (
+                        <File className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      )}
+                      <span className="text-xs flex-1 truncate">{c.title}</span>
+                      <select
+                        defaultValue=""
+                        onChange={(e) => {
+                          if (e.target.value) handleAssignOrphan(c.id, e.target.value, section.id);
+                        }}
+                        className="h-7 text-[11px] rounded border border-border bg-background px-1 max-w-[140px]"
+                      >
+                        <option value="" disabled>
+                          {(tabsBySection[section.id]?.length ?? 0) === 0
+                            ? "Crie uma aba"
+                            : "Mover para..."}
+                        </option>
+                        {tabsBySection[section.id]?.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.title}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleDeleteOrphan(c.id, section.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Tabs list */}
               {(tabsBySection[section.id]?.length ?? 0) === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-2">Nenhuma aba criada</p>
