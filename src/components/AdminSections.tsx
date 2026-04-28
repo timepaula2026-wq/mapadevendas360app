@@ -12,6 +12,8 @@ import {
   Pencil,
   Check,
   X,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -288,6 +290,30 @@ const AdminSections = () => {
     }
   };
 
+  const handleReorderContent = async (tabId: string, index: number, direction: -1 | 1) => {
+    const list = contentsByTab[tabId];
+    if (!list) return;
+    const target = index + direction;
+    if (target < 0 || target >= list.length) return;
+    const a = list[index];
+    const b = list[target];
+    const orderA = a.sort_order ?? index;
+    const orderB = b.sort_order ?? target;
+    // Optimistic UI swap
+    const next = [...list];
+    next[index] = { ...b, sort_order: orderA };
+    next[target] = { ...a, sort_order: orderB };
+    setContentsByTab((prev) => ({ ...prev, [tabId]: next }));
+    const [r1, r2] = await Promise.all([
+      supabase.from("section_contents").update({ sort_order: orderB }).eq("id", a.id),
+      supabase.from("section_contents").update({ sort_order: orderA }).eq("id", b.id),
+    ]);
+    if (r1.error || r2.error) {
+      toast.error("Erro ao reordenar");
+      fetchTabContents(tabId);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground mb-3">
@@ -433,7 +459,7 @@ const AdminSections = () => {
                           Nenhum conteúdo
                         </p>
                       )}
-                      {contentsByTab[tab.id]?.map((c) => (
+                      {contentsByTab[tab.id]?.map((c, idx) => (
                         <div
                           key={c.id}
                           className="flex items-center gap-2 px-2 py-1 bg-background rounded"
@@ -446,6 +472,24 @@ const AdminSections = () => {
                             <File className="w-3 h-3 text-muted-foreground shrink-0" />
                           )}
                           <span className="text-[11px] flex-1 truncate">{c.title}</span>
+                          <div className="flex flex-col -space-y-0.5">
+                            <button
+                              onClick={() => handleReorderContent(tab.id, idx, -1)}
+                              disabled={idx === 0}
+                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                              title="Mover para cima"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleReorderContent(tab.id, idx, 1)}
+                              disabled={idx === (contentsByTab[tab.id]?.length ?? 0) - 1}
+                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                              title="Mover para baixo"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
                           {(tabsBySection[section.id]?.length ?? 0) > 1 && (
                             <select
                               value=""
