@@ -459,7 +459,7 @@ const AdminSections = () => {
                           Nenhum conteúdo
                         </p>
                       )}
-                      {contentsByTab[tab.id]?.map((c) => (
+                      {contentsByTab[tab.id]?.map((c, idx) => (
                         <div
                           key={c.id}
                           className="flex items-center gap-2 px-2 py-1 bg-background rounded"
@@ -472,6 +472,24 @@ const AdminSections = () => {
                             <File className="w-3 h-3 text-muted-foreground shrink-0" />
                           )}
                           <span className="text-[11px] flex-1 truncate">{c.title}</span>
+                          <div className="flex flex-col -space-y-0.5">
+                            <button
+                              onClick={() => handleReorderContent(tab.id, idx, -1)}
+                              disabled={idx === 0}
+                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                              title="Mover para cima"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleReorderContent(tab.id, idx, 1)}
+                              disabled={idx === (contentsByTab[tab.id]?.length ?? 0) - 1}
+                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                              title="Mover para baixo"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
                           {(tabsBySection[section.id]?.length ?? 0) > 1 && (
                             <select
                               value=""
