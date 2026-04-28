@@ -72,11 +72,28 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
               title={title}
             />
           ) : type === "pdf" && url ? (
-            <iframe
-              src={`${url}#toolbar=1`}
+            <object
+              data={`${url}#toolbar=1&view=FitH`}
+              type="application/pdf"
               className="w-full h-full"
-              title={title}
-            />
+              aria-label={title}
+            >
+              <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Seu navegador bloqueou a visualização do PDF.
+                </p>
+                <div className="flex gap-2">
+                  <Button onClick={() => window.open(url, "_blank")} size="sm">
+                    <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
+                  </Button>
+                  <a href={url} download target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" /> Baixar
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            </object>
           ) : url ? (
             <iframe
               src={url}
