@@ -268,6 +268,26 @@ const AdminSections = () => {
     }
   };
 
+  const handleMoveContent = async (
+    contentId: string,
+    fromTabId: string,
+    toTabId: string,
+    sectionId: string
+  ) => {
+    if (!toTabId || toTabId === fromTabId) return;
+    const { error } = await supabase
+      .from("section_contents")
+      .update({ tab_id: toTabId })
+      .eq("id", contentId);
+    if (error) toast.error("Erro ao mover");
+    else {
+      toast.success("Movido!");
+      fetchTabContents(fromTabId);
+      if (contentsByTab[toTabId]) fetchTabContents(toTabId);
+      fetchOrphans(sectionId);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground mb-3">
@@ -426,6 +446,25 @@ const AdminSections = () => {
                             <File className="w-3 h-3 text-muted-foreground shrink-0" />
                           )}
                           <span className="text-[11px] flex-1 truncate">{c.title}</span>
+                          {(tabsBySection[section.id]?.length ?? 0) > 1 && (
+                            <select
+                              value=""
+                              onChange={(e) =>
+                                handleMoveContent(c.id, tab.id, e.target.value, section.id)
+                              }
+                              className="h-6 text-[10px] rounded border border-border bg-card px-1 max-w-[110px]"
+                              title="Mover para outra aba"
+                            >
+                              <option value="">Mover para...</option>
+                              {tabsBySection[section.id]
+                                ?.filter((t) => t.id !== tab.id)
+                                .map((t) => (
+                                  <option key={t.id} value={t.id}>
+                                    {t.title}
+                                  </option>
+                                ))}
+                            </select>
+                          )}
                           <button
                             onClick={() => handleDeleteContent(c.id, tab.id)}
                             className="text-muted-foreground hover:text-destructive"
