@@ -320,6 +320,29 @@ const AdminSections = () => {
     }
   };
 
+  const handleReorderTab = async (sectionId: string, index: number, direction: -1 | 1) => {
+    const list = tabsBySection[sectionId];
+    if (!list) return;
+    const target = index + direction;
+    if (target < 0 || target >= list.length) return;
+    const a = list[index];
+    const b = list[target];
+    const orderA = a.sort_order ?? index;
+    const orderB = b.sort_order ?? target;
+    const next = [...list];
+    next[index] = { ...b, sort_order: orderA };
+    next[target] = { ...a, sort_order: orderB };
+    setTabsBySection((prev) => ({ ...prev, [sectionId]: next }));
+    const [r1, r2] = await Promise.all([
+      supabase.from("section_tabs").update({ sort_order: orderB }).eq("id", a.id),
+      supabase.from("section_tabs").update({ sort_order: orderA }).eq("id", b.id),
+    ]);
+    if (r1.error || r2.error) {
+      toast.error("Erro ao reordenar abas");
+      fetchTabs(sectionId);
+    }
+  };
+
   const startEditContent = (c: SectionContent) => {
     setEditingContent(c.id);
     setEditContentTitle(c.title);
@@ -429,7 +452,7 @@ const AdminSections = () => {
                 <p className="text-xs text-muted-foreground text-center py-2">Nenhuma aba criada</p>
               )}
 
-              {tabsBySection[section.id]?.map((tab) => (
+              {tabsBySection[section.id]?.map((tab, tabIdx) => (
                 <div key={tab.id} className="bg-secondary/40 rounded-lg overflow-hidden">
                   <div className="flex items-center gap-1 p-2">
                     <button
@@ -470,6 +493,22 @@ const AdminSections = () => {
                       </>
                     ) : (
                       <>
+                        <button
+                          onClick={() => handleReorderTab(section.id, tabIdx, -1)}
+                          disabled={tabIdx === 0}
+                          className="text-muted-foreground hover:text-primary disabled:opacity-30"
+                          title="Mover para cima"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleReorderTab(section.id, tabIdx, 1)}
+                          disabled={tabIdx === (tabsBySection[section.id]?.length ?? 0) - 1}
+                          className="text-muted-foreground hover:text-primary disabled:opacity-30"
+                          title="Mover para baixo"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => {
                             setEditingTab(tab.id);
