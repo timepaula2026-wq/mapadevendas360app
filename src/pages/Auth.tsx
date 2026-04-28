@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Map, Mail, Lock, User, Loader2, Phone, Building2, Calendar } from "lucide-react";
+import { Map, Mail, Lock, User, Loader2, Phone, Building2, Calendar, IdCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const UNITS = [
@@ -27,6 +27,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
   const [unit, setUnit] = useState("");
   const [customUnit, setCustomUnit] = useState("");
   const [unitStartDate, setUnitStartDate] = useState("");
@@ -66,11 +67,22 @@ const Auth = () => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
+  const formatCpf = (value: string) => {
+    const d = value.replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  };
+
   const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
-  const validateConsultor = async (emailToCheck: string): Promise<{ allowed: boolean; message: string } | null> => {
-    const normalizedEmail = emailToCheck.trim().toLowerCase();
-    const cacheKey = `consultor_validation_${normalizedEmail}`;
+  const validateConsultor = async (cpfToCheck: string): Promise<{ allowed: boolean; message: string; nome?: string | null } | null> => {
+    const cleanCpf = cpfToCheck.replace(/\D/g, "");
+    if (cleanCpf.length !== 11) {
+      return { allowed: false, message: "CPF inválido. Informe os 11 dígitos." };
+    }
+    const cacheKey = `consultor_validation_cpf_${cleanCpf}`;
 
     // Check local cache
     try {
@@ -78,8 +90,8 @@ const Auth = () => {
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp < CACHE_TTL_MS) {
-          console.log("Usando validação em cache para:", normalizedEmail);
-          return data as { allowed: boolean; message: string };
+          console.log("Usando validação em cache para CPF.");
+          return data as { allowed: boolean; message: string; nome?: string | null };
         }
         localStorage.removeItem(cacheKey);
       }
@@ -87,7 +99,7 @@ const Auth = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("validate-consultor", {
-        body: { email: normalizedEmail },
+        body: { cpf: cleanCpf },
       });
       if (error) {
         console.error("Erro ao validar consultor:", error);
@@ -100,7 +112,7 @@ const Auth = () => {
         localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
       } catch { /* ignore storage errors */ }
 
-      return data as { allowed: boolean; message: string };
+      return data as { allowed: boolean; message: string; nome?: string | null };
     } catch (err) {
       console.error("Erro ao chamar validação:", err);
       toast({ title: "Erro de validação", description: "Não foi possível validar seu cadastro. Tente novamente.", variant: "destructive" });
@@ -112,22 +124,6 @@ const Auth = () => {
     e.preventDefault();
     setSubmitting(true);
 
-    // Validate consultant status for both login and signup
-    const validation = await validateConsultor(email);
-    if (!validation) {
-      setSubmitting(false);
-      return;
-    }
-    if (!validation.allowed) {
-      toast({
-        title: "Acesso bloqueado",
-        description: validation.message || "Seu cadastro não está autorizado. Entre em contato com o suporte.",
-        variant: "destructive",
-      });
-      setSubmitting(false);
-      return;
-    }
-
     if (isLogin) {
       const { error } = await signIn(email, password);
       if (error) {
@@ -136,6 +132,11 @@ const Auth = () => {
     } else {
       if (!displayName.trim()) {
         toast({ title: "Erro", description: "Preencha o nome completo.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      if (cpf.replace(/\D/g, "").length !== 11) {
+        toast({ title: "Erro", description: "Informe um CPF válido (11 dígitos).", variant: "destructive" });
         setSubmitting(false);
         return;
       }
@@ -156,11 +157,28 @@ const Auth = () => {
         return;
       }
 
+      // Validate CPF against Mapadevendas360 before creating account
+      const validation = await validateConsultor(cpf);
+      if (!validation) {
+        setSubmitting(false);
+        return;
+      }
+      if (!validation.allowed) {
+        toast({
+          title: "Acesso bloqueado",
+          description: validation.message || "Seu CPF não está autorizado. Entre em contato com o suporte.",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
         phone: phone.replace(/\D/g, ""),
         unit: finalUnit,
         unitStartDate,
+        cpf: cpf.replace(/\D/g, ""),
       });
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
@@ -248,6 +266,20 @@ const Auth = () => {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Nome completo"
+                  required
+                  className={inputClass}
+                />
+              </div>
+
+              {/* CPF */}
+              <div className="relative">
+                <IdCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={cpf}
+                  onChange={(e) => setCpf(formatCpf(e.target.value))}
+                  placeholder="CPF"
                   required
                   className={inputClass}
                 />

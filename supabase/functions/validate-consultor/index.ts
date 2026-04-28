@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const GESTAO360_API_BASE = "https://mapadevendas360.com.br/api/consultores";
+const VALIDAR_CPF_URL = "https://gvulpruievqfjdgowrdb.supabase.co/functions/v1/validar-cpf";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,89 +13,74 @@ serve(async (req) => {
   }
 
   try {
-    const { email } = await req.json();
+    const { cpf } = await req.json();
 
-    if (!email || typeof email !== 'string') {
+    if (!cpf || typeof cpf !== 'string') {
       return new Response(
-        JSON.stringify({ error: "Email é obrigatório" }),
+        JSON.stringify({ allowed: false, message: "CPF é obrigatório" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const url = `${GESTAO360_API_BASE}?email=${encodeURIComponent(email.trim().toLowerCase())}`;
-    console.log(`Validating consultor status for: ${email}`);
+    const cleanCpf = cpf.replace(/\D/g, "");
+    if (cleanCpf.length !== 11) {
+      return new Response(
+        JSON.stringify({ allowed: false, message: "CPF inválido. Deve conter 11 dígitos." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
+    console.log(`Validating CPF: ${cleanCpf.substring(0, 3)}***`);
+
+    const response = await fetch(VALIDAR_CPF_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cpf: cleanCpf }),
     });
 
-    const contentType = response.headers.get("content-type") || "";
     const responseText = await response.text();
-    console.log("Gestão360 status:", response.status, "content-type:", contentType);
-    console.log("Gestão360 response body (first 500 chars):", responseText.substring(0, 500));
+    console.log("validar-cpf status:", response.status, "body:", responseText.substring(0, 300));
 
-    if (!contentType.includes("application/json")) {
-      console.error("API returned non-JSON response (likely HTML login page)");
+    if (!response.ok) {
       return new Response(
         JSON.stringify({ allowed: true, status: "api_unavailable", message: "Serviço de validação indisponível. Acesso liberado temporariamente." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return new Response(
-          JSON.stringify({ allowed: false, status: "not_found", message: "Consultor não encontrado no sistema Gestão360." }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(`Gestão360 API error [${response.status}]: ${responseText.substring(0, 200)}`);
-    }
-
-    let data;
+    let data: { valido?: boolean; ativo?: boolean | null; nome?: string | null };
     try {
       data = JSON.parse(responseText);
     } catch {
-      console.error("Failed to parse JSON:", responseText.substring(0, 200));
       return new Response(
         JSON.stringify({ allowed: true, status: "parse_error", message: "Erro ao processar resposta. Acesso liberado temporariamente." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    console.log("Gestão360 parsed response:", JSON.stringify(data));
 
-    // Extract status - try common response formats
-    const status = (
-      data?.status || 
-      data?.data?.status || 
-      data?.consultor?.status || 
-      ""
-    ).toString().toLowerCase().trim();
-
-    const allowedStatuses = ["ativo", "aprovado"];
-    const blockedStatuses = ["inativo", "desligado"];
-
-    if (allowedStatuses.includes(status)) {
+    if (!data.valido) {
       return new Response(
-        JSON.stringify({ allowed: true, status, message: "Consultor ativo." }),
+        JSON.stringify({ allowed: false, status: "not_found", message: "CPF não encontrado no Mapadevendas360. Procure o suporte." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const reason = blockedStatuses.includes(status)
-      ? `Consultor com status "${status}". Acesso não permitido.`
-      : `Status "${status || 'desconhecido'}" não autorizado para acesso.`;
+    if (data.ativo === false) {
+      return new Response(
+        JSON.stringify({ allowed: false, status: "inactive", message: "Consultor inativo. Acesso não permitido." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(
-      JSON.stringify({ allowed: false, status: status || "unknown", message: reason }),
+      JSON.stringify({ allowed: true, status: "ativo", nome: data.nome ?? null, message: "Consultor ativo." }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    console.error("Error validating consultor:", error);
+    console.error("Error validating CPF:", error);
     const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     return new Response(
-      JSON.stringify({ error: `Erro ao validar consultor: ${errorMessage}` }),
+      JSON.stringify({ allowed: false, message: `Erro ao validar CPF: ${errorMessage}` }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
