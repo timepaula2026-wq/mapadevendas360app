@@ -99,12 +99,44 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
               <img src={url} alt={title} className="max-w-full max-h-full object-contain" />
             </div>
           ) : url ? (
-            <iframe
-              src={url}
-              className="w-full h-full"
-              title={title}
-              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            />
+            (() => {
+              // Domains that block iframe embedding via X-Frame-Options / CSP
+              const noEmbedDomains = [
+                "notebooklm.google.com",
+                "docs.google.com",
+                "drive.google.com",
+                "instagram.com",
+                "facebook.com",
+                "linkedin.com",
+                "x.com",
+                "twitter.com",
+              ];
+              let blocked = false;
+              try {
+                const host = new URL(url).hostname.toLowerCase();
+                blocked = noEmbedDomains.some((d) => host === d || host.endsWith("." + d));
+              } catch {}
+              if (blocked) {
+                return (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      Este conteúdo não permite visualização incorporada. Abra em uma nova aba para acessá-lo.
+                    </p>
+                    <Button onClick={() => window.open(url, "_blank")} size="sm">
+                      <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
+                    </Button>
+                  </div>
+                );
+              }
+              return (
+                <iframe
+                  src={url}
+                  className="w-full h-full"
+                  title={title}
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                />
+              );
+            })()
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               Conteúdo não disponível
