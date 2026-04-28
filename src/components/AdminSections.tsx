@@ -290,6 +290,30 @@ const AdminSections = () => {
     }
   };
 
+  const handleReorderContent = async (tabId: string, index: number, direction: -1 | 1) => {
+    const list = contentsByTab[tabId];
+    if (!list) return;
+    const target = index + direction;
+    if (target < 0 || target >= list.length) return;
+    const a = list[index];
+    const b = list[target];
+    const orderA = a.sort_order ?? index;
+    const orderB = b.sort_order ?? target;
+    // Optimistic UI swap
+    const next = [...list];
+    next[index] = { ...b, sort_order: orderA };
+    next[target] = { ...a, sort_order: orderB };
+    setContentsByTab((prev) => ({ ...prev, [tabId]: next }));
+    const [r1, r2] = await Promise.all([
+      supabase.from("section_contents").update({ sort_order: orderB }).eq("id", a.id),
+      supabase.from("section_contents").update({ sort_order: orderA }).eq("id", b.id),
+    ]);
+    if (r1.error || r2.error) {
+      toast.error("Erro ao reordenar");
+      fetchTabContents(tabId);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground mb-3">
