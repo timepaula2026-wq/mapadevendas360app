@@ -59,6 +59,7 @@ const AdminSections = () => {
   const [expandedTab, setExpandedTab] = useState<string | null>(null);
   const [tabsBySection, setTabsBySection] = useState<Record<string, SectionTab[]>>({});
   const [contentsByTab, setContentsByTab] = useState<Record<string, SectionContent[]>>({});
+  const [orphansBySection, setOrphansBySection] = useState<Record<string, SectionContent[]>>({});
   const [newTabTitle, setNewTabTitle] = useState<Record<string, string>>({});
   const [editingTab, setEditingTab] = useState<string | null>(null);
   const [editTabTitle, setEditTabTitle] = useState("");
@@ -81,6 +82,16 @@ const AdminSections = () => {
     setTabsBySection((prev) => ({ ...prev, [sectionId]: (data as SectionTab[]) || [] }));
   };
 
+  const fetchOrphans = async (sectionId: string) => {
+    const { data } = await supabase
+      .from("section_contents")
+      .select("*")
+      .eq("section_id", sectionId)
+      .is("tab_id", null)
+      .order("created_at", { ascending: true });
+    setOrphansBySection((prev) => ({ ...prev, [sectionId]: (data as SectionContent[]) || [] }));
+  };
+
   const fetchTabContents = async (tabId: string) => {
     const { data } = await supabase
       .from("section_contents")
@@ -96,6 +107,7 @@ const AdminSections = () => {
     } else {
       setExpandedSection(sectionId);
       if (!tabsBySection[sectionId]) fetchTabs(sectionId);
+      fetchOrphans(sectionId);
     }
   };
 
@@ -230,6 +242,29 @@ const AdminSections = () => {
     else {
       toast.success("Removido!");
       fetchTabContents(tabId);
+    }
+  };
+
+  const handleAssignOrphan = async (contentId: string, tabId: string, sectionId: string) => {
+    const { error } = await supabase
+      .from("section_contents")
+      .update({ tab_id: tabId })
+      .eq("id", contentId);
+    if (error) toast.error("Erro ao mover");
+    else {
+      toast.success("Movido para a aba!");
+      fetchOrphans(sectionId);
+      if (contentsByTab[tabId]) fetchTabContents(tabId);
+    }
+  };
+
+  const handleDeleteOrphan = async (contentId: string, sectionId: string) => {
+    if (!confirm("Excluir este conteúdo?")) return;
+    const { error } = await supabase.from("section_contents").delete().eq("id", contentId);
+    if (error) toast.error("Erro ao excluir");
+    else {
+      toast.success("Removido!");
+      fetchOrphans(sectionId);
     }
   };
 
