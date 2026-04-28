@@ -21,7 +21,7 @@ function jsonResponse(body: ValidationResponse, status = 200) {
   });
 }
 
-function isValidCPF(cpf: string): boolean {
+export function isValidCPF(cpf: string): boolean {
   if (cpf.length !== 11) return false;
   // Reject known invalid sequences (all same digit)
   if (/^(\d)\1{10}$/.test(cpf)) return false;
@@ -42,7 +42,7 @@ function isValidCPF(cpf: string): boolean {
   return true;
 }
 
-serve(async (req) => {
+export const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -158,4 +158,6 @@ serve(async (req) => {
       message: `Erro ao validar CPF: ${errorMessage}`,
     }, 500);
   }
-});
+};
+
+serve(handler);
