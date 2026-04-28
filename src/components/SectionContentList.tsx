@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Youtube, FileText, ExternalLink, Loader2, ChevronRight, ChevronDown } from "lucide-react";
+import { Youtube, FileText, ExternalLink, Loader2, ChevronRight, ChevronDown, Image as ImageIcon } from "lucide-react";
 import { useSectionContents, type SectionContent } from "@/hooks/useSectionContents";
 import ContentViewerModal from "@/components/ContentViewerModal";
 
@@ -20,13 +20,19 @@ const ContentRow = ({
   >
     <div
       className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-        c.type === "youtube" ? "bg-red-500/10" : c.type === "pdf" ? "bg-blue-500/10" : "bg-muted"
+        c.type === "youtube" ? "bg-red-500/10" : c.type === "pdf" ? "bg-blue-500/10" : c.type === "image" ? "bg-emerald-500/10 overflow-hidden" : "bg-muted"
       }`}
     >
       {c.type === "youtube" ? (
         <Youtube className="w-5 h-5 text-red-500" />
       ) : c.type === "pdf" ? (
         <FileText className="w-5 h-5 text-blue-500" />
+      ) : c.type === "image" ? (
+        c.url ? (
+          <img src={c.url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <ImageIcon className="w-5 h-5 text-emerald-500" />
+        )
       ) : (
         <ExternalLink className="w-5 h-5 text-muted-foreground" />
       )}
