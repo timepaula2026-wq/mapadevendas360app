@@ -66,6 +66,12 @@ const AdminSections = () => {
   const [editingTab, setEditingTab] = useState<string | null>(null);
   const [editTabTitle, setEditTabTitle] = useState("");
 
+  // Edit content state
+  const [editingContent, setEditingContent] = useState<string | null>(null);
+  const [editContentTitle, setEditContentTitle] = useState("");
+  const [editContentDesc, setEditContentDesc] = useState("");
+  const [editContentUrl, setEditContentUrl] = useState("");
+
   // Form for adding content to a tab
   const [showForm, setShowForm] = useState<string | null>(null); // tabId
   const [contentTitle, setContentTitle] = useState("");
@@ -310,6 +316,37 @@ const AdminSections = () => {
     ]);
     if (r1.error || r2.error) {
       toast.error("Erro ao reordenar");
+      fetchTabContents(tabId);
+    }
+  };
+
+  const startEditContent = (c: SectionContent) => {
+    setEditingContent(c.id);
+    setEditContentTitle(c.title);
+    setEditContentDesc(c.description || "");
+    setEditContentUrl(c.url || "");
+  };
+
+  const handleSaveEditContent = async (contentId: string, tabId: string, type: string) => {
+    if (!editContentTitle.trim()) return;
+    const updates: Record<string, unknown> = {
+      title: editContentTitle.trim(),
+      description: editContentDesc.trim() || null,
+    };
+    if (type !== "pdf") {
+      updates.url = editContentUrl || null;
+      if (type === "youtube") {
+        updates.youtube_id = extractYoutubeId(editContentUrl);
+      }
+    }
+    const { error } = await supabase
+      .from("section_contents")
+      .update(updates)
+      .eq("id", contentId);
+    if (error) toast.error("Erro ao salvar");
+    else {
+      toast.success("Atualizado!");
+      setEditingContent(null);
       fetchTabContents(tabId);
     }
   };
