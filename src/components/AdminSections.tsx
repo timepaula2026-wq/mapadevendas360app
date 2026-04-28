@@ -268,6 +268,26 @@ const AdminSections = () => {
     }
   };
 
+  const handleMoveContent = async (
+    contentId: string,
+    fromTabId: string,
+    toTabId: string,
+    sectionId: string
+  ) => {
+    if (!toTabId || toTabId === fromTabId) return;
+    const { error } = await supabase
+      .from("section_contents")
+      .update({ tab_id: toTabId })
+      .eq("id", contentId);
+    if (error) toast.error("Erro ao mover");
+    else {
+      toast.success("Movido!");
+      fetchTabContents(fromTabId);
+      if (contentsByTab[toTabId]) fetchTabContents(toTabId);
+      fetchOrphans(sectionId);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground mb-3">
