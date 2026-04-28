@@ -51,6 +51,7 @@ const SECTIONS = [
   { id: "cliente", label: "Área do Cliente" },
   { id: "analise", label: "Plataforma de Análise" },
   { id: "presenca", label: "Presença Treinamentos" },
+  { id: "termo-correspondente", label: "Termo de Correspondente" },
 ];
 
 const AdminSections = () => {
