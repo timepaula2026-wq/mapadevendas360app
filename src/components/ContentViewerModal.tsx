@@ -94,6 +94,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
                 </div>
               </div>
             </object>
+          ) : type === "image" && url ? (
+            <div className="w-full h-full flex items-center justify-center bg-black/40 overflow-auto">
+              <img src={url} alt={title} className="max-w-full max-h-full object-contain" />
+            </div>
           ) : url ? (
             <iframe
               src={url}

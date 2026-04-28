@@ -14,6 +14,7 @@ import {
   X,
   ArrowUp,
   ArrowDown,
+  Image as ImageIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,7 +77,7 @@ const AdminSections = () => {
   const [showForm, setShowForm] = useState<string | null>(null); // tabId
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
-  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link">("youtube");
+  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -198,19 +199,20 @@ const AdminSections = () => {
 
     const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
 
+    const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
       user_id: user.id,
       title: contentTitle.trim() || file.name,
       description: contentDesc.trim() || null,
-      type: "pdf",
+      type: isImage ? "image" : "pdf",
       url: urlData.publicUrl,
     });
 
     if (error) toast.error("Erro ao salvar");
     else {
-      toast.success("PDF enviado!");
+      toast.success(isImage ? "Imagem enviada!" : "PDF enviado!");
       resetContentForm();
       fetchTabContents(tabId);
     }
@@ -220,7 +222,7 @@ const AdminSections = () => {
   const handleAddContent = async (sectionId: string, tabId: string) => {
     if (!contentTitle.trim() || !user) return;
 
-    if (contentType === "pdf" && fileInputRef.current?.files?.[0]) {
+    if ((contentType === "pdf" || contentType === "image") && fileInputRef.current?.files?.[0]) {
       await handleFileUpload(fileInputRef.current.files[0], sectionId, tabId);
       return;
     }
@@ -356,7 +358,7 @@ const AdminSections = () => {
       title: editContentTitle.trim(),
       description: editContentDesc.trim() || null,
     };
-    if (type !== "pdf") {
+    if (type !== "pdf" && type !== "image") {
       updates.url = editContentUrl || null;
       if (type === "youtube") {
         updates.youtube_id = extractYoutubeId(editContentUrl);
@@ -555,7 +557,7 @@ const AdminSections = () => {
                                 placeholder="Descrição (opcional)"
                                 className="h-7 text-xs"
                               />
-                              {c.type !== "pdf" && (
+                              {c.type !== "pdf" && c.type !== "image" && (
                                 <Input
                                   value={editContentUrl}
                                   onChange={(e) => setEditContentUrl(e.target.value)}
@@ -661,6 +663,7 @@ const AdminSections = () => {
                               [
                                 { type: "youtube" as const, icon: Youtube, label: "YouTube" },
                                 { type: "pdf" as const, icon: Upload, label: "PDF" },
+                                { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                 { type: "link" as const, icon: File, label: "Link" },
                               ]
                             ).map(({ type, icon: Icon, label }) => (
@@ -689,11 +692,11 @@ const AdminSections = () => {
                             placeholder="Descrição (opcional)"
                             className="h-7 text-xs"
                           />
-                          {contentType === "pdf" ? (
+                          {contentType === "pdf" || contentType === "image" ? (
                             <input
                               ref={fileInputRef}
                               type="file"
-                              accept=".pdf"
+                              accept={contentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
                               className="w-full text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-primary file:text-primary-foreground"
                             />
                           ) : (
