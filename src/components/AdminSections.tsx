@@ -452,7 +452,7 @@ const AdminSections = () => {
                 <p className="text-xs text-muted-foreground text-center py-2">Nenhuma aba criada</p>
               )}
 
-              {tabsBySection[section.id]?.map((tab) => (
+              {tabsBySection[section.id]?.map((tab, tabIdx) => (
                 <div key={tab.id} className="bg-secondary/40 rounded-lg overflow-hidden">
                   <div className="flex items-center gap-1 p-2">
                     <button
@@ -493,6 +493,22 @@ const AdminSections = () => {
                       </>
                     ) : (
                       <>
+                        <button
+                          onClick={() => handleReorderTab(section.id, tabIdx, -1)}
+                          disabled={tabIdx === 0}
+                          className="text-muted-foreground hover:text-primary disabled:opacity-30"
+                          title="Mover para cima"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleReorderTab(section.id, tabIdx, 1)}
+                          disabled={tabIdx === (tabsBySection[section.id]?.length ?? 0) - 1}
+                          className="text-muted-foreground hover:text-primary disabled:opacity-30"
+                          title="Mover para baixo"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => {
                             setEditingTab(tab.id);
