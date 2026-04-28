@@ -663,6 +663,7 @@ const AdminSections = () => {
                               [
                                 { type: "youtube" as const, icon: Youtube, label: "YouTube" },
                                 { type: "pdf" as const, icon: Upload, label: "PDF" },
+                                { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                 { type: "link" as const, icon: File, label: "Link" },
                               ]
                             ).map(({ type, icon: Icon, label }) => (
@@ -691,11 +692,11 @@ const AdminSections = () => {
                             placeholder="Descrição (opcional)"
                             className="h-7 text-xs"
                           />
-                          {contentType === "pdf" ? (
+                          {contentType === "pdf" || contentType === "image" ? (
                             <input
                               ref={fileInputRef}
                               type="file"
-                              accept=".pdf"
+                              accept={contentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
                               className="w-full text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-primary file:text-primary-foreground"
                             />
                           ) : (
