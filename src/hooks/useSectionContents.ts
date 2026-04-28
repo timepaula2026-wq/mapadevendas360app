@@ -10,24 +10,41 @@ export interface SectionContent {
   url: string | null;
   youtube_id: string | null;
   sort_order: number | null;
+  tab_id: string | null;
+}
+
+export interface SectionTab {
+  id: string;
+  section_id: string;
+  title: string;
+  sort_order: number | null;
 }
 
 export const useSectionContents = (sectionId: string) => {
   const [contents, setContents] = useState<SectionContent[]>([]);
+  const [tabs, setTabs] = useState<SectionTab[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
-      const { data } = await supabase
-        .from("section_contents")
-        .select("*")
-        .eq("section_id", sectionId)
-        .order("sort_order", { ascending: true });
-      setContents((data as SectionContent[]) || []);
+      const [{ data: contentsData }, { data: tabsData }] = await Promise.all([
+        supabase
+          .from("section_contents")
+          .select("*")
+          .eq("section_id", sectionId)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("section_tabs")
+          .select("*")
+          .eq("section_id", sectionId)
+          .order("sort_order", { ascending: true }),
+      ]);
+      setContents((contentsData as SectionContent[]) || []);
+      setTabs((tabsData as SectionTab[]) || []);
       setLoading(false);
     };
     fetch();
   }, [sectionId]);
 
-  return { contents, loading };
+  return { contents, tabs, loading };
 };

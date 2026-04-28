@@ -1,31 +1,28 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Youtube, FileText, File, Upload, Loader2, ChevronDown, ChevronRight, GripVertical, Pencil, Check, X } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Youtube,
+  FileText,
+  File,
+  Upload,
+  Loader2,
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Check,
+  X,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 interface SectionContent {
   id: string;
   section_id: string;
+  tab_id: string | null;
   title: string;
   description: string | null;
   type: string;
@@ -34,60 +31,13 @@ interface SectionContent {
   sort_order: number | null;
 }
 
-// Sortable item component
-const SortableItem = ({ item, onDelete, onRename, sectionId }: { item: SectionContent; onDelete: (id: string, sectionId: string) => void; onRename: (id: string, newTitle: string, sectionId: string) => void; sectionId: string }) => {
-  const [editing, setEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(item.title);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+interface SectionTab {
+  id: string;
+  section_id: string;
+  title: string;
+  sort_order: number | null;
+}
 
-  const handleSave = () => {
-    if (editTitle.trim() && editTitle.trim() !== item.title) {
-      onRename(item.id, editTitle.trim(), sectionId);
-    }
-    setEditing(false);
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-1.5">
-      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none">
-        <GripVertical className="w-3.5 h-3.5" />
-      </button>
-      {item.type === "youtube" ? <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" /> :
-       item.type === "pdf" ? <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" /> :
-       <File className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-      {editing ? (
-        <div className="flex items-center gap-1 flex-1 min-w-0">
-          <Input
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            className="h-6 text-xs flex-1"
-            autoFocus
-            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setEditing(false); }}
-          />
-          <button onClick={handleSave} className="text-green-500 hover:text-green-600 shrink-0"><Check className="w-3.5 h-3.5" /></button>
-          <button onClick={() => setEditing(false)} className="text-muted-foreground hover:text-foreground shrink-0"><X className="w-3.5 h-3.5" /></button>
-        </div>
-      ) : (
-        <span className="text-foreground text-xs truncate flex-1">{item.title}</span>
-      )}
-      {!editing && (
-        <>
-          <button onClick={() => { setEditTitle(item.title); setEditing(true); }} className="text-muted-foreground hover:text-primary shrink-0">
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => onDelete(item.id, sectionId)} className="text-muted-foreground hover:text-destructive shrink-0">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </>
-      )}
-    </div>
-  );
-};
 const SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante" },
   { id: "vendas", label: "Central de Vendas & CRM" },
@@ -106,8 +56,15 @@ const SECTIONS = [
 const AdminSections = () => {
   const { user } = useAuth();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [sectionContents, setSectionContents] = useState<Record<string, SectionContent[]>>({});
-  const [showForm, setShowForm] = useState<string | null>(null);
+  const [expandedTab, setExpandedTab] = useState<string | null>(null);
+  const [tabsBySection, setTabsBySection] = useState<Record<string, SectionTab[]>>({});
+  const [contentsByTab, setContentsByTab] = useState<Record<string, SectionContent[]>>({});
+  const [newTabTitle, setNewTabTitle] = useState<Record<string, string>>({});
+  const [editingTab, setEditingTab] = useState<string | null>(null);
+  const [editTabTitle, setEditTabTitle] = useState("");
+
+  // Form for adding content to a tab
+  const [showForm, setShowForm] = useState<string | null>(null); // tabId
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link">("youtube");
@@ -115,18 +72,22 @@ const AdminSections = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  const fetchSectionContents = async (sectionId: string) => {
+  const fetchTabs = async (sectionId: string) => {
     const { data } = await supabase
-      .from("section_contents")
+      .from("section_tabs")
       .select("*")
       .eq("section_id", sectionId)
       .order("sort_order", { ascending: true });
-    setSectionContents((prev) => ({ ...prev, [sectionId]: (data as SectionContent[]) || [] }));
+    setTabsBySection((prev) => ({ ...prev, [sectionId]: (data as SectionTab[]) || [] }));
+  };
+
+  const fetchTabContents = async (tabId: string) => {
+    const { data } = await supabase
+      .from("section_contents")
+      .select("*")
+      .eq("tab_id", tabId)
+      .order("sort_order", { ascending: true });
+    setContentsByTab((prev) => ({ ...prev, [tabId]: (data as SectionContent[]) || [] }));
   };
 
   const toggleSection = (sectionId: string) => {
@@ -134,7 +95,55 @@ const AdminSections = () => {
       setExpandedSection(null);
     } else {
       setExpandedSection(sectionId);
-      if (!sectionContents[sectionId]) fetchSectionContents(sectionId);
+      if (!tabsBySection[sectionId]) fetchTabs(sectionId);
+    }
+  };
+
+  const toggleTab = (tabId: string) => {
+    if (expandedTab === tabId) {
+      setExpandedTab(null);
+    } else {
+      setExpandedTab(tabId);
+      if (!contentsByTab[tabId]) fetchTabContents(tabId);
+    }
+  };
+
+  const handleAddTab = async (sectionId: string) => {
+    const title = (newTabTitle[sectionId] || "").trim();
+    if (!title) return;
+    const order = tabsBySection[sectionId]?.length ?? 0;
+    const { error } = await supabase
+      .from("section_tabs")
+      .insert({ section_id: sectionId, title, sort_order: order });
+    if (error) toast.error("Erro ao criar aba");
+    else {
+      toast.success("Aba criada!");
+      setNewTabTitle((prev) => ({ ...prev, [sectionId]: "" }));
+      fetchTabs(sectionId);
+    }
+  };
+
+  const handleRenameTab = async (tabId: string, sectionId: string) => {
+    if (!editTabTitle.trim()) return;
+    const { error } = await supabase
+      .from("section_tabs")
+      .update({ title: editTabTitle.trim() })
+      .eq("id", tabId);
+    if (error) toast.error("Erro ao renomear");
+    else {
+      toast.success("Renomeada!");
+      setEditingTab(null);
+      fetchTabs(sectionId);
+    }
+  };
+
+  const handleDeleteTab = async (tabId: string, sectionId: string) => {
+    if (!confirm("Excluir esta aba e todos os seus conteúdos?")) return;
+    const { error } = await supabase.from("section_tabs").delete().eq("id", tabId);
+    if (error) toast.error("Erro ao excluir");
+    else {
+      toast.success("Aba removida");
+      fetchTabs(sectionId);
     }
   };
 
@@ -143,7 +152,15 @@ const AdminSections = () => {
     return match ? match[1] : null;
   };
 
-  const handleFileUpload = async (file: globalThis.File, sectionId: string) => {
+  const resetContentForm = () => {
+    setShowForm(null);
+    setContentTitle("");
+    setContentDesc("");
+    setContentUrl("");
+    setContentType("youtube");
+  };
+
+  const handleFileUpload = async (file: globalThis.File, sectionId: string, tabId: string) => {
     if (!user) return;
     setUploading(true);
     const fileExt = file.name.split(".").pop();
@@ -159,12 +176,11 @@ const AdminSections = () => {
       return;
     }
 
-    const { data: urlData } = supabase.storage
-      .from("training-files")
-      .getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
 
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
+      tab_id: tabId,
       user_id: user.id,
       title: contentTitle.trim() || file.name,
       description: contentDesc.trim() || null,
@@ -176,21 +192,22 @@ const AdminSections = () => {
     else {
       toast.success("PDF enviado!");
       resetContentForm();
-      fetchSectionContents(sectionId);
+      fetchTabContents(tabId);
     }
     setUploading(false);
   };
 
-  const handleAddContent = async (sectionId: string) => {
+  const handleAddContent = async (sectionId: string, tabId: string) => {
     if (!contentTitle.trim() || !user) return;
 
     if (contentType === "pdf" && fileInputRef.current?.files?.[0]) {
-      await handleFileUpload(fileInputRef.current.files[0], sectionId);
+      await handleFileUpload(fileInputRef.current.files[0], sectionId, tabId);
       return;
     }
 
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
+      tab_id: tabId,
       user_id: user.id,
       title: contentTitle.trim(),
       description: contentDesc.trim() || null,
@@ -203,59 +220,23 @@ const AdminSections = () => {
     else {
       toast.success("Conteúdo adicionado!");
       resetContentForm();
-      fetchSectionContents(sectionId);
+      fetchTabContents(tabId);
     }
   };
 
-  const handleDeleteContent = async (contentId: string, sectionId: string) => {
+  const handleDeleteContent = async (contentId: string, tabId: string) => {
     const { error } = await supabase.from("section_contents").delete().eq("id", contentId);
     if (error) toast.error("Erro ao excluir");
     else {
       toast.success("Removido!");
-      fetchSectionContents(sectionId);
+      fetchTabContents(tabId);
     }
-  };
-
-  const handleRenameContent = async (contentId: string, newTitle: string, sectionId: string) => {
-    const { error } = await supabase.from("section_contents").update({ title: newTitle }).eq("id", contentId);
-    if (error) toast.error("Erro ao renomear");
-    else {
-      toast.success("Título atualizado!");
-      fetchSectionContents(sectionId);
-    }
-  };
-
-  const resetContentForm = () => {
-    setShowForm(null);
-    setContentTitle("");
-    setContentDesc("");
-    setContentUrl("");
-    setContentType("youtube");
-  };
-
-  const handleDragEnd = async (event: DragEndEvent, sectionId: string) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const items = sectionContents[sectionId] || [];
-    const oldIndex = items.findIndex((i) => i.id === active.id);
-    const newIndex = items.findIndex((i) => i.id === over.id);
-    const reordered = arrayMove(items, oldIndex, newIndex);
-
-    // Optimistic update
-    setSectionContents((prev) => ({ ...prev, [sectionId]: reordered }));
-
-    // Persist new order
-    const updates = reordered.map((item, index) =>
-      supabase.from("section_contents").update({ sort_order: index }).eq("id", item.id)
-    );
-    await Promise.all(updates);
   };
 
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground mb-3">
-        Gerencie o conteúdo de cada seção do aplicativo.
+        Cada seção tem abas (temas). Adicione conteúdos dentro de cada aba.
       </p>
       {SECTIONS.map((section) => (
         <div key={section.id} className="bg-card border border-border rounded-xl overflow-hidden">
@@ -265,9 +246,9 @@ const AdminSections = () => {
           >
             <span className="text-sm font-medium text-foreground">{section.label}</span>
             <div className="flex items-center gap-2">
-              {sectionContents[section.id] && (
+              {tabsBySection[section.id] && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  {sectionContents[section.id].length}
+                  {tabsBySection[section.id].length} abas
                 </span>
               )}
               {expandedSection === section.id ? (
@@ -280,95 +261,212 @@ const AdminSections = () => {
 
           {expandedSection === section.id && (
             <div className="border-t border-border p-3 space-y-2">
-              {/* Content list with drag-and-drop */}
-              {(sectionContents[section.id]?.length ?? 0) > 0 && (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, section.id)}>
-                  <SortableContext items={sectionContents[section.id]?.map((c) => c.id) || []} strategy={verticalListSortingStrategy}>
-                    {sectionContents[section.id]?.map((c) => (
-                      <SortableItem key={c.id} item={c} onDelete={handleDeleteContent} onRename={handleRenameContent} sectionId={section.id} />
-                    ))}
-                  </SortableContext>
-                </DndContext>
+              {/* Tabs list */}
+              {(tabsBySection[section.id]?.length ?? 0) === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-2">Nenhuma aba criada</p>
               )}
 
-              {sectionContents[section.id]?.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-2">Nenhum conteúdo</p>
-              )}
-
-              {/* Add button */}
-              {showForm !== section.id && (
-                <button
-                  onClick={() => setShowForm(section.id)}
-                  className="w-full flex items-center justify-center gap-1 py-2 text-xs text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                >
-                  <Plus className="w-3 h-3" /> Adicionar conteúdo
-                </button>
-              )}
-
-              {/* Add form */}
-              {showForm === section.id && (
-                <div className="p-3 bg-secondary rounded-lg space-y-2">
-                  <div className="flex gap-1">
-                    {([
-                      { type: "youtube" as const, icon: Youtube, label: "YouTube" },
-                      { type: "pdf" as const, icon: Upload, label: "PDF" },
-                      { type: "link" as const, icon: File, label: "Link" },
-                    ]).map(({ type, icon: Icon, label }) => (
-                      <button
-                        key={type}
-                        onClick={() => setContentType(type)}
-                        className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-medium ${
-                          contentType === type
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <Icon className="w-3 h-3" /> {label}
-                      </button>
-                    ))}
-                  </div>
-                  <Input
-                    value={contentTitle}
-                    onChange={(e) => setContentTitle(e.target.value)}
-                    placeholder="Título"
-                    className="h-8 text-xs"
-                  />
-                  <Input
-                    value={contentDesc}
-                    onChange={(e) => setContentDesc(e.target.value)}
-                    placeholder="Descrição (opcional)"
-                    className="h-8 text-xs"
-                  />
-                  {contentType === "pdf" ? (
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf"
-                      className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                    />
-                  ) : (
-                    <Input
-                      value={contentUrl}
-                      onChange={(e) => setContentUrl(e.target.value)}
-                      placeholder={contentType === "youtube" ? "URL do YouTube" : "URL do link"}
-                      className="h-8 text-xs"
-                    />
-                  )}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleAddContent(section.id)}
-                      disabled={!contentTitle.trim() || uploading}
-                      size="sm"
-                      className="flex-1 text-xs gap-1"
+              {tabsBySection[section.id]?.map((tab) => (
+                <div key={tab.id} className="bg-secondary/40 rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-1 p-2">
+                    <button
+                      onClick={() => toggleTab(tab.id)}
+                      className="flex items-center gap-1 flex-1 text-left"
                     >
-                      {uploading ? <><Loader2 className="w-3 h-3 animate-spin" /> Enviando...</> : "Adicionar"}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={resetContentForm} className="text-xs">
-                      Cancelar
-                    </Button>
+                      {expandedTab === tab.id ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                      {editingTab === tab.id ? (
+                        <Input
+                          value={editTabTitle}
+                          onChange={(e) => setEditTabTitle(e.target.value)}
+                          className="h-6 text-xs"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <span className="text-xs font-medium text-foreground">{tab.title}</span>
+                      )}
+                    </button>
+                    {editingTab === tab.id ? (
+                      <>
+                        <button
+                          onClick={() => handleRenameTab(tab.id, section.id)}
+                          className="text-green-500 hover:text-green-600"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingTab(null)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditingTab(tab.id);
+                            setEditTabTitle(tab.title);
+                          }}
+                          className="text-muted-foreground hover:text-primary"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTab(tab.id, section.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
                   </div>
+
+                  {expandedTab === tab.id && (
+                    <div className="border-t border-border p-2 space-y-1.5 bg-card/50">
+                      {(contentsByTab[tab.id]?.length ?? 0) === 0 && (
+                        <p className="text-[11px] text-muted-foreground text-center py-1">
+                          Nenhum conteúdo
+                        </p>
+                      )}
+                      {contentsByTab[tab.id]?.map((c) => (
+                        <div
+                          key={c.id}
+                          className="flex items-center gap-2 px-2 py-1 bg-background rounded"
+                        >
+                          {c.type === "youtube" ? (
+                            <Youtube className="w-3 h-3 text-red-500 shrink-0" />
+                          ) : c.type === "pdf" ? (
+                            <FileText className="w-3 h-3 text-blue-500 shrink-0" />
+                          ) : (
+                            <File className="w-3 h-3 text-muted-foreground shrink-0" />
+                          )}
+                          <span className="text-[11px] flex-1 truncate">{c.title}</span>
+                          <button
+                            onClick={() => handleDeleteContent(c.id, tab.id)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+
+                      {showForm !== tab.id ? (
+                        <button
+                          onClick={() => setShowForm(tab.id)}
+                          className="w-full flex items-center justify-center gap-1 py-1.5 text-[11px] text-primary hover:bg-primary/5 rounded"
+                        >
+                          <Plus className="w-3 h-3" /> Adicionar conteúdo
+                        </button>
+                      ) : (
+                        <div className="p-2 bg-secondary rounded space-y-1.5">
+                          <div className="flex gap-1">
+                            {(
+                              [
+                                { type: "youtube" as const, icon: Youtube, label: "YouTube" },
+                                { type: "pdf" as const, icon: Upload, label: "PDF" },
+                                { type: "link" as const, icon: File, label: "Link" },
+                              ]
+                            ).map(({ type, icon: Icon, label }) => (
+                              <button
+                                key={type}
+                                onClick={() => setContentType(type)}
+                                className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-medium ${
+                                  contentType === type
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                <Icon className="w-3 h-3" /> {label}
+                              </button>
+                            ))}
+                          </div>
+                          <Input
+                            value={contentTitle}
+                            onChange={(e) => setContentTitle(e.target.value)}
+                            placeholder="Título"
+                            className="h-7 text-xs"
+                          />
+                          <Input
+                            value={contentDesc}
+                            onChange={(e) => setContentDesc(e.target.value)}
+                            placeholder="Descrição (opcional)"
+                            className="h-7 text-xs"
+                          />
+                          {contentType === "pdf" ? (
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept=".pdf"
+                              className="w-full text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-primary file:text-primary-foreground"
+                            />
+                          ) : (
+                            <Input
+                              value={contentUrl}
+                              onChange={(e) => setContentUrl(e.target.value)}
+                              placeholder={
+                                contentType === "youtube" ? "URL do YouTube" : "URL do link"
+                              }
+                              className="h-7 text-xs"
+                            />
+                          )}
+                          <div className="flex gap-1">
+                            <Button
+                              onClick={() => handleAddContent(section.id, tab.id)}
+                              disabled={!contentTitle.trim() || uploading}
+                              size="sm"
+                              className="flex-1 h-7 text-[11px] gap-1"
+                            >
+                              {uploading ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 animate-spin" /> Enviando...
+                                </>
+                              ) : (
+                                "Adicionar"
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={resetContentForm}
+                              className="h-7 text-[11px]"
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
+
+              {/* Add new tab */}
+              <div className="flex gap-2 pt-2 border-t border-border">
+                <Input
+                  value={newTabTitle[section.id] || ""}
+                  onChange={(e) =>
+                    setNewTabTitle((prev) => ({ ...prev, [section.id]: e.target.value }))
+                  }
+                  placeholder="Nome da nova aba (ex: Comece aqui)"
+                  className="h-8 text-xs"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddTab(section.id);
+                  }}
+                />
+                <Button
+                  onClick={() => handleAddTab(section.id)}
+                  disabled={!(newTabTitle[section.id] || "").trim()}
+                  size="sm"
+                  className="h-8 text-xs gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Aba
+                </Button>
+              </div>
             </div>
           )}
         </div>

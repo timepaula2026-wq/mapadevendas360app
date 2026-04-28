@@ -602,6 +602,7 @@ export type Database = {
           id: string
           section_id: string
           sort_order: number | null
+          tab_id: string | null
           title: string
           type: string
           url: string | null
@@ -614,6 +615,7 @@ export type Database = {
           id?: string
           section_id: string
           sort_order?: number | null
+          tab_id?: string | null
           title: string
           type?: string
           url?: string | null
@@ -626,11 +628,47 @@ export type Database = {
           id?: string
           section_id?: string
           sort_order?: number | null
+          tab_id?: string | null
           title?: string
           type?: string
           url?: string | null
           user_id?: string
           youtube_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_contents_tab_id_fkey"
+            columns: ["tab_id"]
+            isOneToOne: false
+            referencedRelation: "section_tabs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      section_tabs: {
+        Row: {
+          created_at: string
+          id: string
+          section_id: string
+          sort_order: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          section_id: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          section_id?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
