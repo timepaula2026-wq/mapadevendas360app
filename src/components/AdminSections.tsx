@@ -358,7 +358,7 @@ const AdminSections = () => {
       title: editContentTitle.trim(),
       description: editContentDesc.trim() || null,
     };
-    if (type !== "pdf") {
+    if (type !== "pdf" && type !== "image") {
       updates.url = editContentUrl || null;
       if (type === "youtube") {
         updates.youtube_id = extractYoutubeId(editContentUrl);
@@ -557,7 +557,7 @@ const AdminSections = () => {
                                 placeholder="Descrição (opcional)"
                                 className="h-7 text-xs"
                               />
-                              {c.type !== "pdf" && (
+                              {c.type !== "pdf" && c.type !== "image" && (
                                 <Input
                                   value={editContentUrl}
                                   onChange={(e) => setEditContentUrl(e.target.value)}
