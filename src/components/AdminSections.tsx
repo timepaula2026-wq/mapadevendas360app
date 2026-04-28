@@ -499,8 +499,52 @@ const AdminSections = () => {
                       {contentsByTab[tab.id]?.map((c, idx) => (
                         <div
                           key={c.id}
-                          className="flex items-center gap-2 px-2 py-1 bg-background rounded"
+                          className="px-2 py-1 bg-background rounded"
                         >
+                          {editingContent === c.id ? (
+                            <div className="space-y-1.5 p-1">
+                              <Input
+                                value={editContentTitle}
+                                onChange={(e) => setEditContentTitle(e.target.value)}
+                                placeholder="Título"
+                                className="h-7 text-xs"
+                                autoFocus
+                              />
+                              <Input
+                                value={editContentDesc}
+                                onChange={(e) => setEditContentDesc(e.target.value)}
+                                placeholder="Descrição (opcional)"
+                                className="h-7 text-xs"
+                              />
+                              {c.type !== "pdf" && (
+                                <Input
+                                  value={editContentUrl}
+                                  onChange={(e) => setEditContentUrl(e.target.value)}
+                                  placeholder={c.type === "youtube" ? "URL do YouTube" : "URL do link"}
+                                  className="h-7 text-xs"
+                                />
+                              )}
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  className="h-6 text-[10px] flex-1"
+                                  onClick={() => handleSaveEditContent(c.id, tab.id, c.type)}
+                                  disabled={!editContentTitle.trim()}
+                                >
+                                  Salvar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-6 text-[10px]"
+                                  onClick={() => setEditingContent(null)}
+                                >
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                          <div className="flex items-center gap-2">
                           {c.type === "youtube" ? (
                             <Youtube className="w-3 h-3 text-red-500 shrink-0" />
                           ) : c.type === "pdf" ? (
@@ -547,11 +591,20 @@ const AdminSections = () => {
                             </select>
                           )}
                           <button
+                            onClick={() => startEditContent(c)}
+                            className="text-muted-foreground hover:text-primary"
+                            title="Editar"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteContent(c.id, tab.id)}
                             className="text-muted-foreground hover:text-destructive"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
+                          </div>
+                          )}
                         </div>
                       ))}
 
