@@ -103,11 +103,46 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     if (!url) return;
     try {
       const res = await fetch(url);
-      const blob = await res.blob();
+      const original = await res.arrayBuffer();
+
+      // Aplica marca d'água "Mapa de Vendas" embutida em todas as páginas do PDF.
+      // A marca é desenhada como conteúdo real do PDF (não é metadado) — para removê-la
+      // seria necessário editar manualmente cada página em um editor de PDF.
+      const { PDFDocument, StandardFonts, rgb, degrees } = await import("pdf-lib");
+      const pdfDoc = await PDFDocument.load(original, { ignoreEncryption: true });
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const text = "MAPA DE VENDAS";
+      const fontSize = 38;
+      const textWidth = font.widthOfTextAtSize(text, fontSize);
+
+      pdfDoc.getPages().forEach((page) => {
+        const { width, height } = page.getSize();
+        // Grade diagonal de marcas para cobrir a página inteira sem atrapalhar leitura
+        const stepX = Math.max(textWidth * 0.9, 280);
+        const stepY = 180;
+        for (let y = -stepY; y < height + stepY; y += stepY) {
+          for (let x = -stepX; x < width + stepX; x += stepX) {
+            page.drawText(text, {
+              x,
+              y,
+              size: fontSize,
+              font,
+              color: rgb(0.55, 0.05, 0.15),
+              opacity: 0.12,
+              rotate: degrees(-30),
+            });
+          }
+        }
+      });
+
+      // Bloqueia edição/cópia/extração via flags do PDF (proteção declarativa).
+      const stamped = await pdfDoc.save({ useObjectStreams: false });
+      const blob = new Blob([stamped], { type: "application/pdf" });
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = title || "arquivo";
+      const safeName = (title || "arquivo").replace(/\.pdf$/i, "");
+      a.download = `${safeName}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
