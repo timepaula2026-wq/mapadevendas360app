@@ -1087,7 +1087,12 @@ const AdminSections = () => {
                             </div>
                           )}
                         </div>
-                      ));
+                          )}
+                          </Sortable>
+                          ))}
+                          </SortableContext>
+                        </DndContext>
+                        );
                       })()}
 
                       {showForm !== tab.id ? (
