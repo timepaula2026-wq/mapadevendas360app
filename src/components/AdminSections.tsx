@@ -405,7 +405,7 @@ const AdminSections = () => {
     };
     // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
     const file = editFileInputRef.current?.files?.[0];
-    if ((type === "pdf" || type === "image") && file) {
+    if ((type === "pdf" || type === "image" || type === "video") && file) {
       setEditUploading(true);
       const fileExt = file.name.split(".").pop();
       const filePath = `sections/edit/${Date.now()}.${fileExt}`;
@@ -421,10 +421,16 @@ const AdminSections = () => {
       updates.url = urlData.publicUrl;
       updates.youtube_id = null;
       setEditUploading(false);
-    } else if (type === "pdf" || type === "image") {
+    } else if (type === "pdf" || type === "image" || type === "video") {
       // Sem novo arquivo: exigir que já exista URL salva
       if (!currentUrl) {
-        toast.error(type === "pdf" ? "Selecione um arquivo PDF" : "Selecione uma imagem");
+        toast.error(
+          type === "pdf"
+            ? "Selecione um arquivo PDF"
+            : type === "image"
+            ? "Selecione uma imagem"
+            : "Selecione um arquivo de vídeo (MP4)"
+        );
         return;
       }
       // mantém URL atual
