@@ -33,6 +33,7 @@ interface SectionContent {
   url: string | null;
   youtube_id: string | null;
   sort_order: number | null;
+  allow_download?: boolean | null;
 }
 
 interface SectionTab {
