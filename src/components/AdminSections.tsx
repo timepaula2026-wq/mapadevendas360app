@@ -197,6 +197,7 @@ const AdminSections = () => {
     setContentUrl("");
     setContentType("youtube");
     setContentAllowDownload(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleFileUpload = async (
@@ -870,6 +871,7 @@ const AdminSections = () => {
                           />
                            {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                             <input
+                              key={contentType}
                               ref={fileInputRef}
                               type="file"
                               accept={
