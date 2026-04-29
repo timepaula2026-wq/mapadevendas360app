@@ -74,6 +74,7 @@ const AdminSections = () => {
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
   const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
+  const [editContentAllowDownload, setEditContentAllowDownload] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editUploading, setEditUploading] = useState(false);
 
@@ -83,6 +84,7 @@ const AdminSections = () => {
   const [contentDesc, setContentDesc] = useState("");
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
   const [contentUrl, setContentUrl] = useState("");
+  const [contentAllowDownload, setContentAllowDownload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -185,6 +187,7 @@ const AdminSections = () => {
     setContentDesc("");
     setContentUrl("");
     setContentType("youtube");
+    setContentAllowDownload(false);
   };
 
   const handleFileUpload = async (
@@ -236,6 +239,7 @@ const AdminSections = () => {
       type: resolvedType,
       url: urlData.publicUrl,
       sort_order: nextOrder,
+      allow_download: resolvedType === "pdf" ? contentAllowDownload : false,
     });
 
     if (error) toast.error("Erro ao salvar");
@@ -289,6 +293,7 @@ const AdminSections = () => {
       url: contentUrl.trim(),
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
       sort_order: nextOrder,
+      allow_download: false,
     });
 
     if (error) toast.error("Erro ao adicionar");
@@ -404,6 +409,7 @@ const AdminSections = () => {
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
     setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
+    setEditContentAllowDownload(!!(c as unknown as { allow_download?: boolean }).allow_download);
   };
 
   const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
@@ -416,6 +422,7 @@ const AdminSections = () => {
       title: editContentTitle.trim(),
       description: editContentDesc.trim() || null,
       type,
+      allow_download: type === "pdf" ? editContentAllowDownload : false,
     };
     // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
     const file = editFileInputRef.current?.files?.[0];
