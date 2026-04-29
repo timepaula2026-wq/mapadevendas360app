@@ -121,7 +121,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 mr-8">
             {(type === "pdf" || type === "image") && url && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrint} title="Imprimir">
                 <Printer className="w-4 h-4" />
