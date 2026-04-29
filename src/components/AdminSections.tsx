@@ -91,6 +91,10 @@ interface SectionTab {
 
 const AdminSections = () => {
   const { user } = useAuth();
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
   const [sections, setSections] = useState<{ id: string; label: string }[]>(DEFAULT_GRID_SECTIONS.map(({ id, label }) => ({ id, label })));
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedTab, setExpandedTab] = useState<string | null>(null);
