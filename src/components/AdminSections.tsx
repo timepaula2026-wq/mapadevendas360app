@@ -713,6 +713,17 @@ const AdminSections = () => {
                                   className="h-7 text-xs"
                                 />
                               )}
+                              {editContentType === "pdf" && (
+                                <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={editContentAllowDownload}
+                                    onChange={(e) => setEditContentAllowDownload(e.target.checked)}
+                                    className="h-3 w-3 accent-primary"
+                                  />
+                                  Permitir download deste PDF
+                                </label>
+                              )}
                               <div className="flex gap-1">
                                 <Button
                                   size="sm"
