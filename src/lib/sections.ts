@@ -13,7 +13,7 @@ export const DEFAULT_GRID_SECTIONS = [
   { id: "administrativo", label: "Gestão de Performance 360", iconName: "Briefcase", route: "/administrativo" },
   { id: "agenda", label: "Agenda Online", iconName: "CalendarDays", route: "/agenda" },
   { id: "paula", label: "Fale com a Paula", iconName: "MessageCircleHeart", route: "/fale-com-paula" },
-  { id: "comissao", label: "Comissão", iconName: "DollarSign", route: "/comissao" },
+  { id: "comissao", label: "Comissão", iconName: "DollarSign", route: "/vendas?calc=1" },
   { id: "lideres", label: "Escola de Líderes", iconName: "School", route: "/lideres" },
 ] as const;
 
