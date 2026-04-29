@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { DYNAMIC_ICONS } from "@/lib/iconPicker";
 
 interface GridItem {
   id: string;
@@ -57,13 +58,31 @@ const IconGrid = () => {
     const fetchOrder = async () => {
       const { data } = await supabase
         .from("icon_grid_order")
-        .select("id, sort_order, visible, custom_label")
+        .select("id, sort_order, visible, custom_label, icon_name, route, is_custom")
         .order("sort_order", { ascending: true });
 
       if (data && data.length > 0) {
-        const visible = (data as { id: string; sort_order: number; visible: boolean; custom_label?: string | null }[])
-          .filter((d) => d.visible && ALL_ITEMS[d.id])
-          .map((d) => ({ ...ALL_ITEMS[d.id], label: d.custom_label || ALL_ITEMS[d.id].label }));
+        const visible = (data as Array<{
+          id: string; sort_order: number; visible: boolean;
+          custom_label?: string | null; icon_name?: string | null;
+          route?: string | null; is_custom?: boolean | null;
+        }>)
+          .filter((d) => d.visible && (ALL_ITEMS[d.id] || d.is_custom))
+          .map((d) => {
+            if (d.is_custom) {
+              const Icon = (d.icon_name && DYNAMIC_ICONS[d.icon_name]) || DYNAMIC_ICONS.Sparkles;
+              return {
+                id: d.id,
+                label: d.custom_label || d.id,
+                icon: Icon,
+                color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]",
+                route: d.route || `/c/${d.id}`,
+              } as GridItem;
+            }
+            const base = ALL_ITEMS[d.id];
+            const Icon = (d.icon_name && DYNAMIC_ICONS[d.icon_name]) || base.icon;
+            return { ...base, icon: Icon, label: d.custom_label || base.label };
+          });
         setOrderedItems(visible);
       }
     };
