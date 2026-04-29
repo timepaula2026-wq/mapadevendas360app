@@ -508,7 +508,7 @@ const AdminSections = () => {
           Ordem e nomes dos ícones da tela inicial
         </summary>
         <div className="p-3 border-t border-border">
-          <AdminIconOrder />
+          <AdminIconOrder onChange={fetchSections} />
         </div>
       </details>
       <p className="text-xs text-muted-foreground mb-3">
