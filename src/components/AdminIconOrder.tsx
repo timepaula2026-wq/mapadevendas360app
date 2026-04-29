@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DYNAMIC_ICONS, pickIconFromName, slugify } from "@/lib/iconPicker";
+import { DEFAULT_SECTION_LABELS } from "@/lib/sections";
 import {
   DndContext,
   closestCenter,
@@ -23,29 +24,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Same labels as IconGrid
-const ICON_LABELS: Record<string, string> = {
-  trilha: "Trilha do Iniciante",
-  vendas: "Central de Vendas & CRM",
-  ferramentas: "Acessos de Ferramentas",
-  treinamentos: "Treinamentos",
-  carreira: "Plano de Carreira",
-  apresentacao: "Apresentação de Produtos",
-  sorteios: "Sorteios & Comunicados",
-  credito: "Liberação de Crédito",
-  jornada: "Jornada Impacto",
-  equipe: "Gestão de Equipe",
-  cliente: "Área do Cliente",
-  analise: "Plataforma de Análise",
-  loja: "Loja",
-  locacao: "Locação de Materiais",
-  presenca: "Presença Treinamentos",
-  administrativo: "Gestão de Performance 360",
-  agenda: "Agenda Online",
-  paula: "Fale com a Paula",
-  comissao: "Comissão",
-  lideres: "Escola de Líderes",
-};
+const getSectionLabel = (item: Pick<IconOrder, "id" | "custom_label">) =>
+  item.custom_label || DEFAULT_SECTION_LABELS[item.id] || item.id;
 
 interface IconOrder {
   id: string;
@@ -75,7 +55,7 @@ const SortableIconItem = ({
     opacity: isDragging ? 0.5 : 1,
   };
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(item.custom_label || ICON_LABELS[item.id] || item.id);
+  const [value, setValue] = useState(getSectionLabel(item));
   const PreviewIcon = (item.icon_name && DYNAMIC_ICONS[item.icon_name]) || null;
 
   return (
@@ -108,7 +88,7 @@ const SortableIconItem = ({
           </button>
           <button
             onClick={() => {
-              setValue(item.custom_label || ICON_LABELS[item.id] || item.id);
+              setValue(getSectionLabel(item));
               setEditing(false);
             }}
             className="text-muted-foreground hover:text-foreground shrink-0"
@@ -120,7 +100,7 @@ const SortableIconItem = ({
       ) : (
         <>
           <span className={`text-sm flex-1 ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
-            {item.custom_label || ICON_LABELS[item.id] || item.id}
+            {getSectionLabel(item)}
             {item.is_custom && <span className="ml-2 text-[10px] uppercase tracking-wide text-primary">novo</span>}
           </span>
           <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-foreground shrink-0" title="Renomear">
