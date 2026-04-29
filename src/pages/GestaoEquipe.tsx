@@ -1,7 +1,6 @@
 import { ArrowLeft, Users, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
-import CalculadoraCollapsible from "@/components/CalculadoraCollapsible";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 
 const GestaoEquipe = () => {
@@ -42,10 +41,6 @@ const GestaoEquipe = () => {
         </button>
 
         <SectionContentList sectionId="equipe" />
-
-        <div className="pt-2">
-          <CalculadoraCollapsible />
-        </div>
       </div>
     </div>
   );
