@@ -1,25 +1,8 @@
 import { useState, useEffect } from "react";
-import {
-  GraduationCap,
-  Rocket,
-  Wrench,
-  Trophy,
-  FileText,
-  Gift,
-  CreditCard,
-  MapPin,
-  Users,
-  Globe,
-  BarChart3,
-  Briefcase,
-  CalendarDays,
-  MessageCircleHeart,
-  DollarSign,
-  School,
-} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DYNAMIC_ICONS } from "@/lib/iconPicker";
+import { DEFAULT_GRID_SECTIONS, DEFAULT_SECTION_IDS } from "@/lib/sections";
 
 interface GridItem {
   id: string;
@@ -29,30 +12,24 @@ interface GridItem {
   route?: string;
 }
 
-const ALL_ITEMS: Record<string, GridItem> = {
-  trilha: { id: "trilha", label: "Trilha do Iniciante", icon: Rocket, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/trilha" },
-  vendas: { id: "vendas", label: "Central de Vendas & CRM", icon: BarChart3, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/vendas" },
-  ferramentas: { id: "ferramentas", label: "Acessos de Ferramentas", icon: Wrench, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/ferramentas" },
-  treinamentos: { id: "treinamentos", label: "Treinamentos", icon: GraduationCap, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/trainings" },
-  carreira: { id: "carreira", label: "Plano de Carreira", icon: Trophy, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/carreira" },
-  apresentacao: { id: "apresentacao", label: "Apresentação de Produtos", icon: FileText, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/apresentacao" },
-  sorteios: { id: "sorteios", label: "Sorteios & Comunicados", icon: Gift, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/sorteios" },
-  credito: { id: "credito", label: "Liberação de Crédito", icon: CreditCard, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/credito" },
-  jornada: { id: "jornada", label: "Jornada Impacto", icon: MapPin, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/jornada" },
-  equipe: { id: "equipe", label: "Gestão de Equipe", icon: Users, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/equipe" },
-  cliente: { id: "cliente", label: "Área do Cliente", icon: Globe, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/cliente" },
-  administrativo: { id: "administrativo", label: "Gestão de Performance 360", icon: Briefcase, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/administrativo" },
-  agenda: { id: "agenda", label: "Agenda Online", icon: CalendarDays, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/agenda" },
-  paula: { id: "paula", label: "Fale com a Paula", icon: MessageCircleHeart, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/fale-com-paula" },
-  comissao: { id: "comissao", label: "Comissão", icon: DollarSign, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/comissao" },
-  lideres: { id: "lideres", label: "Escola de Líderes", icon: School, color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]", route: "/lideres" },
-};
+const DEFAULT_COLOR = "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]";
 
-const DEFAULT_ORDER = ["trilha", "vendas", "ferramentas", "treinamentos", "carreira", "apresentacao", "sorteios", "credito", "jornada", "equipe", "cliente", "administrativo", "agenda", "paula", "comissao", "lideres"];
+const ALL_ITEMS: Record<string, GridItem> = Object.fromEntries(
+  DEFAULT_GRID_SECTIONS.map((section) => [
+    section.id,
+    {
+      id: section.id,
+      label: section.label,
+      icon: DYNAMIC_ICONS[section.iconName] || DYNAMIC_ICONS.Sparkles,
+      color: DEFAULT_COLOR,
+      route: section.route,
+    },
+  ])
+) as Record<string, GridItem>;
 
 const IconGrid = () => {
   const navigate = useNavigate();
-  const [orderedItems, setOrderedItems] = useState<GridItem[]>(DEFAULT_ORDER.map((id) => ALL_ITEMS[id]));
+  const [orderedItems, setOrderedItems] = useState<GridItem[]>(DEFAULT_SECTION_IDS.map((id) => ALL_ITEMS[id]));
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -81,7 +58,7 @@ const IconGrid = () => {
             }
             const base = ALL_ITEMS[d.id];
             const Icon = (d.icon_name && DYNAMIC_ICONS[d.icon_name]) || base.icon;
-            return { ...base, icon: Icon, label: d.custom_label || base.label };
+            return { ...base, icon: Icon, label: d.custom_label || base.label, route: d.route || base.route };
           });
         setOrderedItems(visible);
       }

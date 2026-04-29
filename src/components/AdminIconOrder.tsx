@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DYNAMIC_ICONS, pickIconFromName, slugify } from "@/lib/iconPicker";
+import { DEFAULT_SECTION_LABELS } from "@/lib/sections";
 import {
   DndContext,
   closestCenter,
@@ -23,29 +24,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Same labels as IconGrid
-const ICON_LABELS: Record<string, string> = {
-  trilha: "Trilha do Iniciante",
-  vendas: "Central de Vendas & CRM",
-  ferramentas: "Acessos de Ferramentas",
-  treinamentos: "Treinamentos",
-  carreira: "Plano de Carreira",
-  apresentacao: "Apresentação de Produtos",
-  sorteios: "Sorteios & Comunicados",
-  credito: "Liberação de Crédito",
-  jornada: "Jornada Impacto",
-  equipe: "Gestão de Equipe",
-  cliente: "Área do Cliente",
-  analise: "Plataforma de Análise",
-  loja: "Loja",
-  locacao: "Locação de Materiais",
-  presenca: "Presença Treinamentos",
-  administrativo: "Gestão de Performance 360",
-  agenda: "Agenda Online",
-  paula: "Fale com a Paula",
-  comissao: "Comissão",
-  lideres: "Escola de Líderes",
-};
+const getSectionLabel = (item: Pick<IconOrder, "id" | "custom_label">) =>
+  item.custom_label || DEFAULT_SECTION_LABELS[item.id] || item.id;
 
 interface IconOrder {
   id: string;
@@ -75,7 +55,7 @@ const SortableIconItem = ({
     opacity: isDragging ? 0.5 : 1,
   };
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(item.custom_label || ICON_LABELS[item.id] || item.id);
+  const [value, setValue] = useState(getSectionLabel(item));
   const PreviewIcon = (item.icon_name && DYNAMIC_ICONS[item.icon_name]) || null;
 
   return (
@@ -108,7 +88,7 @@ const SortableIconItem = ({
           </button>
           <button
             onClick={() => {
-              setValue(item.custom_label || ICON_LABELS[item.id] || item.id);
+              setValue(getSectionLabel(item));
               setEditing(false);
             }}
             className="text-muted-foreground hover:text-foreground shrink-0"
@@ -120,7 +100,7 @@ const SortableIconItem = ({
       ) : (
         <>
           <span className={`text-sm flex-1 ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
-            {item.custom_label || ICON_LABELS[item.id] || item.id}
+            {getSectionLabel(item)}
             {item.is_custom && <span className="ml-2 text-[10px] uppercase tracking-wide text-primary">novo</span>}
           </span>
           <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-foreground shrink-0" title="Renomear">
@@ -138,7 +118,7 @@ const SortableIconItem = ({
   );
 };
 
-const AdminIconOrder = () => {
+const AdminIconOrder = ({ onChange }: { onChange?: () => void } = {}) => {
   const [items, setItems] = useState<IconOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -181,6 +161,7 @@ const AdminIconOrder = () => {
       supabase.from("icon_grid_order").update({ sort_order: index }).eq("id", item.id)
     );
     await Promise.all(updates);
+    onChange?.();
     toast.success("Ordem salva!");
   };
 
@@ -196,7 +177,10 @@ const AdminIconOrder = () => {
       .update({ visible: newVisible })
       .eq("id", id);
     if (error) toast.error("Erro ao atualizar visibilidade");
-    else toast.success(newVisible ? "Ícone visível" : "Ícone oculto");
+    else {
+      onChange?.();
+      toast.success(newVisible ? "Ícone visível" : "Ícone oculto");
+    }
   };
 
   const handleRename = async (id: string, label: string) => {
@@ -207,17 +191,23 @@ const AdminIconOrder = () => {
       .update({ custom_label: newLabel })
       .eq("id", id);
     if (error) toast.error("Erro ao renomear");
-    else toast.success("Nome atualizado!");
+    else {
+      onChange?.();
+      toast.success("Nome atualizado!");
+    }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este ícone da grade? Você poderá restaurá-lo recriando o registro.")) return;
+    if (!confirm("Excluir esta seção da tela inicial e da lista de seções? Os conteúdos vinculados a ela também serão removidos.")) return;
     setItems((prev) => prev.filter((i) => i.id !== id));
+    await supabase.from("section_contents").delete().eq("section_id", id);
+    await supabase.from("section_tabs").delete().eq("section_id", id);
     const { error } = await supabase.from("icon_grid_order").delete().eq("id", id);
     if (error) {
       toast.error("Erro ao excluir");
       fetchOrder();
     } else {
+      onChange?.();
       toast.success("Ícone removido da grade");
     }
   };
@@ -255,6 +245,7 @@ const AdminIconOrder = () => {
     toast.success("Aba criada na tela inicial!");
     setNewName("");
     setCreating(false);
+    onChange?.();
     fetchOrder();
   };
 
