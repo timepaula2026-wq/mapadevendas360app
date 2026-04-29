@@ -43,7 +43,7 @@ const Index = () => {
 
       {/* Top bar */}
       {settings.show_header && (
-        <header className="flex items-center justify-between px-5 pt-10 pb-4">
+        <header className="header-glass sticky top-0 z-40 flex items-center justify-between px-5 pt-8 pb-3">
           <button onClick={() => setSidebarOpen(true)} className="text-white/80 hover:text-white">
             <Menu className="w-6 h-6" />
           </button>
@@ -54,7 +54,7 @@ const Index = () => {
             {settings.header_logo_url && (
               <img src={settings.header_logo_url} alt="Logo" className="w-7 h-7 object-contain" />
             )}
-            <h1 className="text-xl font-bold text-gradient-gold">{settings.header_title}</h1>
+            <h1 className="text-lg font-light tracking-wide text-foreground">{settings.header_title}</h1>
           </div>
           <div className="flex items-center gap-1">
             <button onClick={() => setSearchOpen(true)} className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
@@ -65,8 +65,10 @@ const Index = () => {
       )}
 
       {/* Banner */}
-      <div className="px-4 mb-8">
-        <BannerCarousel />
+      <div className="hero-radial px-4 pt-4 mb-8">
+        <div className="rounded-3xl overflow-hidden">
+          <BannerCarousel />
+        </div>
       </div>
 
       {/* Icon Grid */}
