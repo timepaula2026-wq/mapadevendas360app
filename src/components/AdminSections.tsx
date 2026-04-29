@@ -197,6 +197,7 @@ const AdminSections = () => {
     setContentUrl("");
     setContentType("youtube");
     setContentAllowDownload(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleFileUpload = async (
