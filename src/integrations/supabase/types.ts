@@ -679,6 +679,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          parent_id: string | null
           section_id: string
           sort_order: number | null
           tab_id: string | null
@@ -693,6 +694,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          parent_id?: string | null
           section_id: string
           sort_order?: number | null
           tab_id?: string | null
@@ -707,6 +709,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          parent_id?: string | null
           section_id?: string
           sort_order?: number | null
           tab_id?: string | null
@@ -717,6 +720,13 @@ export type Database = {
           youtube_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "section_contents_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "section_contents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "section_contents_tab_id_fkey"
             columns: ["tab_id"]

@@ -77,6 +77,7 @@ const SectionContentList = ({ sectionId }: SectionContentListProps) => {
   const { contents, tabs, loading } = useSectionContents(sectionId);
   const [viewer, setViewer] = useState<{ title: string; type: string; url: string | null; youtubeId: string | null; allowDownload: boolean } | null>(null);
   const [openTab, setOpenTab] = useState<string | null>(null);
+  const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
 
   if (loading) {
     return (
@@ -88,13 +89,55 @@ const SectionContentList = ({ sectionId }: SectionContentListProps) => {
 
   if (contents.length === 0 && tabs.length === 0) return null;
 
-  const orphanContents = contents.filter((c) => !c.tab_id);
+  const orphanContents = contents.filter((c) => !c.tab_id && !c.parent_id);
+  const childrenByParent: Record<string, SectionContent[]> = {};
+  contents.forEach((c) => {
+    if (c.parent_id) {
+      (childrenByParent[c.parent_id] ||= []).push(c);
+    }
+  });
+
+  const renderParentWithChildren = (c: SectionContent) => {
+    const kids = childrenByParent[c.id] || [];
+    const isOpen = !!openParents[c.id];
+    if (kids.length === 0) {
+      return <ContentRow key={c.id} c={c} onOpen={setViewer} />;
+    }
+    return (
+      <div key={c.id} className="space-y-2">
+        <div className="flex items-stretch gap-2">
+          <div className="flex-1">
+            <ContentRow c={c} onOpen={setViewer} />
+          </div>
+          <button
+            onClick={() => setOpenParents((p) => ({ ...p, [c.id]: !isOpen }))}
+            className="px-2 rounded-xl bg-card border border-border hover:border-primary/30 flex items-center justify-center"
+            aria-label="Ver sub-conteúdos"
+            title={`${kids.length} sub-conteúdo(s)`}
+          >
+            {isOpen ? (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+        </div>
+        {isOpen && (
+          <div className="ml-6 pl-3 border-l-2 border-primary/20 space-y-2">
+            {kids.map((k) => (
+              <ContentRow key={k.id} c={k} onOpen={setViewer} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
       <div className="space-y-3">
         {tabs.map((t) => {
-          const tabContents = contents.filter((c) => c.tab_id === t.id);
+          const tabContents = contents.filter((c) => c.tab_id === t.id && !c.parent_id);
           const isOpen = openTab === t.id;
           return (
             <div key={t.id} className="bg-card border border-border rounded-xl overflow-hidden">
@@ -123,7 +166,7 @@ const SectionContentList = ({ sectionId }: SectionContentListProps) => {
                       Nenhum conteúdo nesta aba
                     </p>
                   ) : (
-                    tabContents.map((c) => <ContentRow key={c.id} c={c} onOpen={setViewer} />)
+                    tabContents.map((c) => renderParentWithChildren(c))
                   )}
                 </div>
               )}
@@ -131,9 +174,7 @@ const SectionContentList = ({ sectionId }: SectionContentListProps) => {
           );
         })}
 
-        {orphanContents.map((c) => (
-          <ContentRow key={c.id} c={c} onOpen={setViewer} />
-        ))}
+        {orphanContents.map((c) => renderParentWithChildren(c))}
       </div>
 
       {viewer && (

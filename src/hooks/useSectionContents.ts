@@ -11,6 +11,7 @@ export interface SectionContent {
   youtube_id: string | null;
   sort_order: number | null;
   tab_id: string | null;
+  parent_id: string | null;
   allow_download?: boolean | null;
 }
 

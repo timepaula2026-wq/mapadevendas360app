@@ -29,6 +29,7 @@ interface SectionContent {
   id: string;
   section_id: string;
   tab_id: string | null;
+  parent_id: string | null;
   title: string;
   description: string | null;
   type: string;
@@ -68,7 +69,8 @@ const AdminSections = () => {
   const [editUploading, setEditUploading] = useState(false);
 
   // Form for adding content to a tab
-  const [showForm, setShowForm] = useState<string | null>(null); // tabId
+  const [showForm, setShowForm] = useState<string | null>(null); // tabId (for new top-level content)
+  const [showSubForm, setShowSubForm] = useState<string | null>(null); // parentId (for new sub-content)
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
@@ -192,6 +194,7 @@ const AdminSections = () => {
 
   const resetContentForm = () => {
     setShowForm(null);
+    setShowSubForm(null);
     setContentTitle("");
     setContentDesc("");
     setContentUrl("");
@@ -204,7 +207,8 @@ const AdminSections = () => {
     file: globalThis.File,
     sectionId: string,
     tabId: string,
-    forcedType?: "pdf" | "image" | "video"
+    forcedType?: "pdf" | "image" | "video",
+    parentId?: string | null
   ) => {
     if (!user) return;
     setUploading(true);
@@ -243,6 +247,7 @@ const AdminSections = () => {
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
+      parent_id: parentId ?? null,
       user_id: user.id,
       title: contentTitle.trim() || file.name,
       description: contentDesc.trim() || null,
@@ -267,7 +272,7 @@ const AdminSections = () => {
     setUploading(false);
   };
 
-  const handleAddContent = async (sectionId: string, tabId: string) => {
+  const handleAddContent = async (sectionId: string, tabId: string, parentId?: string | null) => {
     if (!contentTitle.trim() || !user) return;
 
     // Validações de upload/URL
@@ -283,7 +288,7 @@ const AdminSections = () => {
         );
         return;
       }
-      await handleFileUpload(file, sectionId, tabId, contentType);
+      await handleFileUpload(file, sectionId, tabId, contentType, parentId);
       return;
     }
 
@@ -296,6 +301,7 @@ const AdminSections = () => {
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
+      parent_id: parentId ?? null,
       user_id: user.id,
       title: contentTitle.trim(),
       description: contentDesc.trim() || null,
@@ -671,7 +677,11 @@ const AdminSections = () => {
                           Nenhum conteúdo
                         </p>
                       )}
-                      {contentsByTab[tab.id]?.map((c, idx) => (
+                      {(() => {
+                        const all = contentsByTab[tab.id] || [];
+                        const parents = all.filter((x) => !x.parent_id);
+                        const childrenOf = (pid: string) => all.filter((x) => x.parent_id === pid);
+                        return parents.map((c, idx) => (
                         <div
                           key={c.id}
                           className="px-2 py-1 bg-background rounded"
@@ -822,8 +832,149 @@ const AdminSections = () => {
                           </button>
                           </div>
                           )}
+                          {/* Sub-conteúdos (filhos) */}
+                          {editingContent !== c.id && childrenOf(c.id).length > 0 && (
+                            <div className="mt-1 ml-4 pl-2 border-l-2 border-primary/30 space-y-1">
+                              {childrenOf(c.id).map((sub) => (
+                                <div key={sub.id} className="flex items-center gap-2 px-2 py-1 bg-secondary/40 rounded">
+                                  {sub.type === "youtube" ? (
+                                    <Youtube className="w-3 h-3 text-red-500 shrink-0" />
+                                  ) : sub.type === "pdf" ? (
+                                    <FileText className="w-3 h-3 text-blue-500 shrink-0" />
+                                  ) : sub.type === "image" ? (
+                                    <ImageIcon className="w-3 h-3 text-emerald-500 shrink-0" />
+                                  ) : (
+                                    <File className="w-3 h-3 text-muted-foreground shrink-0" />
+                                  )}
+                                  <span className="text-[11px] flex-1 truncate">↳ {sub.title}</span>
+                                  <button
+                                    onClick={() => startEditContent(sub)}
+                                    className="text-muted-foreground hover:text-primary"
+                                    title="Editar"
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteContent(sub.id, tab.id)}
+                                    className="text-muted-foreground hover:text-destructive"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {/* Botão / formulário de sub-conteúdo */}
+                          {editingContent !== c.id && showSubForm !== c.id && (
+                            <button
+                              onClick={() => {
+                                setShowSubForm(c.id);
+                                setShowForm(null);
+                                setContentTitle("");
+                                setContentDesc("");
+                                setContentUrl("");
+                                setContentType("youtube");
+                                setContentAllowDownload(false);
+                              }}
+                              className="mt-1 ml-4 text-[10px] text-primary hover:underline flex items-center gap-1"
+                            >
+                              <Plus className="w-2.5 h-2.5" /> Adicionar sub-conteúdo
+                            </button>
+                          )}
+                          {showSubForm === c.id && (
+                            <div className="mt-1 ml-4 p-2 bg-secondary rounded space-y-1.5">
+                              <p className="text-[10px] text-muted-foreground">Sub-conteúdo de: {c.title}</p>
+                              <div className="flex gap-1">
+                                {(
+                                  [
+                                    { type: "youtube" as const, icon: Youtube, label: "Link Vídeo" },
+                                    { type: "video" as const, icon: Youtube, label: "MP4" },
+                                    { type: "pdf" as const, icon: Upload, label: "PDF" },
+                                    { type: "image" as const, icon: ImageIcon, label: "Imagem" },
+                                    { type: "link" as const, icon: File, label: "Link" },
+                                  ]
+                                ).map(({ type, icon: Icon, label }) => (
+                                  <button
+                                    key={type}
+                                    onClick={() => setContentType(type)}
+                                    className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-medium ${
+                                      contentType === type
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                  >
+                                    <Icon className="w-3 h-3" /> {label}
+                                  </button>
+                                ))}
+                              </div>
+                              <Input
+                                value={contentTitle}
+                                onChange={(e) => setContentTitle(e.target.value)}
+                                placeholder="Título"
+                                className="h-7 text-xs"
+                              />
+                              <Input
+                                value={contentDesc}
+                                onChange={(e) => setContentDesc(e.target.value)}
+                                placeholder="Descrição (opcional)"
+                                className="h-7 text-xs"
+                              />
+                              {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
+                                <input
+                                  key={contentType}
+                                  ref={fileInputRef}
+                                  type="file"
+                                  accept={
+                                    contentType === "pdf"
+                                      ? ".pdf"
+                                      : contentType === "image"
+                                      ? "image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                                      : "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                                  }
+                                  className="w-full text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-primary file:text-primary-foreground"
+                                />
+                              ) : (
+                                <Input
+                                  value={contentUrl}
+                                  onChange={(e) => setContentUrl(e.target.value)}
+                                  placeholder={contentType === "youtube" ? "URL do vídeo" : "URL do link"}
+                                  className="h-7 text-xs"
+                                />
+                              )}
+                              {contentType === "pdf" && (
+                                <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={contentAllowDownload}
+                                    onChange={(e) => setContentAllowDownload(e.target.checked)}
+                                    className="h-3 w-3 accent-primary"
+                                  />
+                                  Permitir download
+                                </label>
+                              )}
+                              <div className="flex gap-1">
+                                <Button
+                                  onClick={() => handleAddContent(section.id, tab.id, c.id)}
+                                  disabled={!contentTitle.trim() || uploading}
+                                  size="sm"
+                                  className="flex-1 h-7 text-[11px] gap-1"
+                                >
+                                  {uploading ? (<><Loader2 className="w-3 h-3 animate-spin" /> Enviando...</>) : "Adicionar sub"}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={resetContentForm}
+                                  className="h-7 text-[11px]"
+                                >
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      ))}
+                      ));
+                      })()}
 
                       {showForm !== tab.id ? (
                         <button
