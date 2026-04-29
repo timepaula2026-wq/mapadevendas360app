@@ -2,7 +2,6 @@ import { ArrowLeft, School } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
-import BottomNav from "@/components/BottomNav";
 
 const EscolaLideres = () => {
   const navigate = useNavigate();
@@ -29,7 +28,6 @@ const EscolaLideres = () => {
           <AgendaOnlineBlock />
         </div>
       </div>
-      <BottomNav />
     </div>
   );
 };
