@@ -866,6 +866,17 @@ const AdminSections = () => {
                               className="h-7 text-xs"
                             />
                           )}
+                          {contentType === "pdf" && (
+                            <label className="flex items-center gap-2 text-[11px] text-foreground cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={contentAllowDownload}
+                                onChange={(e) => setContentAllowDownload(e.target.checked)}
+                                className="h-3.5 w-3.5 accent-primary"
+                              />
+                              Permitir que usuários baixem este PDF
+                            </label>
+                          )}
                           <div className="flex gap-1">
                             <Button
                               onClick={() => handleAddContent(section.id, tab.id)}
