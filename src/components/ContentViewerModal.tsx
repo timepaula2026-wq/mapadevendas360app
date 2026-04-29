@@ -100,10 +100,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   useEffect(() => {
     if (!(open && type === "pdf")) return;
     setPdfLoaded(false);
-    // No iOS já vai direto pro gview; em outros mobiles, ativamos o fallback
-    // se o iframe nativo não disparar onLoad em até 4s.
-    setUseFallback(isIOS);
-    if (isIOS || !isMobile) return;
+    // Tentar SEMPRE o visualizador nativo primeiro (URL direta = mais rápido,
+    // sem proxy externo). Só cai para o gview se demorar demais no mobile.
+    setUseFallback(false);
+    if (!isMobile) return;
     const t = window.setTimeout(() => {
       setPdfLoaded((loaded) => {
         if (!loaded) {
@@ -114,7 +114,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       });
     }, 4000);
     return () => window.clearTimeout(t);
-  }, [open, url, type, isIOS, isMobile]);
+  }, [open, url, type, isMobile]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
@@ -273,16 +273,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
                   className="w-full h-full border-0"
                   title={title}
+                  loading="eager"
                   onLoad={() => setPdfLoaded(true)}
                   style={{ WebkitOverflowScrolling: "touch" }}
                 />
               ) : (
                 <iframe
                   key="native"
-                  src={`${url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                  // iOS Safari ignora fragmentos PDF — usamos URL direta (mais leve).
+                  // Desktop/Android usam parâmetros enxutos: sem toolbar/navpanes,
+                  // FitH para abrir já ajustado à largura, scrollbar habilitada.
+                  src={isIOS ? url : `${url}#toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=1&view=FitH&pagemode=none`}
                   className="w-full h-full border-0"
                   title={title}
+                  loading="eager"
+                  referrerPolicy="no-referrer"
                   onLoad={() => setPdfLoaded(true)}
+                  style={{ WebkitOverflowScrolling: "touch" }}
                 />
               )}
             </div>
