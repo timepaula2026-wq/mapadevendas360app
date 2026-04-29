@@ -518,7 +518,7 @@ const AdminSections = () => {
       <p className="text-xs text-muted-foreground mb-3">
         Cada seção tem abas (temas). Adicione conteúdos dentro de cada aba.
       </p>
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <div key={section.id} className="bg-card border border-border rounded-xl overflow-hidden">
           <button
             onClick={() => toggleSection(section.id)}
