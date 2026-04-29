@@ -194,6 +194,7 @@ const AdminSections = () => {
 
   const resetContentForm = () => {
     setShowForm(null);
+    setShowSubForm(null);
     setContentTitle("");
     setContentDesc("");
     setContentUrl("");
@@ -206,7 +207,8 @@ const AdminSections = () => {
     file: globalThis.File,
     sectionId: string,
     tabId: string,
-    forcedType?: "pdf" | "image" | "video"
+    forcedType?: "pdf" | "image" | "video",
+    parentId?: string | null
   ) => {
     if (!user) return;
     setUploading(true);
@@ -245,6 +247,7 @@ const AdminSections = () => {
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
+      parent_id: parentId ?? null,
       user_id: user.id,
       title: contentTitle.trim() || file.name,
       description: contentDesc.trim() || null,
@@ -269,7 +272,7 @@ const AdminSections = () => {
     setUploading(false);
   };
 
-  const handleAddContent = async (sectionId: string, tabId: string) => {
+  const handleAddContent = async (sectionId: string, tabId: string, parentId?: string | null) => {
     if (!contentTitle.trim() || !user) return;
 
     // Validações de upload/URL
@@ -285,7 +288,7 @@ const AdminSections = () => {
         );
         return;
       }
-      await handleFileUpload(file, sectionId, tabId, contentType);
+      await handleFileUpload(file, sectionId, tabId, contentType, parentId);
       return;
     }
 
@@ -298,6 +301,7 @@ const AdminSections = () => {
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
+      parent_id: parentId ?? null,
       user_id: user.id,
       title: contentTitle.trim(),
       description: contentDesc.trim() || null,
