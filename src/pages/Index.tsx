@@ -8,7 +8,6 @@ import IconGrid from "@/components/IconGrid";
 import BottomNav from "@/components/BottomNav";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import SearchOverlay from "@/components/SearchOverlay";
-import GridZoomControl from "@/components/GridZoomControl";
 import { useAppSettings } from "@/hooks/useAppSettings";
 
 const Index = () => {
@@ -73,9 +72,6 @@ const Index = () => {
 
       {/* Icon Grid */}
       <div className="px-4 mt-4">
-        <div className="flex justify-end mb-2">
-          <GridZoomControl />
-        </div>
         <IconGrid />
       </div>
 
