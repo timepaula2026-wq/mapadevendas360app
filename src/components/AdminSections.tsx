@@ -583,11 +583,35 @@ const AdminSections = () => {
                                 placeholder="Descrição (opcional)"
                                 className="h-7 text-xs"
                               />
-                              {c.type !== "pdf" && c.type !== "image" && (
+                              <select
+                                value={editContentType}
+                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image")}
+                                className="h-7 text-xs w-full bg-background border border-input rounded-md px-2"
+                              >
+                                <option value="link">Link</option>
+                                <option value="youtube">Vídeo</option>
+                                <option value="pdf">PDF</option>
+                                <option value="image">Imagem</option>
+                              </select>
+                              {editContentType === "pdf" || editContentType === "image" ? (
+                                <div className="space-y-1">
+                                  <input
+                                    ref={editFileInputRef}
+                                    type="file"
+                                    accept={editContentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
+                                    className="text-[10px] w-full"
+                                  />
+                                  {c.url && (c.type === "pdf" || c.type === "image") && (
+                                    <p className="text-[9px] text-muted-foreground truncate">
+                                      Atual: {c.url.split("/").pop()}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
                                 <Input
                                   value={editContentUrl}
                                   onChange={(e) => setEditContentUrl(e.target.value)}
-                                  placeholder={c.type === "youtube" ? "URL do YouTube" : "URL do link"}
+                                  placeholder={editContentType === "youtube" ? "URL do vídeo (YouTube, Vimeo, Drive...)" : "URL do link"}
                                   className="h-7 text-xs"
                                 />
                               )}
@@ -596,9 +620,9 @@ const AdminSections = () => {
                                   size="sm"
                                   className="h-6 text-[10px] flex-1"
                                   onClick={() => handleSaveEditContent(c.id, tab.id, c.type)}
-                                  disabled={!editContentTitle.trim()}
+                                  disabled={!editContentTitle.trim() || editUploading}
                                 >
-                                  Salvar
+                                  {editUploading ? "Enviando..." : "Salvar"}
                                 </Button>
                                 <Button
                                   size="sm"
