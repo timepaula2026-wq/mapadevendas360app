@@ -277,19 +277,36 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   onLoad={() => setPdfLoaded(true)}
                   style={{ WebkitOverflowScrolling: "touch" }}
                 />
+              ) : isIOS ? (
+                // iOS Safari NÃO rola dentro do iframe de PDF: o conteúdo fica
+                // travado na primeira página. Solução: container pai rolável
+                // (overflow-auto + inertial scroll) e iframe com altura intrínseca
+                // grande para que o scroll aconteça no container, não no iframe.
+                <div
+                  className="absolute inset-0 overflow-auto bg-muted"
+                  style={{ WebkitOverflowScrolling: "touch" }}
+                >
+                  <iframe
+                    key="native-ios"
+                    src={url}
+                    title={title}
+                    loading="eager"
+                    referrerPolicy="no-referrer"
+                    onLoad={() => setPdfLoaded(true)}
+                    className="block w-full border-0"
+                    style={{ height: "300vh", minHeight: "300vh" }}
+                    scrolling="no"
+                  />
+                </div>
               ) : (
                 <iframe
                   key="native"
-                  // iOS Safari ignora fragmentos PDF — usamos URL direta (mais leve).
-                  // Desktop/Android usam parâmetros enxutos: sem toolbar/navpanes,
-                  // FitH para abrir já ajustado à largura, scrollbar habilitada.
-                  src={isIOS ? url : `${url}#toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=1&view=FitH&pagemode=none`}
+                  src={`${url}#toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=1&view=FitH&pagemode=none`}
                   className="w-full h-full border-0"
                   title={title}
                   loading="eager"
                   referrerPolicy="no-referrer"
                   onLoad={() => setPdfLoaded(true)}
-                  style={{ WebkitOverflowScrolling: "touch" }}
                 />
               )}
             </div>
