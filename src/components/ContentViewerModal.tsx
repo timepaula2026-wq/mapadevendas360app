@@ -80,6 +80,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const isVideoType = isLinkVideo || isFileVideo;
   const videoInfo = isLinkVideo && url ? getVideoEmbed(url, youtubeId) : null;
 
+  // Zoom da imagem dentro do conteúdo
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+
+  // Loading state para PDF (iOS demora a renderizar o primeiro frame)
+  const [pdfLoaded, setPdfLoaded] = useState(false);
+  useEffect(() => {
+    if (open && type === "pdf") setPdfLoaded(false);
+  }, [open, url, type]);
+
+  // iOS Safari não rola dentro de <object>; usamos Google Docs Viewer como alternativa
+  const isIOS =
+    typeof navigator !== "undefined" &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    !(window as unknown as { MSStream?: unknown }).MSStream;
+
   const handlePrint = () => {
     if (isVideoType || !url) return;
     const iframe = document.createElement("iframe");
