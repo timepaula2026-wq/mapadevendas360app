@@ -33,6 +33,7 @@ interface SectionContent {
   url: string | null;
   youtube_id: string | null;
   sort_order: number | null;
+  allow_download?: boolean | null;
 }
 
 interface SectionTab {
@@ -74,6 +75,7 @@ const AdminSections = () => {
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
   const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
+  const [editContentAllowDownload, setEditContentAllowDownload] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editUploading, setEditUploading] = useState(false);
 
@@ -83,6 +85,7 @@ const AdminSections = () => {
   const [contentDesc, setContentDesc] = useState("");
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
   const [contentUrl, setContentUrl] = useState("");
+  const [contentAllowDownload, setContentAllowDownload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -185,6 +188,7 @@ const AdminSections = () => {
     setContentDesc("");
     setContentUrl("");
     setContentType("youtube");
+    setContentAllowDownload(false);
   };
 
   const handleFileUpload = async (
@@ -236,6 +240,7 @@ const AdminSections = () => {
       type: resolvedType,
       url: urlData.publicUrl,
       sort_order: nextOrder,
+      allow_download: resolvedType === "pdf" ? contentAllowDownload : false,
     });
 
     if (error) toast.error("Erro ao salvar");
@@ -289,6 +294,7 @@ const AdminSections = () => {
       url: contentUrl.trim(),
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
       sort_order: nextOrder,
+      allow_download: false,
     });
 
     if (error) toast.error("Erro ao adicionar");
@@ -404,6 +410,7 @@ const AdminSections = () => {
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
     setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
+    setEditContentAllowDownload(!!(c as unknown as { allow_download?: boolean }).allow_download);
   };
 
   const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
@@ -416,6 +423,7 @@ const AdminSections = () => {
       title: editContentTitle.trim(),
       description: editContentDesc.trim() || null,
       type,
+      allow_download: type === "pdf" ? editContentAllowDownload : false,
     };
     // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
     const file = editFileInputRef.current?.files?.[0];
@@ -705,6 +713,17 @@ const AdminSections = () => {
                                   className="h-7 text-xs"
                                 />
                               )}
+                              {editContentType === "pdf" && (
+                                <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={editContentAllowDownload}
+                                    onChange={(e) => setEditContentAllowDownload(e.target.checked)}
+                                    className="h-3 w-3 accent-primary"
+                                  />
+                                  Permitir download deste PDF
+                                </label>
+                              )}
                               <div className="flex gap-1">
                                 <Button
                                   size="sm"
@@ -857,6 +876,17 @@ const AdminSections = () => {
                               }
                               className="h-7 text-xs"
                             />
+                          )}
+                          {contentType === "pdf" && (
+                            <label className="flex items-center gap-2 text-[11px] text-foreground cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={contentAllowDownload}
+                                onChange={(e) => setContentAllowDownload(e.target.checked)}
+                                className="h-3.5 w-3.5 accent-primary"
+                              />
+                              Permitir que usuários baixem este PDF
+                            </label>
                           )}
                           <div className="flex gap-1">
                             <Button

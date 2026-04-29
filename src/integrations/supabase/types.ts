@@ -597,6 +597,7 @@ export type Database = {
       }
       section_contents: {
         Row: {
+          allow_download: boolean
           created_at: string
           description: string | null
           id: string
@@ -610,6 +611,7 @@ export type Database = {
           youtube_id: string | null
         }
         Insert: {
+          allow_download?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -623,6 +625,7 @@ export type Database = {
           youtube_id?: string | null
         }
         Update: {
+          allow_download?: boolean
           created_at?: string
           description?: string | null
           id?: string

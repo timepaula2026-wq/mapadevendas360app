@@ -12,10 +12,18 @@ const ContentRow = ({
   onOpen,
 }: {
   c: SectionContent;
-  onOpen: (v: { title: string; type: string; url: string | null; youtubeId: string | null }) => void;
+  onOpen: (v: { title: string; type: string; url: string | null; youtubeId: string | null; allowDownload: boolean }) => void;
 }) => (
   <button
-    onClick={() => onOpen({ title: c.title, type: c.type, url: c.url, youtubeId: c.youtube_id })}
+    onClick={() =>
+      onOpen({
+        title: c.title,
+        type: c.type,
+        url: c.url,
+        youtubeId: c.youtube_id,
+        allowDownload: !!c.allow_download,
+      })
+    }
     className="w-full flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors text-left"
   >
     <div
@@ -67,7 +75,7 @@ const ContentRow = ({
 
 const SectionContentList = ({ sectionId }: SectionContentListProps) => {
   const { contents, tabs, loading } = useSectionContents(sectionId);
-  const [viewer, setViewer] = useState<{ title: string; type: string; url: string | null; youtubeId: string | null } | null>(null);
+  const [viewer, setViewer] = useState<{ title: string; type: string; url: string | null; youtubeId: string | null; allowDownload: boolean } | null>(null);
   const [openTab, setOpenTab] = useState<string | null>(null);
 
   if (loading) {
@@ -136,6 +144,7 @@ const SectionContentList = ({ sectionId }: SectionContentListProps) => {
           type={viewer.type}
           url={viewer.url}
           youtubeId={viewer.youtubeId}
+          allowDownload={viewer.allowDownload}
         />
       )}
     </>
