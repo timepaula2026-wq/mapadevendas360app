@@ -1,6 +1,8 @@
-import { Printer, Download } from "lucide-react";
+import { Printer, Download, ZoomIn, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import ImageZoomModal from "@/components/ImageZoomModal";
 
 interface ContentViewerModalProps {
   open: boolean;
