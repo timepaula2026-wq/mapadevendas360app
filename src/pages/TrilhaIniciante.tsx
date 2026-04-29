@@ -1,28 +1,63 @@
 import { ArrowLeft, Rocket, FileSignature } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_GRID_SECTIONS } from "@/lib/sections";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import SectionContentList from "@/components/SectionContentList";
 import CalculadoraComissao from "@/components/CalculadoraComissao";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 
-const SECTIONS = [
-  { id: "trilha", label: "Trilha do Iniciante" },
-  { id: "vendas", label: "Central de Vendas & CRM" },
-  { id: "ferramentas", label: "Acessos de Ferramentas" },
-  { id: "carreira", label: "Plano de Carreira" },
-  { id: "apresentacao", label: "Apresentação de Produtos" },
-  { id: "sorteios", label: "Sorteios & Comunicados" },
-  { id: "credito", label: "Liberação de Crédito" },
-  { id: "jornada", label: "Jornada Impacto" },
-  { id: "equipe", label: "Gestão de Equipe" },
-  { id: "cliente", label: "Área do Cliente" },
-  { id: "analise", label: "Plataforma de Análise" },
-  { id: "presenca", label: "Presença Treinamentos" },
-];
+type Section = { id: string; label: string };
+
+const DEFAULT_SECTIONS: Section[] = DEFAULT_GRID_SECTIONS.map((s) => ({ id: s.id, label: s.label }));
 
 const TrilhaIniciante = () => {
   const navigate = useNavigate();
+  const { roles: userRoles } = useUserRoles();
+  const [sections, setSections] = useState<Section[]>(DEFAULT_SECTIONS);
   const [activeSection, setActiveSection] = useState<string>("trilha");
+
+  const baseLabels = useMemo(
+    () => Object.fromEntries(DEFAULT_GRID_SECTIONS.map((s) => [s.id, s.label])) as Record<string, string>,
+    []
+  );
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      const { data } = await supabase
+        .from("icon_grid_order")
+        .select("id, sort_order, visible, custom_label, is_custom, allowed_roles")
+        .order("sort_order", { ascending: true });
+
+      if (!data || data.length === 0) return;
+
+      const isAdmin = userRoles.includes("admin");
+      const visible = (data as Array<{
+        id: string; visible: boolean; custom_label?: string | null;
+        is_custom?: boolean | null; allowed_roles?: string[] | null;
+      }>)
+        .filter((d) => d.visible && (baseLabels[d.id] || d.is_custom))
+        .filter((d) => {
+          const allowed = d.allowed_roles || [];
+          if (allowed.length === 0 || isAdmin) return true;
+          return userRoles.some((r) => allowed.includes(r));
+        })
+        .map((d) => ({
+          id: d.id,
+          label: d.custom_label || baseLabels[d.id] || d.id,
+        }));
+
+      if (visible.length > 0) {
+        setSections(visible);
+        if (!visible.find((s) => s.id === activeSection)) {
+          setActiveSection(visible[0].id);
+        }
+      }
+    };
+    fetchOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRoles.join(",")]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -42,7 +77,7 @@ const TrilhaIniciante = () => {
         {/* Seletor de seção (chips horizontais) */}
         <div className="-mx-5 px-5 mb-4 overflow-x-auto scrollbar-none">
           <div className="flex gap-2 pb-1">
-            {SECTIONS.map((s) => (
+            {sections.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
