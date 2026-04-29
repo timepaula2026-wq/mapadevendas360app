@@ -8,6 +8,7 @@ import VideoZoomModal from "@/components/VideoZoomModal";
 interface BannerSlide {
   id: string;
   title: string | null;
+  description: string | null;
   image_url: string | null;
   video_url: string | null;
   youtube_id: string | null;
@@ -21,7 +22,8 @@ const BannerCarousel = () => {
   const [slides, setSlides] = useState<BannerSlide[]>([]);
   const [current, setCurrent] = useState(0);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [zoomImage, setZoomImage] = useState<{ src: string; title?: string | null; description?: string | null } | null>(null);
+  const [videoMeta, setVideoMeta] = useState<{ title?: string | null; description?: string | null } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,6 +50,7 @@ const BannerCarousel = () => {
   const handleClick = useCallback((slide: BannerSlide) => {
     if (slide.type === "video" && slide.youtube_id) {
       setPlayingVideo(slide.youtube_id);
+      setVideoMeta({ title: slide.title, description: slide.description });
       return;
     }
     if (slide.link_type === "internal" && slide.link_url) {
@@ -56,7 +59,7 @@ const BannerCarousel = () => {
       window.open(slide.link_url, "_blank");
     } else if (slide.type === "image" && slide.image_url) {
       // No link configured: open zoom view
-      setZoomImage(slide.image_url);
+      setZoomImage({ src: slide.image_url, title: slide.title, description: slide.description });
     }
   }, [navigate]);
 
@@ -94,7 +97,7 @@ const BannerCarousel = () => {
                 onContextMenu={(e) => e.preventDefault()}
               />
               <button
-                onClick={(e) => { e.stopPropagation(); setZoomImage(slide.image_url!); }}
+                onClick={(e) => { e.stopPropagation(); setZoomImage({ src: slide.image_url!, title: slide.title, description: slide.description }); }}
                 aria-label="Ampliar imagem"
                 className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70"
               >
@@ -118,10 +121,19 @@ const BannerCarousel = () => {
             <div className="w-full h-full bg-gradient-to-br from-primary/80 to-amber-700/80" />
           )}
 
-          {/* Title overlay */}
-          {slide.title && (
-            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-              <h2 className="text-base font-bold text-white drop-shadow-lg">{slide.title}</h2>
+          {/* Title + description overlay */}
+          {(slide.title || slide.description) && (
+            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 sm:p-4 pr-12">
+              {slide.title && (
+                <h2 className="text-sm sm:text-base font-bold text-white drop-shadow-lg leading-tight line-clamp-1">
+                  {slide.title}
+                </h2>
+              )}
+              {slide.description && (
+                <p className="text-[11px] sm:text-xs text-white/90 mt-0.5 leading-snug line-clamp-2 drop-shadow">
+                  {slide.description}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -161,10 +173,20 @@ const BannerCarousel = () => {
       )}
     </div>
     {zoomImage && (
-      <ImageZoomModal src={zoomImage} onClose={() => setZoomImage(null)} />
+      <ImageZoomModal
+        src={zoomImage.src}
+        title={zoomImage.title}
+        description={zoomImage.description}
+        onClose={() => setZoomImage(null)}
+      />
     )}
     {playingVideo && (
-      <VideoZoomModal youtubeId={playingVideo} onClose={() => setPlayingVideo(null)} />
+      <VideoZoomModal
+        youtubeId={playingVideo}
+        title={videoMeta?.title}
+        description={videoMeta?.description}
+        onClose={() => { setPlayingVideo(null); setVideoMeta(null); }}
+      />
     )}
     </>
   );
