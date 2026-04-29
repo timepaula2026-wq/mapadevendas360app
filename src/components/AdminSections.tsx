@@ -389,7 +389,7 @@ const AdminSections = () => {
     setEditContentTitle(c.title);
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
-    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image") || "link");
+    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
   };
 
   const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
