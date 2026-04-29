@@ -72,9 +72,6 @@ const Index = () => {
 
       {/* Icon Grid */}
       <div className="px-4 mt-4">
-        <div className="flex justify-end mb-2">
-          <GridZoomControl />
-        </div>
         <IconGrid />
       </div>
 
