@@ -9,6 +9,8 @@ interface ContentViewerModalProps {
   type: string;
   url: string | null;
   youtubeId: string | null;
+  /** Quando true, exibe o botão de baixar (apenas para PDF). */
+  allowDownload?: boolean;
 }
 
 // Detects video provider and returns an embeddable URL when possible.
@@ -68,7 +70,7 @@ const getVideoEmbed = (
   return { embedUrl: null, isVideo: false, provider: "unknown" };
 };
 
-const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: ContentViewerModalProps) => {
+const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false }: ContentViewerModalProps) => {
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
   const isLinkVideo = type === "youtube";
@@ -127,7 +129,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
                 <Printer className="w-4 h-4" />
               </Button>
             )}
-            {(type === "pdf" || type === "image") && url && (
+            {type === "pdf" && url && allowDownload && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload} title="Baixar">
                 <Download className="w-4 h-4" />
               </Button>
@@ -153,6 +155,9 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
                 controls
                 autoPlay
                 playsInline
+                controlsList="nodownload noremoteplayback noplaybackrate"
+                disablePictureInPicture
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full h-full object-contain"
               >
                 Seu navegador não suporta a reprodução deste vídeo.
