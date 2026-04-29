@@ -52,7 +52,7 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   }, []);
 
   // Helper: midpoint of two touches relative to the stage center
-  const midpointRelToCenter = (t1: Touch, t2: Touch) => {
+  const midpointRelToCenter = (t1: React.Touch, t2: React.Touch) => {
     const rect = stageRef.current?.getBoundingClientRect();
     const cx = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
     const cy = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
