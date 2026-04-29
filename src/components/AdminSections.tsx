@@ -940,8 +940,28 @@ const AdminSections = () => {
                           {/* Sub-conteúdos (filhos) */}
                           {editingContent !== c.id && childrenOf(c.id).length > 0 && (
                             <div className="mt-1 ml-4 pl-2 border-l-2 border-primary/30 space-y-1">
+                              <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={(e) => handleDragEndChildren(tab.id, c.id, e)}
+                              >
+                                <SortableContext
+                                  items={childrenOf(c.id).map((s) => s.id)}
+                                  strategy={verticalListSortingStrategy}
+                                >
                               {childrenOf(c.id).map((sub) => (
-                                <div key={sub.id} className="flex items-center gap-2 px-2 py-1 bg-secondary/40 rounded">
+                                <Sortable key={sub.id} id={sub.id}>
+                                {(sh) => (
+                                <div className="flex items-center gap-2 px-2 py-1 bg-secondary/40 rounded">
+                                  <button
+                                    {...sh.listeners}
+                                    {...sh.attributes}
+                                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"
+                                    title="Arrastar para reordenar"
+                                    aria-label="Arrastar"
+                                  >
+                                    <GripVertical className="w-3 h-3" />
+                                  </button>
                                   {sub.type === "youtube" ? (
                                     <Youtube className="w-3 h-3 text-red-500 shrink-0" />
                                   ) : sub.type === "pdf" ? (
@@ -966,7 +986,11 @@ const AdminSections = () => {
                                     <Trash2 className="w-3 h-3" />
                                   </button>
                                 </div>
+                                )}
+                                </Sortable>
                               ))}
+                                </SortableContext>
+                              </DndContext>
                             </div>
                           )}
                           {/* Botão / formulário de sub-conteúdo */}
