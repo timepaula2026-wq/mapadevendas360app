@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Play, ZoomIn, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, ZoomIn } from "lucide-react";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import VideoZoomModal from "@/components/VideoZoomModal";
 
@@ -24,10 +24,6 @@ const BannerCarousel = () => {
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [zoomImage, setZoomImage] = useState<{ src: string; title?: string | null; description?: string | null } | null>(null);
   const [videoMeta, setVideoMeta] = useState<{ title?: string | null; description?: string | null } | null>(null);
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem("banner_dismissed") === "1";
-  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,8 +74,6 @@ const BannerCarousel = () => {
       <FallbackCarousel slides={fallback} current={current} setCurrent={setCurrent} />
     );
   }
-
-  if (dismissed) return null;
 
   return (
     <>
@@ -178,19 +172,6 @@ const BannerCarousel = () => {
         </div>
       )}
 
-      {/* Close (dismiss) button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          sessionStorage.setItem("banner_dismissed", "1");
-          setDismissed(true);
-        }}
-        aria-label="Fechar banner"
-        title="Fechar banner"
-        className="absolute top-2 right-12 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white hover:bg-black/80 ring-1 ring-white/20"
-      >
-        <X className="w-4 h-4" />
-      </button>
     </div>
     {zoomImage && (
       <ImageZoomModal
