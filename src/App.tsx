@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useApprovalCheck } from "@/hooks/useApprovalCheck";
 import { supabase } from "@/integrations/supabase/client";
+import AppSettingsApplier from "@/components/AppSettingsApplier";
 import Index from "./pages/Index";
 import TrainingsList from "./pages/TrainingsList";
 import TrainingDetail from "./pages/TrainingDetail";
@@ -79,6 +80,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <AppSettingsApplier />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
