@@ -636,23 +636,30 @@ const AdminSections = () => {
                               />
                               <select
                                 value={editContentType}
-                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image")}
+                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image" | "video")}
                                 className="h-7 text-xs w-full bg-background border border-input rounded-md px-2"
                               >
                                 <option value="link">Link</option>
-                                <option value="youtube">Vídeo</option>
+                                <option value="youtube">Link de Vídeo (YouTube/Vimeo)</option>
+                                <option value="video">Vídeo MP4 (upload)</option>
                                 <option value="pdf">PDF</option>
                                 <option value="image">Imagem</option>
                               </select>
-                              {editContentType === "pdf" || editContentType === "image" ? (
+                              {editContentType === "pdf" || editContentType === "image" || editContentType === "video" ? (
                                 <div className="space-y-1">
                                   <input
                                     ref={editFileInputRef}
                                     type="file"
-                                    accept={editContentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
+                                    accept={
+                                      editContentType === "pdf"
+                                        ? ".pdf"
+                                        : editContentType === "image"
+                                        ? "image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                                        : "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                                    }
                                     className="text-[10px] w-full"
                                   />
-                                  {c.url && (c.type === "pdf" || c.type === "image") && (
+                                  {c.url && (c.type === "pdf" || c.type === "image" || c.type === "video") && (
                                     <p className="text-[9px] text-muted-foreground truncate">
                                       Atual: {c.url.split("/").pop()}
                                     </p>
