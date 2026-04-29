@@ -137,7 +137,7 @@ const SectionContentList = ({ sectionId }: SectionContentListProps) => {
     <>
       <div className="space-y-3">
         {tabs.map((t) => {
-          const tabContents = contents.filter((c) => c.tab_id === t.id);
+          const tabContents = contents.filter((c) => c.tab_id === t.id && !c.parent_id);
           const isOpen = openTab === t.id;
           return (
             <div key={t.id} className="bg-card border border-border rounded-xl overflow-hidden">
