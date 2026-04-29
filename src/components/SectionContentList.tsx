@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Youtube, FileText, ExternalLink, Loader2, ChevronRight, ChevronDown, Image as ImageIcon, PlayCircle } from "lucide-react";
+import { Youtube, FileText, ExternalLink, Loader2, ChevronRight, ChevronDown, Image as ImageIcon, PlayCircle, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useSectionContents, type SectionContent } from "@/hooks/useSectionContents";
 import ContentViewerModal from "@/components/ContentViewerModal";
 
@@ -161,6 +161,45 @@ const SectionContentList = ({ sectionId }: SectionContentListProps) => {
               </button>
               {isOpen && (
                 <div className="border-t border-border p-3 space-y-2">
+                  {(() => {
+                    const parentsWithKids = tabContents.filter(
+                      (c) => (childrenByParent[c.id]?.length ?? 0) > 0
+                    );
+                    if (parentsWithKids.length === 0) return null;
+                    const allOpen = parentsWithKids.every((p) => openParents[p.id]);
+                    return (
+                      <div className="flex justify-end gap-2 -mt-1 mb-1">
+                        <button
+                          onClick={() =>
+                            setOpenParents((prev) => {
+                              const next = { ...prev };
+                              parentsWithKids.forEach((p) => (next[p.id] = true));
+                              return next;
+                            })
+                          }
+                          disabled={allOpen}
+                          className="text-[11px] flex items-center gap-1 px-2 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/60 disabled:opacity-40 disabled:hover:bg-transparent"
+                          title="Expandir todos os sub-conteúdos"
+                        >
+                          <ChevronsUpDown className="w-3.5 h-3.5" /> Expandir todos
+                        </button>
+                        <button
+                          onClick={() =>
+                            setOpenParents((prev) => {
+                              const next = { ...prev };
+                              parentsWithKids.forEach((p) => (next[p.id] = false));
+                              return next;
+                            })
+                          }
+                          disabled={parentsWithKids.every((p) => !openParents[p.id])}
+                          className="text-[11px] flex items-center gap-1 px-2 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/60 disabled:opacity-40 disabled:hover:bg-transparent"
+                          title="Recolher todos os sub-conteúdos"
+                        >
+                          <ChevronsDownUp className="w-3.5 h-3.5" /> Recolher todos
+                        </button>
+                      </div>
+                    );
+                  })()}
                   {tabContents.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-3">
                       Nenhum conteúdo nesta aba
