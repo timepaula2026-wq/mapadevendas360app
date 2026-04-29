@@ -105,14 +105,13 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       const panDx = mx - start.mx;
       const panDy = my - start.my;
 
-      // Keep the point under the fingers fixed while scaling around it
-      const nextTx = mx - (start.mx - start.tx) * ratio + panDx * 0;
-      const nextTy = my - (start.my - start.ty) * ratio + panDy * 0;
-
-      // Add finger pan delta on top, so users can drag while pinching
+      // Keep finger midpoint fixed while scaling, then add pan delta so
+      // users can drag with the pinch gesture as well.
+      const nextTx = mx - (start.mx - start.tx) * ratio + panDx;
+      const nextTy = my - (start.my - start.ty) * ratio + panDy;
       setScale(next);
-      setTx(nextTx + panDx);
-      setTy(nextTy + panDy);
+      setTx(nextTx);
+      setTy(nextTy);
     } else if (e.touches.length === 1 && dragRef.current && scale > 1) {
       setTx(dragRef.current.tx + (e.touches[0].clientX - dragRef.current.x));
       setTy(dragRef.current.ty + (e.touches[0].clientY - dragRef.current.y));
