@@ -72,6 +72,9 @@ const AdminSections = () => {
   const [editContentTitle, setEditContentTitle] = useState("");
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
+  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image">("link");
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+  const [editUploading, setEditUploading] = useState(false);
 
   // Form for adding content to a tab
   const [showForm, setShowForm] = useState<string | null>(null); // tabId
@@ -350,18 +353,41 @@ const AdminSections = () => {
     setEditContentTitle(c.title);
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
+    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image") || "link");
   };
 
-  const handleSaveEditContent = async (contentId: string, tabId: string, type: string) => {
+  const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
     if (!editContentTitle.trim()) return;
+    const type = editContentType;
     const updates: Record<string, unknown> = {
       title: editContentTitle.trim(),
       description: editContentDesc.trim() || null,
+      type,
     };
-    if (type !== "pdf" && type !== "image") {
+    // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
+    const file = editFileInputRef.current?.files?.[0];
+    if ((type === "pdf" || type === "image") && file) {
+      setEditUploading(true);
+      const fileExt = file.name.split(".").pop();
+      const filePath = `sections/edit/${Date.now()}.${fileExt}`;
+      const { error: upErr } = await supabase.storage
+        .from("training-files")
+        .upload(filePath, file);
+      if (upErr) {
+        toast.error("Erro no upload: " + upErr.message);
+        setEditUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
+      updates.url = urlData.publicUrl;
+      updates.youtube_id = null;
+      setEditUploading(false);
+    } else if (type !== "pdf" && type !== "image") {
       updates.url = editContentUrl || null;
       if (type === "youtube") {
         updates.youtube_id = extractYoutubeId(editContentUrl);
+      } else {
+        updates.youtube_id = null;
       }
     }
     const { error } = await supabase
