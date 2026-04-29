@@ -1,0 +1,183 @@
+import { Share2, Printer } from "lucide-react";
+import { toast } from "sonner";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const tabelas: Record<string, number[]> = {
+  linear_23: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544, 0.3],
+  linear_20: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544],
+  imoveis_1024: [0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.209],
+  imoveis_50: [0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1113],
+};
+
+const planoLabels: Record<string, string> = {
+  linear_23: "Linear/Reduzido - 2.3%",
+  linear_20: "Linear/Reduzido - 2.0%",
+  imoveis_1024: "Plano 100% (G. 1024) - 2.3%",
+  imoveis_50: "Plano 50% (Imóveis) - 2.0%",
+};
+
+function formatarEntrada(value: string): string {
+  const v = value.replace(/\D/g, "");
+  if (!v) return "";
+  const num = (parseInt(v) / 100).toFixed(2);
+  let formatted = num.replace(".", ",");
+  formatted = formatted.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+  formatted = formatted.replace(/(\d)(\d{3}),/g, "$1.$2,");
+  return formatted;
+}
+
+function limparValor(v: string): number {
+  return parseFloat(v.replace(/\./g, "").replace(",", "."));
+}
+
+interface Parcela {
+  mes: number;
+  bruto: number;
+  liquido: number;
+}
+
+const CalculadoraComissao = () => {
+  const [valorInput, setValorInput] = useState("");
+  const [plano, setPlano] = useState("linear_23");
+  const [resultado, setResultado] = useState<{ parcelas: Parcela[]; totalBruto: number; totalLiq: number; imposto: number } | null>(null);
+
+  const calcular = () => {
+    const valorCarta = limparValor(valorInput);
+    if (isNaN(valorCarta) || valorCarta <= 0) return;
+    const parcPerc = tabelas[plano];
+    let totalBruto = 0;
+    const parcelas: Parcela[] = parcPerc.map((p, i) => {
+      const bruto = valorCarta * (p / 100);
+      totalBruto += bruto;
+      return { mes: i + 1, bruto, liquido: bruto * 0.98 };
+    });
+    setResultado({ parcelas, totalBruto, totalLiq: totalBruto * 0.98, imposto: totalBruto * 0.02 });
+  };
+
+  const fmt = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const gerarTexto = () => {
+    if (!resultado) return "";
+    let texto = `📊 Calculadora de Comissão\n`;
+    texto += `Plano: ${planoLabels[plano]}\nValor da Carta: R$ ${valorInput}\n\n`;
+    texto += `Comissão Bruta: R$ ${fmt(resultado.totalBruto)}\n`;
+    texto += `Impostos (2%): - R$ ${fmt(resultado.imposto)}\n`;
+    texto += `Líquido: R$ ${fmt(resultado.totalLiq)}\n\n`;
+    texto += resultado.parcelas.map(p => `${p.mes}º mês: Bruto R$ ${fmt(p.bruto)} | Líq R$ ${fmt(p.liquido)}`).join("\n");
+    return texto;
+  };
+
+  const compartilhar = async () => {
+    const texto = gerarTexto();
+    if (navigator.share) {
+      try { await navigator.share({ title: "Comissão", text: texto }); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(texto);
+      toast.success("Resultado copiado!");
+    }
+  };
+
+  const imprimir = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow || !resultado) return;
+    const rows = resultado.parcelas.map(p =>
+      `<tr><td>${p.mes}º</td><td>R$ ${fmt(p.bruto)}</td><td>R$ ${fmt(p.liquido)}</td></tr>`
+    ).join("");
+    printWindow.document.write(`<html><head><title>Comissão</title><style>
+      body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:12px}
+      th,td{border:1px solid #ccc;padding:8px;text-align:center}th{background:#f0f0f0}
+      .dest{color:#d9534f;font-weight:bold}
+    </style></head><body>
+      <h2>Calculadora de Comissão</h2>
+      <p><b>Plano:</b> ${planoLabels[plano]}<br><b>Valor da Carta:</b> R$ ${valorInput}</p>
+      <p><b>Comissão Bruta:</b> R$ ${fmt(resultado.totalBruto)}</p>
+      <p class="dest">Impostos (2%): - R$ ${fmt(resultado.imposto)}</p>
+      <p><b>Recebimento Líquido: R$ ${fmt(resultado.totalLiq)}</b></p>
+      <table><tr><th>Mês</th><th>Bruto</th><th>Líquido (-2%)</th></tr>${rows}</table>
+    </body></html>`);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-center text-lg">Calcule sua Comissão</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Valor da Carta (R$)</Label>
+            <Input
+              value={valorInput}
+              onChange={(e) => setValorInput(formatarEntrada(e.target.value))}
+              placeholder="Ex: 250.000,00"
+              inputMode="numeric"
+            />
+          </div>
+          <div>
+            <Label>Plano de Vendas (Tabela 2025)</Label>
+            <Select value={plano} onValueChange={setPlano}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(planoLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={calcular} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold">
+            Calcular Parcelado
+          </Button>
+        </CardContent>
+      </Card>
+
+      {resultado && (
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div className="space-y-2 text-sm">
+              <p><span className="font-bold">Comissão Bruta:</span> R$ {fmt(resultado.totalBruto)}</p>
+              <p className="text-destructive font-bold">Impostos (2%): - R$ {fmt(resultado.imposto)}</p>
+              <p className="font-bold text-base">Recebimento Líquido: R$ {fmt(resultado.totalLiq)}</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-muted">
+                    <th className="border border-border p-2 text-center">Mês</th>
+                    <th className="border border-border p-2 text-center">Bruto</th>
+                    <th className="border border-border p-2 text-center">Líquido (-2%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resultado.parcelas.map((p) => (
+                    <tr key={p.mes}>
+                      <td className="border border-border p-2 text-center">{p.mes}º</td>
+                      <td className="border border-border p-2 text-center">R$ {fmt(p.bruto)}</td>
+                      <td className="border border-border p-2 text-center">R$ {fmt(p.liquido)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={compartilhar} variant="outline" className="flex-1 gap-2">
+                <Share2 className="w-4 h-4" /> Compartilhar
+              </Button>
+              <Button onClick={imprimir} variant="outline" className="flex-1 gap-2">
+                <Printer className="w-4 h-4" /> Imprimir
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default CalculadoraComissao;

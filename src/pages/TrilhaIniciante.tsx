@@ -2,6 +2,7 @@ import { ArrowLeft, Rocket, FileSignature } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import SectionContentList from "@/components/SectionContentList";
+import CalculadoraComissao from "@/components/CalculadoraComissao";
 
 const SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante" },
@@ -74,6 +75,11 @@ const TrilhaIniciante = () => {
         )}
 
         <SectionContentList sectionId={activeSection} />
+
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Calculadora de Comissão</h2>
+          <CalculadoraComissao />
+        </div>
       </div>
     </div>
   );
