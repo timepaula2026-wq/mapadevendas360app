@@ -90,7 +90,8 @@ const AdminSections = () => {
       .from("section_tabs")
       .select("*")
       .eq("section_id", sectionId)
-      .order("sort_order", { ascending: true });
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
     setTabsBySection((prev) => ({ ...prev, [sectionId]: (data as SectionTab[]) || [] }));
   };
 
@@ -109,7 +110,8 @@ const AdminSections = () => {
       .from("section_contents")
       .select("*")
       .eq("tab_id", tabId)
-      .order("sort_order", { ascending: true });
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
     setContentsByTab((prev) => ({ ...prev, [tabId]: (data as SectionContent[]) || [] }));
   };
 
