@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -12,6 +12,8 @@ import AdminSections from "@/components/AdminSections";
 import AdminProducts from "@/components/AdminProducts";
 import AdminBannerSlides from "@/components/AdminBannerSlides";
 import AdminNotifications from "@/components/AdminNotifications";
+import AdminAppLayout from "@/components/AdminAppLayout";
+import AdminUserRoles from "@/components/AdminUserRoles";
 
 interface Training {
   id: string;
@@ -286,6 +288,12 @@ const AdminPanel = () => {
              </TabsTrigger>
              <TabsTrigger value="notifications" className="flex-1 gap-1">
                <Bell className="w-4 h-4" /> Notificações
+             </TabsTrigger>
+             <TabsTrigger value="layout" className="flex-1 gap-1">
+               <Palette className="w-4 h-4" /> Layout
+             </TabsTrigger>
+             <TabsTrigger value="roles" className="flex-1 gap-1">
+               <ShieldCheck className="w-4 h-4" /> Papéis
              </TabsTrigger>
               <TabsTrigger value="stats" className="flex-1 gap-1">
                   <Layers className="w-4 h-4" /> Resumo
@@ -572,6 +580,16 @@ const AdminPanel = () => {
           {/* ===== NOTIFICATIONS TAB ===== */}
           <TabsContent value="notifications">
             <AdminNotifications />
+          </TabsContent>
+
+          {/* ===== LAYOUT TAB ===== */}
+          <TabsContent value="layout">
+            <AdminAppLayout />
+          </TabsContent>
+
+          {/* ===== ROLES TAB ===== */}
+          <TabsContent value="roles">
+            <AdminUserRoles />
           </TabsContent>
 
         </Tabs>

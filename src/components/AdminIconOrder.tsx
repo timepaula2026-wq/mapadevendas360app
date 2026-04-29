@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { GripVertical, Loader2, Eye, EyeOff, Pencil, Trash2, Check, X, Plus, Sparkles } from "lucide-react";
+import { GripVertical, Loader2, Eye, EyeOff, Pencil, Trash2, Check, X, Plus, Sparkles, ShieldCheck, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DYNAMIC_ICONS, pickIconFromName, slugify } from "@/lib/iconPicker";
 import { DEFAULT_SECTION_LABELS } from "@/lib/sections";
+import { ROLES } from "@/lib/roles";
 import {
   DndContext,
   closestCenter,
@@ -35,6 +36,7 @@ interface IconOrder {
   icon_name?: string | null;
   route?: string | null;
   is_custom?: boolean | null;
+  allowed_roles?: string[] | null;
 }
 
 const SortableIconItem = ({
@@ -42,11 +44,13 @@ const SortableIconItem = ({
   onToggleVisibility,
   onRename,
   onDelete,
+  onUpdateRoles,
 }: {
   item: IconOrder;
   onToggleVisibility: (id: string) => void;
   onRename: (id: string, label: string) => Promise<void>;
   onDelete: (id: string) => void;
+  onUpdateRoles: (id: string, roles: string[]) => Promise<void>;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = {
@@ -56,63 +60,105 @@ const SortableIconItem = ({
   };
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(getSectionLabel(item));
+  const [showRoles, setShowRoles] = useState(false);
   const PreviewIcon = (item.icon_name && DYNAMIC_ICONS[item.icon_name]) || null;
+  const currentRoles = item.allowed_roles || [];
+
+  const toggleRole = (role: string) => {
+    const next = currentRoles.includes(role)
+      ? currentRoles.filter((r) => r !== role)
+      : [...currentRoles, role];
+    onUpdateRoles(item.id, next);
+  };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-3 py-2.5 px-3 bg-card border border-border rounded-lg mb-1.5">
-      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none">
-        <GripVertical className="w-4 h-4" />
-      </button>
-      {PreviewIcon && (
-        <div className="w-7 h-7 rounded-md bg-primary/15 flex items-center justify-center shrink-0">
-          <PreviewIcon className="w-4 h-4 text-primary" />
+    <div ref={setNodeRef} style={style} className="bg-card border border-border rounded-lg mb-1.5">
+      <div className="flex items-center gap-3 py-2.5 px-3">
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none">
+          <GripVertical className="w-4 h-4" />
+        </button>
+        {PreviewIcon && (
+          <div className="w-7 h-7 rounded-md bg-primary/15 flex items-center justify-center shrink-0">
+            <PreviewIcon className="w-4 h-4 text-primary" />
+          </div>
+        )}
+        {editing ? (
+          <>
+            <Input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="h-8 text-sm flex-1"
+              autoFocus
+            />
+            <button
+              onClick={async () => {
+                await onRename(item.id, value.trim());
+                setEditing(false);
+              }}
+              className="text-primary hover:opacity-80 shrink-0"
+              title="Salvar"
+            >
+              <Check className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setValue(getSectionLabel(item));
+                setEditing(false);
+              }}
+              className="text-muted-foreground hover:text-foreground shrink-0"
+              title="Cancelar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </>
+        ) : (
+          <>
+            <span className={`text-sm flex-1 ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
+              {getSectionLabel(item)}
+              {item.is_custom && <span className="ml-2 text-[10px] uppercase tracking-wide text-primary">novo</span>}
+              {currentRoles.length > 0 && (
+                <span className="ml-2 text-[10px] text-muted-foreground">🔒 {currentRoles.length}</span>
+              )}
+            </span>
+            <button onClick={() => setShowRoles((s) => !s)} className="text-muted-foreground hover:text-foreground shrink-0" title="Permissões">
+              <ShieldCheck className="w-4 h-4" />
+            </button>
+            <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-foreground shrink-0" title="Renomear">
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button onClick={() => onToggleVisibility(item.id)} className="text-muted-foreground hover:text-foreground shrink-0" title={item.visible ? "Ocultar" : "Mostrar"}>
+              {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+            <button onClick={() => onDelete(item.id)} className="text-destructive hover:opacity-80 shrink-0" title="Excluir da grade">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+      {showRoles && !editing && (
+        <div className="border-t border-border px-3 py-2.5 bg-secondary/30">
+          <p className="text-[11px] text-muted-foreground mb-2">
+            Selecione quais papéis podem acessar. Vazio = todos.
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {ROLES.map((r) => {
+              const active = currentRoles.includes(r.value);
+              return (
+                <button
+                  key={r.value}
+                  onClick={() => toggleRole(r.value)}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      )}
-      {editing ? (
-        <>
-          <Input
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="h-8 text-sm flex-1"
-            autoFocus
-          />
-          <button
-            onClick={async () => {
-              await onRename(item.id, value.trim());
-              setEditing(false);
-            }}
-            className="text-primary hover:opacity-80 shrink-0"
-            title="Salvar"
-          >
-            <Check className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => {
-              setValue(getSectionLabel(item));
-              setEditing(false);
-            }}
-            className="text-muted-foreground hover:text-foreground shrink-0"
-            title="Cancelar"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </>
-      ) : (
-        <>
-          <span className={`text-sm flex-1 ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
-            {getSectionLabel(item)}
-            {item.is_custom && <span className="ml-2 text-[10px] uppercase tracking-wide text-primary">novo</span>}
-          </span>
-          <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-foreground shrink-0" title="Renomear">
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button onClick={() => onToggleVisibility(item.id)} className="text-muted-foreground hover:text-foreground shrink-0" title={item.visible ? "Ocultar" : "Mostrar"}>
-            {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-          </button>
-          <button onClick={() => onDelete(item.id)} className="text-destructive hover:opacity-80 shrink-0" title="Excluir da grade">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </>
       )}
     </div>
   );
@@ -209,6 +255,19 @@ const AdminIconOrder = ({ onChange }: { onChange?: () => void } = {}) => {
     } else {
       onChange?.();
       toast.success("Ícone removido da grade");
+    }
+  };
+
+  const handleUpdateRoles = async (id: string, roles: string[]) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, allowed_roles: roles } : i)));
+    const { error } = await supabase
+      .from("icon_grid_order")
+      .update({ allowed_roles: roles })
+      .eq("id", id);
+    if (error) toast.error("Erro ao atualizar permissões");
+    else {
+      onChange?.();
+      toast.success("Permissões atualizadas");
     }
   };
 
@@ -326,6 +385,7 @@ const AdminIconOrder = ({ onChange }: { onChange?: () => void } = {}) => {
               onToggleVisibility={handleToggleVisibility}
               onRename={handleRename}
               onDelete={handleDelete}
+              onUpdateRoles={handleUpdateRoles}
             />
           ))}
         </SortableContext>

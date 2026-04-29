@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          background_color: string
+          display_mode: string
+          favicon_url: string | null
+          header_alignment: string
+          header_logo_url: string | null
+          header_title: string
+          id: string
+          primary_color: string
+          show_header: boolean
+          text_color: string
+          updated_at: string
+        }
+        Insert: {
+          background_color?: string
+          display_mode?: string
+          favicon_url?: string | null
+          header_alignment?: string
+          header_logo_url?: string | null
+          header_title?: string
+          id?: string
+          primary_color?: string
+          show_header?: boolean
+          text_color?: string
+          updated_at?: string
+        }
+        Update: {
+          background_color?: string
+          display_mode?: string
+          favicon_url?: string | null
+          header_alignment?: string
+          header_logo_url?: string | null
+          header_title?: string
+          id?: string
+          primary_color?: string
+          show_header?: boolean
+          text_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           created_at: string
@@ -254,6 +296,7 @@ export type Database = {
       }
       icon_grid_order: {
         Row: {
+          allowed_roles: string[]
           custom_label: string | null
           icon_name: string | null
           id: string
@@ -264,6 +307,7 @@ export type Database = {
           visible: boolean
         }
         Insert: {
+          allowed_roles?: string[]
           custom_label?: string | null
           icon_name?: string | null
           id: string
@@ -274,6 +318,7 @@ export type Database = {
           visible?: boolean
         }
         Update: {
+          allowed_roles?: string[]
           custom_label?: string | null
           icon_name?: string | null
           id?: string
@@ -755,7 +800,15 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "iniciante"
+        | "autorizado"
+        | "supervisor"
+        | "gestor"
+        | "secretaria"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -883,7 +936,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "iniciante",
+        "autorizado",
+        "supervisor",
+        "gestor",
+        "secretaria",
+      ],
     },
   },
 } as const
