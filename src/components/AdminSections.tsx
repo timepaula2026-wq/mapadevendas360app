@@ -789,11 +789,17 @@ const AdminSections = () => {
                         const all = contentsByTab[tab.id] || [];
                         const parents = all.filter((x) => !x.parent_id);
                         const childrenOf = (pid: string) => all.filter((x) => x.parent_id === pid);
-                        return parents.map((c, idx) => (
-                        <div
-                          key={c.id}
-                          className="px-2 py-1 bg-background rounded"
+                        return (
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(e) => handleDragEndParents(tab.id, e)}
                         >
+                          <SortableContext items={parents.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+                          {parents.map((c, idx) => (
+                          <Sortable key={c.id} id={c.id}>
+                          {(h) => (
+                          <div className="px-2 py-1 bg-background rounded">
                           {editingContent === c.id ? (
                             <div className="space-y-1.5 p-1">
                               <Input
