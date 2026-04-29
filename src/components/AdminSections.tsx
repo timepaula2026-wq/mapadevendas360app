@@ -450,6 +450,67 @@ const AdminSections = () => {
     }
   };
 
+  // Drag-and-drop reordering for parent contents within a tab.
+  // Children (parent_id != null) keep their relative order untouched.
+  const handleDragEndParents = async (tabId: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const list = contentsByTab[tabId] || [];
+    const parents = list.filter((x) => !x.parent_id);
+    const oldIdx = parents.findIndex((p) => p.id === active.id);
+    const newIdx = parents.findIndex((p) => p.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const reordered = arrayMove(parents, oldIdx, newIdx);
+    // Reindex parents 0..N-1, keep children unchanged but interleaved after their parent for display order.
+    const reindexedParents = reordered.map((p, i) => ({ ...p, sort_order: i }));
+    // Rebuild full list: each parent followed by its children (children keep their own sort_order).
+    const childrenByParent = list.reduce<Record<string, typeof list>>((acc, c) => {
+      if (c.parent_id) (acc[c.parent_id] ||= []).push(c);
+      return acc;
+    }, {});
+    const nextFull: typeof list = [];
+    reindexedParents.forEach((p) => {
+      nextFull.push(p);
+      (childrenByParent[p.id] || []).forEach((ch) => nextFull.push(ch));
+    });
+    setContentsByTab((prev) => ({ ...prev, [tabId]: nextFull }));
+    const ok = await persistReindex("section_contents", reindexedParents);
+    if (!ok) {
+      toast.error("Erro ao reordenar");
+      fetchTabContents(tabId);
+    }
+  };
+
+  // Drag-and-drop reordering for sub-contents under a given parent.
+  const handleDragEndChildren = async (
+    tabId: string,
+    parentId: string,
+    event: DragEndEvent
+  ) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const list = contentsByTab[tabId] || [];
+    const kids = list.filter((x) => x.parent_id === parentId);
+    const oldIdx = kids.findIndex((k) => k.id === active.id);
+    const newIdx = kids.findIndex((k) => k.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const reordered = arrayMove(kids, oldIdx, newIdx);
+    const reindexedKids = reordered.map((k, i) => ({ ...k, sort_order: i }));
+    // Update local state preserving parents and other groups.
+    const nextFull = list.map((c) => {
+      if (c.parent_id !== parentId) return c;
+      const updated = reindexedKids.find((r) => r.id === c.id);
+      return updated || c;
+    });
+    // Sort so kids appear in their new order in lookups.
+    setContentsByTab((prev) => ({ ...prev, [tabId]: nextFull }));
+    const ok = await persistReindex("section_contents", reindexedKids);
+    if (!ok) {
+      toast.error("Erro ao reordenar");
+      fetchTabContents(tabId);
+    }
+  };
+
   const handleReorderTab = async (sectionId: string, index: number, direction: -1 | 1) => {
     const list = tabsBySection[sectionId];
     if (!list) return;
