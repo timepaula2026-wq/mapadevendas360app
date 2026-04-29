@@ -181,8 +181,12 @@ const IconGrid = () => {
                 style={{ width: "var(--icon-size)", height: "var(--icon-size)" }}
               />
               <span
-                className="font-semibold text-white text-center leading-tight line-clamp-2 px-1 drop-shadow-sm"
-                style={{ fontSize: "var(--label-size)" }}
+                className="font-semibold text-white text-center line-clamp-2 px-0.5 drop-shadow-sm break-words"
+                style={{
+                  fontSize: "var(--label-size)",
+                  lineHeight: "var(--label-leading)",
+                  letterSpacing: "-0.01em",
+                }}
               >
                 {item.label}
               </span>
