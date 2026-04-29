@@ -229,8 +229,19 @@ const AdminSections = () => {
   const handleAddContent = async (sectionId: string, tabId: string) => {
     if (!contentTitle.trim() || !user) return;
 
-    if ((contentType === "pdf" || contentType === "image") && fileInputRef.current?.files?.[0]) {
-      await handleFileUpload(fileInputRef.current.files[0], sectionId, tabId);
+    // Validações de upload/URL
+    if (contentType === "pdf" || contentType === "image") {
+      const file = fileInputRef.current?.files?.[0];
+      if (!file) {
+        toast.error(contentType === "pdf" ? "Selecione um arquivo PDF" : "Selecione uma imagem");
+        return;
+      }
+      await handleFileUpload(file, sectionId, tabId);
+      return;
+    }
+
+    if (!contentUrl.trim()) {
+      toast.error(contentType === "youtube" ? "Informe a URL do vídeo" : "Informe a URL do link");
       return;
     }
 
@@ -242,7 +253,7 @@ const AdminSections = () => {
       title: contentTitle.trim(),
       description: contentDesc.trim() || null,
       type: contentType,
-      url: contentUrl || null,
+      url: contentUrl.trim(),
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
       sort_order: nextOrder,
     });
