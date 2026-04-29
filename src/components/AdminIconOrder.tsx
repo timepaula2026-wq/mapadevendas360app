@@ -40,6 +40,11 @@ const ICON_LABELS: Record<string, string> = {
   loja: "Loja",
   locacao: "Locação de Materiais",
   presenca: "Presença Treinamentos",
+  administrativo: "Gestão de Performance 360",
+  agenda: "Agenda Online",
+  paula: "Fale com a Paula",
+  comissao: "Comissão",
+  lideres: "Escola de Líderes",
 };
 
 interface IconOrder {
