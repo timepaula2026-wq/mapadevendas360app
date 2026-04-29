@@ -33,12 +33,14 @@ export const useSectionContents = (sectionId: string) => {
           .from("section_contents")
           .select("*")
           .eq("section_id", sectionId)
-          .order("sort_order", { ascending: true }),
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true }),
         supabase
           .from("section_tabs")
           .select("*")
           .eq("section_id", sectionId)
-          .order("sort_order", { ascending: true }),
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true }),
       ]);
       if (!active) return;
       setContents((contentsData as SectionContent[]) || []);

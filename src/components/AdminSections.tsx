@@ -90,7 +90,8 @@ const AdminSections = () => {
       .from("section_tabs")
       .select("*")
       .eq("section_id", sectionId)
-      .order("sort_order", { ascending: true });
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
     setTabsBySection((prev) => ({ ...prev, [sectionId]: (data as SectionTab[]) || [] }));
   };
 
@@ -109,7 +110,8 @@ const AdminSections = () => {
       .from("section_contents")
       .select("*")
       .eq("tab_id", tabId)
-      .order("sort_order", { ascending: true });
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
     setContentsByTab((prev) => ({ ...prev, [tabId]: (data as SectionContent[]) || [] }));
   };
 
@@ -203,6 +205,7 @@ const AdminSections = () => {
     const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
 
     const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+    const nextOrder = contentsByTab[tabId]?.length ?? 0;
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
@@ -211,6 +214,7 @@ const AdminSections = () => {
       description: contentDesc.trim() || null,
       type: isImage ? "image" : "pdf",
       url: urlData.publicUrl,
+      sort_order: nextOrder,
     });
 
     if (error) toast.error("Erro ao salvar");
@@ -230,6 +234,7 @@ const AdminSections = () => {
       return;
     }
 
+    const nextOrder = contentsByTab[tabId]?.length ?? 0;
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
@@ -239,6 +244,7 @@ const AdminSections = () => {
       type: contentType,
       url: contentUrl || null,
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
+      sort_order: nextOrder,
     });
 
     if (error) toast.error("Erro ao adicionar");
