@@ -1,4 +1,4 @@
-import { Printer, ExternalLink, Download } from "lucide-react";
+import { Printer, Download } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -77,26 +77,41 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
   const videoInfo = isLinkVideo && url ? getVideoEmbed(url, youtubeId) : null;
 
   const handlePrint = () => {
-    if (isVideoType) {
-      if (url) window.open(url, "_blank");
-      else if (youtubeId) window.open(`https://www.youtube.com/watch?v=${youtubeId}`, "_blank");
-      return;
-    }
-    if (url) {
-      const printWindow = window.open(url, "_blank");
-      if (printWindow) {
-        printWindow.addEventListener("load", () => {
-          printWindow.print();
-        });
+    if (isVideoType || !url) return;
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.src = url;
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch {
+        /* noop */
       }
-    }
+    };
+    document.body.appendChild(iframe);
   };
 
-  const handleOpenExternal = () => {
-    if (isVideoType && !url && youtubeId) {
-      window.open(`https://www.youtube.com/watch?v=${youtubeId}`, "_blank");
-    } else if (url) {
-      window.open(url, "_blank");
+  const handleDownload = async () => {
+    if (!url) return;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = title || "arquivo";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      /* noop */
     }
   };
 
@@ -107,26 +122,24 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-1">
-            {!isVideoType && url && (
+            {(type === "pdf" || type === "image") && url && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrint} title="Imprimir">
                 <Printer className="w-4 h-4" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenExternal} title="Abrir em nova aba">
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-            {type === "pdf" && url && (
-              <a href={url} download target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="h-8 w-8" title="Baixar">
-                  <Download className="w-4 h-4" />
-                </Button>
-              </a>
+            {(type === "pdf" || type === "image") && url && (
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload} title="Baixar">
+                <Download className="w-4 h-4" />
+              </Button>
             )}
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-h-0 bg-muted">
+        <div
+          className="flex-1 min-h-0 bg-muted select-none"
+          onContextMenu={(e) => e.preventDefault()}
+        >
           {!url && !youtubeId ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
@@ -156,15 +169,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
           ) : isLinkVideo && url ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
-                Este vídeo não permite visualização incorporada. Abra em uma nova aba para assistir.
+                Este vídeo não permite visualização incorporada.
               </p>
-              <Button onClick={() => window.open(url, "_blank")} size="sm">
-                <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
-              </Button>
             </div>
           ) : type === "pdf" && url ? (
             <object
-              data={`${url}#toolbar=1&view=FitH`}
+              data={`${url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
               type="application/pdf"
               className="w-full h-full"
               aria-label={title}
@@ -174,14 +184,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
                   Seu navegador bloqueou a visualização do PDF.
                 </p>
                 <div className="flex gap-2">
-                  <Button onClick={() => window.open(url, "_blank")} size="sm">
-                    <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
+                  <Button onClick={handlePrint} size="sm">
+                    <Printer className="w-4 h-4 mr-2" /> Imprimir
                   </Button>
-                  <a href={url} download target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" /> Baixar
-                    </Button>
-                  </a>
+                  <Button variant="outline" size="sm" onClick={handleDownload}>
+                    <Download className="w-4 h-4 mr-2" /> Baixar
+                  </Button>
                 </div>
               </div>
             </object>
@@ -190,7 +198,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
               <img
                 src={url}
                 alt={title}
-                className="max-w-full max-h-full w-auto h-auto object-contain"
+                className="max-w-full max-h-full w-auto h-auto object-contain pointer-events-none"
+                draggable={false}
               />
             </div>
           ) : url ? (
@@ -215,11 +224,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
                 return (
                   <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
                     <p className="text-sm text-muted-foreground max-w-md">
-                      Este conteúdo não permite visualização incorporada. Abra em uma nova aba para acessá-lo.
+                      Este conteúdo não permite visualização incorporada.
                     </p>
-                    <Button onClick={() => window.open(url, "_blank")} size="sm">
-                      <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
-                    </Button>
                   </div>
                 );
               }
