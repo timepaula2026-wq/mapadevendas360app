@@ -1,7 +1,7 @@
 import { ArrowLeft, Users, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
-import CalculadoraComissao from "@/components/CalculadoraComissao";
+import CalculadoraCollapsible from "@/components/CalculadoraCollapsible";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 
 const GestaoEquipe = () => {
@@ -22,6 +22,12 @@ const GestaoEquipe = () => {
       </div>
 
       <div className="px-5 mt-6 space-y-4">
+        {/* Agenda Online no topo */}
+        <div>
+          <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>
+          <AgendaOnlineBlock />
+        </div>
+
         <button
           onClick={() => navigate("/analise")}
           className="w-full bg-card border border-border rounded-xl p-4 flex items-center gap-4 hover:bg-accent transition-colors"
@@ -38,13 +44,7 @@ const GestaoEquipe = () => {
         <SectionContentList sectionId="equipe" />
 
         <div className="pt-2">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Calculadora de Comissão</h2>
-          <CalculadoraComissao />
-        </div>
-
-        <div className="pt-2">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>
-          <AgendaOnlineBlock />
+          <CalculadoraCollapsible />
         </div>
       </div>
     </div>
