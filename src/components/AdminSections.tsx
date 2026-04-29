@@ -762,7 +762,8 @@ const AdminSections = () => {
                           <div className="flex gap-1">
                              {(
                                [
-                                 { type: "youtube" as const, icon: Youtube, label: "Vídeo" },
+                                 { type: "youtube" as const, icon: Youtube, label: "Link Vídeo" },
+                                 { type: "video" as const, icon: Youtube, label: "MP4" },
                                  { type: "pdf" as const, icon: Upload, label: "PDF" },
                                  { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                  { type: "link" as const, icon: File, label: "Link" },
@@ -793,11 +794,17 @@ const AdminSections = () => {
                             placeholder="Descrição (opcional)"
                             className="h-7 text-xs"
                           />
-                           {contentType === "pdf" || contentType === "image" ? (
+                           {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                             <input
                               ref={fileInputRef}
                               type="file"
-                              accept={contentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
+                              accept={
+                                contentType === "pdf"
+                                  ? ".pdf"
+                                  : contentType === "image"
+                                  ? "image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                                  : "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                              }
                               className="w-full text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-primary file:text-primary-foreground"
                             />
                           ) : (
