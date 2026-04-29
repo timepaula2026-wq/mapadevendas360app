@@ -659,14 +659,14 @@ const AdminSections = () => {
                       ) : (
                         <div className="p-2 bg-secondary rounded space-y-1.5">
                           <div className="flex gap-1">
-                            {(
-                              [
-                                { type: "youtube" as const, icon: Youtube, label: "YouTube" },
-                                { type: "pdf" as const, icon: Upload, label: "PDF" },
-                                { type: "image" as const, icon: ImageIcon, label: "Imagem" },
-                                { type: "link" as const, icon: File, label: "Link" },
-                              ]
-                            ).map(({ type, icon: Icon, label }) => (
+                             {(
+                               [
+                                 { type: "youtube" as const, icon: Youtube, label: "Vídeo" },
+                                 { type: "pdf" as const, icon: Upload, label: "PDF" },
+                                 { type: "image" as const, icon: ImageIcon, label: "Imagem" },
+                                 { type: "link" as const, icon: File, label: "Link" },
+                               ]
+                             ).map(({ type, icon: Icon, label }) => (
                               <button
                                 key={type}
                                 onClick={() => setContentType(type)}
@@ -692,7 +692,7 @@ const AdminSections = () => {
                             placeholder="Descrição (opcional)"
                             className="h-7 text-xs"
                           />
-                          {contentType === "pdf" || contentType === "image" ? (
+                           {contentType === "pdf" || contentType === "image" ? (
                             <input
                               ref={fileInputRef}
                               type="file"
@@ -704,7 +704,9 @@ const AdminSections = () => {
                               value={contentUrl}
                               onChange={(e) => setContentUrl(e.target.value)}
                               placeholder={
-                                contentType === "youtube" ? "URL do YouTube" : "URL do link"
+                                contentType === "youtube"
+                                  ? "URL do vídeo (YouTube, Vimeo, Drive, Loom...)"
+                                  : "URL do link"
                               }
                               className="h-7 text-xs"
                             />

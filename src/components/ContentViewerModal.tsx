@@ -1,4 +1,4 @@
-import { X, Printer, ExternalLink, Download } from "lucide-react";
+import { Printer, ExternalLink, Download } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -11,11 +11,72 @@ interface ContentViewerModalProps {
   youtubeId: string | null;
 }
 
+// Detects video provider and returns an embeddable URL when possible.
+// Returns null when the provider is known not to allow iframe embedding.
+const getVideoEmbed = (
+  rawUrl: string,
+  youtubeId: string | null
+): { embedUrl: string | null; isVideo: boolean; provider: string } => {
+  const url = rawUrl?.trim() || "";
+
+  // YouTube (also covers stored youtube_id)
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  const ytId = youtubeId || (ytMatch ? ytMatch[1] : null);
+  if (ytId) {
+    return {
+      embedUrl: `https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`,
+      isVideo: true,
+      provider: "youtube",
+    };
+  }
+
+  // Vimeo: vimeo.com/{id} or player.vimeo.com/video/{id}
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return {
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
+      isVideo: true,
+      provider: "vimeo",
+    };
+  }
+
+  // Google Drive video: /file/d/{id}/...
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    return {
+      embedUrl: `https://drive.google.com/file/d/${driveMatch[1]}/preview`,
+      isVideo: true,
+      provider: "drive",
+    };
+  }
+
+  // Loom
+  const loomMatch = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
+  if (loomMatch) {
+    return {
+      embedUrl: `https://www.loom.com/embed/${loomMatch[1]}`,
+      isVideo: true,
+      provider: "loom",
+    };
+  }
+
+  // NotebookLM does not allow iframe embedding
+  if (/notebooklm\.google\.com/.test(url)) {
+    return { embedUrl: null, isVideo: false, provider: "notebooklm" };
+  }
+
+  return { embedUrl: null, isVideo: false, provider: "unknown" };
+};
+
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: ContentViewerModalProps) => {
+  // Treat legacy "youtube" type and new "video" type the same.
+  const isVideoType = type === "youtube" || type === "video";
+  const videoInfo = isVideoType && url ? getVideoEmbed(url, youtubeId) : null;
+
   const handlePrint = () => {
-    if (type === "youtube" && youtubeId) {
-      // Can't print video, open in new tab instead
-      window.open(`https://www.youtube.com/watch?v=${youtubeId}`, "_blank");
+    if (isVideoType) {
+      if (url) window.open(url, "_blank");
+      else if (youtubeId) window.open(`https://www.youtube.com/watch?v=${youtubeId}`, "_blank");
       return;
     }
     if (url) {
@@ -29,7 +90,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
   };
 
   const handleOpenExternal = () => {
-    if (type === "youtube" && youtubeId) {
+    if (isVideoType && !url && youtubeId) {
       window.open(`https://www.youtube.com/watch?v=${youtubeId}`, "_blank");
     } else if (url) {
       window.open(url, "_blank");
@@ -43,7 +104,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-1">
-            {type !== "youtube" && url && (
+            {!isVideoType && url && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrint} title="Imprimir">
                 <Printer className="w-4 h-4" />
               </Button>
@@ -63,14 +124,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
 
         {/* Content */}
         <div className="flex-1 min-h-0 bg-muted">
-          {type === "youtube" && youtubeId ? (
+          {isVideoType && videoInfo?.embedUrl ? (
             <iframe
-              src={`https://www.youtube.com/embed/${youtubeId}?rel=0&autoplay=1`}
+              src={videoInfo.embedUrl}
               className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
               title={title}
             />
+          ) : isVideoType && url ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Este vídeo não permite visualização incorporada. Abra em uma nova aba para assistir.
+              </p>
+              <Button onClick={() => window.open(url, "_blank")} size="sm">
+                <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
+              </Button>
+            </div>
           ) : type === "pdf" && url ? (
             <object
               data={`${url}#toolbar=1&view=FitH`}
