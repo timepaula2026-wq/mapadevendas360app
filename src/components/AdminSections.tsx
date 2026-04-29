@@ -886,6 +886,15 @@ const AdminSections = () => {
                             </div>
                           ) : (
                           <div className="flex items-center gap-2">
+                          <button
+                            {...h.listeners}
+                            {...h.attributes}
+                            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"
+                            title="Arrastar para reordenar"
+                            aria-label="Arrastar"
+                          >
+                            <GripVertical className="w-3.5 h-3.5" />
+                          </button>
                           {c.type === "youtube" ? (
                             <Youtube className="w-3 h-3 text-red-500 shrink-0" />
                           ) : c.type === "pdf" ? (
@@ -894,24 +903,6 @@ const AdminSections = () => {
                             <File className="w-3 h-3 text-muted-foreground shrink-0" />
                           )}
                           <span className="text-[11px] flex-1 truncate">{c.title}</span>
-                          <div className="flex flex-col -space-y-0.5">
-                            <button
-                              onClick={() => handleReorderContent(tab.id, idx, -1)}
-                              disabled={idx === 0}
-                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              title="Mover para cima"
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => handleReorderContent(tab.id, idx, 1)}
-                              disabled={idx === (contentsByTab[tab.id]?.length ?? 0) - 1}
-                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              title="Mover para baixo"
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                            </button>
-                          </div>
                           {(tabsBySection[section.id]?.length ?? 0) > 1 && (
                             <select
                               value=""
