@@ -316,6 +316,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           )}
         </div>
       </DialogContent>
+      {zoomImage && (
+        <ImageZoomModal
+          src={zoomImage}
+          title={title}
+          onClose={() => setZoomImage(null)}
+        />
+      )}
     </Dialog>
   );
 };
