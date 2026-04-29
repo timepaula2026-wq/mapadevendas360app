@@ -1,6 +1,8 @@
-import { Printer, Download } from "lucide-react";
+import { Printer, Download, ZoomIn, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import ImageZoomModal from "@/components/ImageZoomModal";
 
 interface ContentViewerModalProps {
   open: boolean;
@@ -77,6 +79,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const isFileVideo = type === "video";
   const isVideoType = isLinkVideo || isFileVideo;
   const videoInfo = isLinkVideo && url ? getVideoEmbed(url, youtubeId) : null;
+
+  // Zoom da imagem dentro do conteúdo
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+
+  // Loading state para PDF (iOS demora a renderizar o primeiro frame)
+  const [pdfLoaded, setPdfLoaded] = useState(false);
+  useEffect(() => {
+    if (open && type === "pdf") setPdfLoaded(false);
+  }, [open, url, type]);
+
+  // iOS Safari não rola dentro de <object>; usamos Google Docs Viewer como alternativa
+  const isIOS =
+    typeof navigator !== "undefined" &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    !(window as unknown as { MSStream?: unknown }).MSStream;
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
@@ -213,36 +230,48 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               </p>
             </div>
           ) : type === "pdf" && url ? (
-            <object
-              data={`${url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
-              type="application/pdf"
-              className="w-full h-full"
-              aria-label={title}
-            >
-              <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Seu navegador bloqueou a visualização do PDF.
-                </p>
-                <div className="flex gap-2">
-                  <Button onClick={handlePrint} size="sm">
-                    <Printer className="w-4 h-4 mr-2" /> Imprimir
-                  </Button>
-                  {allowDownload && (
-                    <Button variant="outline" size="sm" onClick={handleDownload}>
-                      <Download className="w-4 h-4 mr-2" /> Baixar
-                    </Button>
-                  )}
+            <div className="relative w-full h-full">
+              {!pdfLoaded && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted z-10">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  <p className="text-xs text-muted-foreground">Carregando PDF…</p>
                 </div>
-              </div>
-            </object>
+              )}
+              {isIOS ? (
+                <iframe
+                  src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
+                  className="w-full h-full border-0"
+                  title={title}
+                  onLoad={() => setPdfLoaded(true)}
+                  style={{ WebkitOverflowScrolling: "touch" }}
+                />
+              ) : (
+                <iframe
+                  src={`${url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                  className="w-full h-full border-0"
+                  title={title}
+                  onLoad={() => setPdfLoaded(true)}
+                />
+              )}
+            </div>
           ) : type === "image" && url ? (
-            <div className="w-full h-full flex items-center justify-center bg-black/40 p-4">
+            <div className="relative w-full h-full flex items-center justify-center bg-black/40 p-4">
               <img
                 src={url}
                 alt={title}
-                className="max-w-full max-h-full w-auto h-auto object-contain pointer-events-none"
+                className="max-w-full max-h-full w-auto h-auto object-contain cursor-zoom-in"
                 draggable={false}
+                onClick={() => setZoomImage(url)}
               />
+              <button
+                type="button"
+                onClick={() => setZoomImage(url)}
+                className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/70 ring-1 ring-white/30 text-white flex items-center justify-center hover:bg-black/85 active:scale-95 transition shadow-lg"
+                aria-label="Ampliar imagem"
+                title="Ampliar"
+              >
+                <ZoomIn className="w-5 h-5" />
+              </button>
             </div>
           ) : url ? (
             (() => {
@@ -287,6 +316,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           )}
         </div>
       </DialogContent>
+      {zoomImage && (
+        <ImageZoomModal
+          src={zoomImage}
+          title={title}
+          onClose={() => setZoomImage(null)}
+        />
+      )}
     </Dialog>
   );
 };
