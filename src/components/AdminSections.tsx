@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/compressImage";
+import AdminIconOrder from "@/components/AdminIconOrder";
 
 interface SectionContent {
   id: string;
@@ -43,7 +44,7 @@ interface SectionTab {
   sort_order: number | null;
 }
 
-const SECTIONS = [
+const DEFAULT_SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante" },
   { id: "vendas", label: "Central de Vendas & CRM" },
   { id: "ferramentas", label: "Acessos de Ferramentas" },
@@ -60,6 +61,7 @@ const SECTIONS = [
 
 const AdminSections = () => {
   const { user } = useAuth();
+  const [sections, setSections] = useState<{ id: string; label: string }[]>(DEFAULT_SECTIONS);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedTab, setExpandedTab] = useState<string | null>(null);
   const [tabsBySection, setTabsBySection] = useState<Record<string, SectionTab[]>>({});
@@ -88,6 +90,24 @@ const AdminSections = () => {
   const [contentAllowDownload, setContentAllowDownload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchSections = async () => {
+    const { data } = await supabase
+      .from("icon_grid_order")
+      .select("id, sort_order, visible, custom_label")
+      .order("sort_order", { ascending: true });
+    if (data && data.length > 0) {
+      const defaultMap = Object.fromEntries(DEFAULT_SECTIONS.map((s) => [s.id, s.label]));
+      const merged = (data as { id: string; sort_order: number; visible: boolean; custom_label?: string | null }[])
+        .filter((d) => defaultMap[d.id]) // só seções de conteúdo
+        .map((d) => ({ id: d.id, label: d.custom_label || defaultMap[d.id] }));
+      if (merged.length > 0) setSections(merged);
+    }
+  };
+
+  useEffect(() => {
+    fetchSections();
+  }, []);
 
   const fetchTabs = async (sectionId: string) => {
     const { data } = await supabase
