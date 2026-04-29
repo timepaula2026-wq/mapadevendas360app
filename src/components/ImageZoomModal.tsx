@@ -209,7 +209,10 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       <div
         ref={stageRef}
         className="w-full h-full flex items-center justify-center overflow-hidden touch-none"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          // Close when tapping/clicking outside the image itself
+          if (e.target === e.currentTarget && scale <= 1) onClose();
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -225,7 +228,8 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
-          className="max-w-[95vw] max-h-[90vh] object-contain pointer-events-none"
+          onClick={(e) => e.stopPropagation()}
+          className="max-w-[95vw] max-h-[90vh] object-contain"
           style={{
             transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
             transition: dragRef.current || pinchRef.current ? "none" : "transform 0.15s ease-out",
