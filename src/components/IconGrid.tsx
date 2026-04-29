@@ -58,7 +58,7 @@ const IconGrid = () => {
             }
             const base = ALL_ITEMS[d.id];
             const Icon = (d.icon_name && DYNAMIC_ICONS[d.icon_name]) || base.icon;
-            return { ...base, icon: Icon, label: d.custom_label || base.label };
+            return { ...base, icon: Icon, label: d.custom_label || base.label, route: d.route || base.route };
           });
         setOrderedItems(visible);
       }
