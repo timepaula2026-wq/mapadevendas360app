@@ -515,8 +515,16 @@ const AdminSections = () => {
 
   return (
     <div className="space-y-2">
+      <details className="bg-card border border-border rounded-xl overflow-hidden mb-3" open>
+        <summary className="cursor-pointer p-3 text-sm font-medium text-foreground hover:bg-secondary/50">
+          Ordem e nomes dos ícones da tela inicial
+        </summary>
+        <div className="p-3 border-t border-border">
+          <AdminIconOrder />
+        </div>
+      </details>
       <p className="text-xs text-muted-foreground mb-3">
-        Cada seção tem abas (temas). Adicione conteúdos dentro de cada aba.
+        Cada seção tem abas (temas). Adicione conteúdos dentro de cada aba. O nome exibido é o mesmo configurado acima.
       </p>
       {sections.map((section) => (
         <div key={section.id} className="bg-card border border-border rounded-xl overflow-hidden">
