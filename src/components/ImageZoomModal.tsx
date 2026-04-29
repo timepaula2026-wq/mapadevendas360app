@@ -189,17 +189,20 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
         </div>
       </div>
 
-      {/* Prominent floating close button (respects iPhone notch) */}
+      {/* Always-visible floating close button (respects iPhone notch/safe-area) */}
       <button
+        type="button"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="fixed z-[110] w-14 h-14 rounded-full bg-red-600 ring-2 ring-white flex items-center justify-center text-white hover:bg-red-700 active:scale-95 transition shadow-2xl"
+        onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }}
+        className="fixed z-[120] flex items-center gap-2 pl-3 pr-4 h-12 rounded-full bg-red-600 ring-2 ring-white text-white font-semibold text-sm hover:bg-red-700 active:scale-95 transition shadow-2xl"
         style={{
           top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
           right: "calc(env(safe-area-inset-right, 0px) + 0.75rem)",
         }}
-        aria-label="Fechar"
+        aria-label="Fechar zoom"
       >
-        <X className="w-7 h-7" strokeWidth={3} />
+        <X className="w-6 h-6" strokeWidth={3} />
+        <span>Fechar</span>
       </button>
 
       {/* Image stage */}
