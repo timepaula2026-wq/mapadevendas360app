@@ -28,6 +28,16 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   } | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const lastTapRef = useRef<number>(0);
+  // Tracks the active touch interaction so we can decide if it ends as a
+  // pure tap (close-on-outside) or as a gesture (pinch/pan — must NOT close).
+  const gestureRef = useRef<{
+    startX: number;
+    startY: number;
+    startTime: number;
+    moved: boolean;
+    multiTouch: boolean;
+    targetIsStage: boolean;
+  } | null>(null);
 
   // Lock body scroll
   useEffect(() => {
@@ -65,6 +75,8 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   // Touch handlers (pinch + pan + double-tap)
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      // Pinch in progress — disqualify this interaction from being a tap
+      if (gestureRef.current) gestureRef.current.multiTouch = true;
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const { mx, my } = midpointRelToCenter(e.touches[0], e.touches[1]);
@@ -77,6 +89,14 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
         my,
       };
     } else if (e.touches.length === 1) {
+      gestureRef.current = {
+        startX: e.touches[0].clientX,
+        startY: e.touches[0].clientY,
+        startTime: Date.now(),
+        moved: false,
+        multiTouch: false,
+        targetIsStage: e.target === stageRef.current,
+      };
       const now = Date.now();
       if (now - lastTapRef.current < 280) {
         // double tap toggle zoom
@@ -91,6 +111,12 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
+    if (gestureRef.current && e.touches.length >= 1) {
+      const dx = e.touches[0].clientX - gestureRef.current.startX;
+      const dy = e.touches[0].clientY - gestureRef.current.startY;
+      if (Math.hypot(dx, dy) > 10) gestureRef.current.moved = true;
+      if (e.touches.length > 1) gestureRef.current.multiTouch = true;
+    }
     if (e.touches.length === 2 && pinchRef.current) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -118,7 +144,28 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
     }
   };
 
-  const onTouchEnd = () => { dragRef.current = null; pinchRef.current = null; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const g = gestureRef.current;
+    const ended = e.touches.length === 0;
+    // Close only on a clean tap on the backdrop (no pinch, no pan, short, not zoomed)
+    if (
+      ended &&
+      g &&
+      g.targetIsStage &&
+      !g.moved &&
+      !g.multiTouch &&
+      Date.now() - g.startTime < 300 &&
+      scale <= 1 &&
+      !pinchRef.current
+    ) {
+      onClose();
+    }
+    if (ended) {
+      dragRef.current = null;
+      pinchRef.current = null;
+      gestureRef.current = null;
+    }
+  };
 
   // Mouse drag when zoomed
   const onMouseDown = (e: React.MouseEvent) => {
@@ -210,8 +257,11 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
         ref={stageRef}
         className="w-full h-full flex items-center justify-center overflow-hidden touch-none"
         onClick={(e) => {
-          // Close when tapping/clicking outside the image itself
-          if (e.target === e.currentTarget && scale <= 1) onClose();
+          // Mouse-only path. Touch close is handled in onTouchEnd to avoid
+          // conflicting with pinch/pan gestures (synthetic clicks are ignored).
+          if (e.target === e.currentTarget && scale <= 1 && e.detail > 0) {
+            onClose();
+          }
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
