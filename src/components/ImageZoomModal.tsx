@@ -38,6 +38,17 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
     multiTouch: boolean;
     targetIsStage: boolean;
   } | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  // Move focus into the modal on open and restore it on close (a11y)
+  useEffect(() => {
+    previouslyFocusedRef.current = (document.activeElement as HTMLElement) ?? null;
+    closeBtnRef.current?.focus();
+    return () => {
+      previouslyFocusedRef.current?.focus?.();
+    };
+  }, []);
 
   // Lock body scroll
   useEffect(() => {
@@ -201,6 +212,10 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center select-none"
       onClick={onClose}
       onContextMenu={(e) => e.preventDefault()}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title ? `Visualização ampliada: ${title}` : "Visualização ampliada da imagem"}
+      aria-describedby={description ? "image-zoom-description" : undefined}
     >
       {/* Top bar */}
       <div
@@ -230,7 +245,12 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
           >
             <RotateCcw className="w-4 h-4" />
           </button>
-          <span className="px-3 h-9 rounded-full bg-white/10 text-white text-xs flex items-center">
+          <span
+            className="px-3 h-9 rounded-full bg-white/10 text-white text-xs flex items-center"
+            role="status"
+            aria-live="polite"
+            aria-label={`Nível de zoom atual: ${Math.round(scale * 100)} por cento`}
+          >
             {Math.round(scale * 100)}%
           </span>
         </div>
@@ -238,15 +258,18 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
 
       {/* Always-visible floating close button (respects iPhone notch/safe-area) */}
       <button
+        ref={closeBtnRef}
         type="button"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
         onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }}
-        className="fixed z-[120] flex items-center gap-2 pl-3 pr-4 h-12 rounded-full bg-red-600 ring-2 ring-white text-white font-semibold text-sm hover:bg-red-700 active:scale-95 transition shadow-2xl"
+        className="fixed z-[120] flex items-center gap-2 pl-3 pr-4 h-12 rounded-full bg-red-600 ring-2 ring-white text-white font-semibold text-sm hover:bg-red-700 active:scale-95 transition shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/70"
         style={{
           top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
           right: "calc(env(safe-area-inset-right, 0px) + 0.75rem)",
         }}
-        aria-label="Fechar zoom"
+        aria-label="Fechar visualização ampliada da imagem"
+        aria-keyshortcuts="Escape"
+        title="Fechar (Esc)"
       >
         <X className="w-6 h-6" strokeWidth={3} />
         <span>Fechar</span>
@@ -274,7 +297,8 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       >
         <img
           src={src}
-          alt="Visualização ampliada"
+          alt={title || description || "Imagem ampliada"}
+          role="img"
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
@@ -303,7 +327,7 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
               </h3>
             )}
             {description && (
-              <p className="text-white/85 text-xs sm:text-sm leading-relaxed mt-1 drop-shadow whitespace-pre-line">
+              <p id="image-zoom-description" className="text-white/85 text-xs sm:text-sm leading-relaxed mt-1 drop-shadow whitespace-pre-line">
                 {description}
               </p>
             )}
