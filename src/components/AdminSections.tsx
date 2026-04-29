@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { compressImage } from "@/lib/compressImage";
 
 interface SectionContent {
   id: string;
@@ -194,12 +195,25 @@ const AdminSections = () => {
   ) => {
     if (!user) return;
     setUploading(true);
-    const fileExt = file.name.split(".").pop();
+    // Comprime imagens grandes antes do upload para abrir mais rápido
+    let toUpload = file;
+    if (/^image\//i.test(file.type)) {
+      try {
+        toUpload = await compressImage(file);
+      } catch {
+        /* mantém original em caso de falha */
+      }
+    }
+    const fileExt = toUpload.name.split(".").pop();
     const filePath = `sections/${sectionId}/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from("training-files")
-      .upload(filePath, file);
+      .upload(filePath, toUpload, {
+        cacheControl: "31536000",
+        contentType: toUpload.type || undefined,
+        upsert: false,
+      });
 
     if (uploadError) {
       toast.error("Erro no upload: " + uploadError.message);
@@ -209,8 +223,8 @@ const AdminSections = () => {
 
     const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
 
-    const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
-    const isVideo = /\.(mp4|webm|mov|m4v|ogv)$/i.test(file.name);
+    const isImage = /\.(png|jpe?g|gif|webp)$/i.test(toUpload.name);
+    const isVideo = /\.(mp4|webm|mov|m4v|ogv)$/i.test(toUpload.name);
     const resolvedType = forcedType ?? (isVideo ? "video" : isImage ? "image" : "pdf");
     const nextOrder = contentsByTab[tabId]?.length ?? 0;
     const { error } = await supabase.from("section_contents").insert({
@@ -407,11 +421,23 @@ const AdminSections = () => {
     const file = editFileInputRef.current?.files?.[0];
     if ((type === "pdf" || type === "image" || type === "video") && file) {
       setEditUploading(true);
-      const fileExt = file.name.split(".").pop();
+      let toUpload = file;
+      if (/^image\//i.test(file.type)) {
+        try {
+          toUpload = await compressImage(file);
+        } catch {
+          /* mantém original em caso de falha */
+        }
+      }
+      const fileExt = toUpload.name.split(".").pop();
       const filePath = `sections/edit/${Date.now()}.${fileExt}`;
       const { error: upErr } = await supabase.storage
         .from("training-files")
-        .upload(filePath, file);
+        .upload(filePath, toUpload, {
+          cacheControl: "31536000",
+          contentType: toUpload.type || undefined,
+          upsert: false,
+        });
       if (upErr) {
         toast.error("Erro no upload: " + upErr.message);
         setEditUploading(false);
