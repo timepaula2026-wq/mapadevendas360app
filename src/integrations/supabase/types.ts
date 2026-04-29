@@ -129,6 +129,7 @@ export type Database = {
         Row: {
           active: boolean | null
           created_at: string
+          description: string | null
           id: string
           image_url: string | null
           link_type: string
@@ -142,6 +143,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
           link_type?: string
@@ -155,6 +157,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
           link_type?: string
