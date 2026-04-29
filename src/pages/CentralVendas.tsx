@@ -1,6 +1,7 @@
 import { ArrowLeft, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
+import CalculadoraCollapsible from "@/components/CalculadoraCollapsible";
 
 const CentralVendas = () => {
   const navigate = useNavigate();
@@ -22,6 +23,10 @@ const CentralVendas = () => {
       <div className="px-5 mt-6">
         <h2 className="text-sm font-semibold text-foreground mb-3">Conteúdos</h2>
         <SectionContentList sectionId="vendas" />
+
+        <div className="mt-6">
+          <CalculadoraCollapsible />
+        </div>
       </div>
     </div>
   );

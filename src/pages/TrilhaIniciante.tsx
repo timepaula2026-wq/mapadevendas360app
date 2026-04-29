@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_GRID_SECTIONS } from "@/lib/sections";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import SectionContentList from "@/components/SectionContentList";
-import CalculadoraCollapsible from "@/components/CalculadoraCollapsible";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 
 type Section = { id: string; label: string };
@@ -120,10 +119,6 @@ const TrilhaIniciante = () => {
         )}
 
         <SectionContentList sectionId={activeSection} />
-
-        <div className="mt-6">
-          <CalculadoraCollapsible />
-        </div>
       </div>
     </div>
   );
