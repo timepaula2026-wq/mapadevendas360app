@@ -53,6 +53,12 @@ const AdminAppLayout = () => {
         show_header: settings.show_header,
         display_mode: settings.display_mode,
         favicon_url: settings.favicon_url,
+        grid_cols_mobile: settings.grid_cols_mobile,
+        grid_cols_tablet: settings.grid_cols_tablet,
+        grid_cols_desktop: settings.grid_cols_desktop,
+        icon_size_mobile: settings.icon_size_mobile,
+        icon_size_tablet: settings.icon_size_tablet,
+        icon_size_desktop: settings.icon_size_desktop,
       })
       .eq("id", "default");
     setSaving(false);
@@ -213,6 +219,54 @@ const AdminAppLayout = () => {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Grade responsiva */}
+      <section className="bg-card border border-border rounded-xl p-4 space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold">Grade da tela inicial</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Defina colunas e tamanho dos ícones por dispositivo.
+          </p>
+        </div>
+
+        {([
+          { device: "Mobile (celular)", colsKey: "grid_cols_mobile", sizeKey: "icon_size_mobile", colsMax: 4 },
+          { device: "Tablet", colsKey: "grid_cols_tablet", sizeKey: "icon_size_tablet", colsMax: 6 },
+          { device: "Desktop / Notebook", colsKey: "grid_cols_desktop", sizeKey: "icon_size_desktop", colsMax: 8 },
+        ] as const).map((cfg) => (
+          <div key={cfg.device} className="space-y-2 pb-3 border-b border-border last:border-0 last:pb-0">
+            <p className="text-xs font-medium text-foreground">{cfg.device}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[11px]">Colunas (máx {cfg.colsMax})</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={cfg.colsMax}
+                  value={settings[cfg.colsKey]}
+                  onChange={(e) =>
+                    update({ [cfg.colsKey]: Math.max(1, Math.min(cfg.colsMax, Number(e.target.value) || 1)) } as Partial<AppSettings>)
+                  }
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px]">Tamanho do ícone (px)</Label>
+                <Input
+                  type="number"
+                  min={16}
+                  max={128}
+                  value={settings[cfg.sizeKey]}
+                  onChange={(e) =>
+                    update({ [cfg.sizeKey]: Math.max(16, Math.min(128, Number(e.target.value) || 36)) } as Partial<AppSettings>)
+                  }
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* Favicon */}

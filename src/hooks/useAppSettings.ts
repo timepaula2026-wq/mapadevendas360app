@@ -12,6 +12,12 @@ export interface AppSettings {
   show_header: boolean;
   display_mode: string;
   favicon_url: string | null;
+  grid_cols_mobile: number;
+  grid_cols_tablet: number;
+  grid_cols_desktop: number;
+  icon_size_mobile: number;
+  icon_size_tablet: number;
+  icon_size_desktop: number;
 }
 
 const DEFAULT: AppSettings = {
@@ -25,6 +31,12 @@ const DEFAULT: AppSettings = {
   show_header: true,
   display_mode: "grid",
   favicon_url: null,
+  grid_cols_mobile: 2,
+  grid_cols_tablet: 3,
+  grid_cols_desktop: 5,
+  icon_size_mobile: 36,
+  icon_size_tablet: 48,
+  icon_size_desktop: 56,
 };
 
 export const useAppSettings = () => {

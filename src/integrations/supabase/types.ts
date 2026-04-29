@@ -19,9 +19,15 @@ export type Database = {
           background_color: string
           display_mode: string
           favicon_url: string | null
+          grid_cols_desktop: number
+          grid_cols_mobile: number
+          grid_cols_tablet: number
           header_alignment: string
           header_logo_url: string | null
           header_title: string
+          icon_size_desktop: number
+          icon_size_mobile: number
+          icon_size_tablet: number
           id: string
           primary_color: string
           show_header: boolean
@@ -32,9 +38,15 @@ export type Database = {
           background_color?: string
           display_mode?: string
           favicon_url?: string | null
+          grid_cols_desktop?: number
+          grid_cols_mobile?: number
+          grid_cols_tablet?: number
           header_alignment?: string
           header_logo_url?: string | null
           header_title?: string
+          icon_size_desktop?: number
+          icon_size_mobile?: number
+          icon_size_tablet?: number
           id?: string
           primary_color?: string
           show_header?: boolean
@@ -45,9 +57,15 @@ export type Database = {
           background_color?: string
           display_mode?: string
           favicon_url?: string | null
+          grid_cols_desktop?: number
+          grid_cols_mobile?: number
+          grid_cols_tablet?: number
           header_alignment?: string
           header_logo_url?: string | null
           header_title?: string
+          icon_size_desktop?: number
+          icon_size_mobile?: number
+          icon_size_tablet?: number
           id?: string
           primary_color?: string
           show_header?: boolean
