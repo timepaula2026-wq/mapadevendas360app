@@ -67,7 +67,7 @@ const BannerCarousel = () => {
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl aspect-[4/5] max-h-[520px] bg-card">
+    <div className="relative w-full overflow-hidden rounded-xl aspect-video sm:aspect-[16/9] max-h-[420px] bg-black">
       {/* Video overlay */}
       {playingVideo && (
         <div className="absolute inset-0 z-20 bg-black rounded-xl">
@@ -98,14 +98,15 @@ const BannerCarousel = () => {
             <img
               src={slide.image_url}
               alt={slide.title || "Banner"}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
+              loading="lazy"
             />
           ) : slide.type === "video" && slide.youtube_id ? (
             <div className="w-full h-full relative">
               <img
                 src={`https://img.youtube.com/vi/${slide.youtube_id}/hqdefault.jpg`}
                 alt={slide.title || "Vídeo"}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                 <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
@@ -168,7 +169,7 @@ const FallbackCarousel = ({ slides, current, setCurrent }: {
   current: number;
   setCurrent: (n: number) => void;
 }) => (
-  <div className="relative w-full overflow-hidden rounded-xl aspect-[4/5] max-h-[520px]">
+  <div className="relative w-full overflow-hidden rounded-xl aspect-video sm:aspect-[16/9] max-h-[420px]">
     {slides.map((slide, i) => (
       <div
         key={slide.id}
