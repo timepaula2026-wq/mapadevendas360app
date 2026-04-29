@@ -168,20 +168,22 @@ const IconGrid = () => {
             className="group"
           >
             <div
-              className={`relative w-full aspect-square rounded-xl bg-gradient-to-br from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] flex flex-col items-center justify-center gap-1 sm:gap-2 shadow-md shadow-black/20 border border-white/10 transition-all duration-200 p-1.5 sm:p-3 ${locked ? "opacity-60" : "group-hover:scale-105 group-hover:shadow-xl group-hover:brightness-110 group-active:scale-95 group-active:brightness-90"}`}
+              className={`bento-card relative w-full aspect-square flex flex-col items-stretch justify-between p-2.5 sm:p-3.5 ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
             >
               {locked && (
-                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center z-10">
                   <Lock className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <item.icon
-                className="text-white shrink-0 transition-transform duration-200 group-hover:scale-110 drop-shadow-sm"
-                strokeWidth={1.4}
-                style={{ width: "var(--icon-size)", height: "var(--icon-size)" }}
-              />
+              <div className="flex-1 flex items-center justify-center">
+                <item.icon
+                  className="text-primary shrink-0 transition-transform duration-200 group-hover:scale-110"
+                  strokeWidth={1.5}
+                  style={{ width: "var(--icon-size)", height: "var(--icon-size)" }}
+                />
+              </div>
               <span
-                className="font-semibold text-white text-center line-clamp-2 px-0.5 drop-shadow-sm break-words"
+                className="font-medium text-foreground/90 text-left line-clamp-2 break-words"
                 style={{
                   fontSize: "var(--label-size)",
                   lineHeight: "var(--label-leading)",
