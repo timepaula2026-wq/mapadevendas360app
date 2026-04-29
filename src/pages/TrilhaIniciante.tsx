@@ -61,16 +61,16 @@ const TrilhaIniciante = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="bg-gradient-to-br from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] px-5 pt-12 pb-8">
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white/80 mb-4">
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm">Voltar</span>
+      <div className="bg-gradient-to-br from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] px-5 pt-10 pb-4">
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white/80 mb-2">
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-xs">Voltar</span>
         </button>
-        <div className="flex items-center gap-3 mb-3">
-          <Rocket className="w-8 h-8 text-white" />
-          <h1 className="text-xl font-bold text-white">Trilha do Iniciante</h1>
+        <div className="flex items-center gap-2 mb-1">
+          <Rocket className="w-5 h-5 text-white" />
+          <h1 className="text-base font-bold text-white">Trilha do Iniciante</h1>
         </div>
-        <p className="text-white/70 text-sm">Comece sua jornada de sucesso em vendas.</p>
+        <p className="text-white/70 text-xs">Comece sua jornada de sucesso em vendas.</p>
       </div>
 
       <div className="px-5 mt-6">
