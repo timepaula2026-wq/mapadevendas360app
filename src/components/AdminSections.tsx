@@ -337,25 +337,32 @@ const AdminSections = () => {
     }
   };
 
+  // Reordena a lista inteira e persiste TODOS os sort_order como 0..N-1.
+  // Isso evita índices duplicados e mantém a ordem estável mesmo com cliques rápidos.
+  const persistReindex = async (
+    table: "section_contents" | "section_tabs",
+    items: { id: string }[]
+  ) => {
+    const results = await Promise.all(
+      items.map((it, i) =>
+        supabase.from(table).update({ sort_order: i }).eq("id", it.id)
+      )
+    );
+    return results.every((r) => !r.error);
+  };
+
   const handleReorderContent = async (tabId: string, index: number, direction: -1 | 1) => {
     const list = contentsByTab[tabId];
     if (!list) return;
     const target = index + direction;
     if (target < 0 || target >= list.length) return;
-    const a = list[index];
-    const b = list[target];
-    const orderA = a.sort_order ?? index;
-    const orderB = b.sort_order ?? target;
-    // Optimistic UI swap
+    // Swap visual e reindex sequencial (0..N-1)
     const next = [...list];
-    next[index] = { ...b, sort_order: orderA };
-    next[target] = { ...a, sort_order: orderB };
-    setContentsByTab((prev) => ({ ...prev, [tabId]: next }));
-    const [r1, r2] = await Promise.all([
-      supabase.from("section_contents").update({ sort_order: orderB }).eq("id", a.id),
-      supabase.from("section_contents").update({ sort_order: orderA }).eq("id", b.id),
-    ]);
-    if (r1.error || r2.error) {
+    [next[index], next[target]] = [next[target], next[index]];
+    const reindexed = next.map((c, i) => ({ ...c, sort_order: i }));
+    setContentsByTab((prev) => ({ ...prev, [tabId]: reindexed }));
+    const ok = await persistReindex("section_contents", reindexed);
+    if (!ok) {
       toast.error("Erro ao reordenar");
       fetchTabContents(tabId);
     }
@@ -366,19 +373,12 @@ const AdminSections = () => {
     if (!list) return;
     const target = index + direction;
     if (target < 0 || target >= list.length) return;
-    const a = list[index];
-    const b = list[target];
-    const orderA = a.sort_order ?? index;
-    const orderB = b.sort_order ?? target;
     const next = [...list];
-    next[index] = { ...b, sort_order: orderA };
-    next[target] = { ...a, sort_order: orderB };
-    setTabsBySection((prev) => ({ ...prev, [sectionId]: next }));
-    const [r1, r2] = await Promise.all([
-      supabase.from("section_tabs").update({ sort_order: orderB }).eq("id", a.id),
-      supabase.from("section_tabs").update({ sort_order: orderA }).eq("id", b.id),
-    ]);
-    if (r1.error || r2.error) {
+    [next[index], next[target]] = [next[target], next[index]];
+    const reindexed = next.map((t, i) => ({ ...t, sort_order: i }));
+    setTabsBySection((prev) => ({ ...prev, [sectionId]: reindexed }));
+    const ok = await persistReindex("section_tabs", reindexed);
+    if (!ok) {
       toast.error("Erro ao reordenar abas");
       fetchTabs(sectionId);
     }
