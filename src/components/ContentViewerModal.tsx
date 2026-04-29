@@ -69,9 +69,12 @@ const getVideoEmbed = (
 };
 
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: ContentViewerModalProps) => {
-  // Treat legacy "youtube" type and new "video" type the same.
-  const isVideoType = type === "youtube" || type === "video";
-  const videoInfo = isVideoType && url ? getVideoEmbed(url, youtubeId) : null;
+  // "youtube" = link/embed (YouTube, Vimeo, Drive...).
+  // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
+  const isLinkVideo = type === "youtube";
+  const isFileVideo = type === "video";
+  const isVideoType = isLinkVideo || isFileVideo;
+  const videoInfo = isLinkVideo && url ? getVideoEmbed(url, youtubeId) : null;
 
   const handlePrint = () => {
     if (isVideoType) {
@@ -130,7 +133,19 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
                 Este conteúdo está sem arquivo ou link. Edite no painel administrativo e adicione o arquivo ou URL.
               </p>
             </div>
-          ) : isVideoType && videoInfo?.embedUrl ? (
+          ) : isFileVideo && url ? (
+            <div className="w-full h-full flex items-center justify-center bg-black">
+              <video
+                src={url}
+                controls
+                autoPlay
+                playsInline
+                className="w-full h-full object-contain"
+              >
+                Seu navegador não suporta a reprodução deste vídeo.
+              </video>
+            </div>
+          ) : isLinkVideo && videoInfo?.embedUrl ? (
             <iframe
               src={videoInfo.embedUrl}
               className="w-full h-full"
@@ -138,7 +153,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
               allowFullScreen
               title={title}
             />
-          ) : isVideoType && url ? (
+          ) : isLinkVideo && url ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
                 Este vídeo não permite visualização incorporada. Abra em uma nova aba para assistir.

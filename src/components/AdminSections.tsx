@@ -72,7 +72,7 @@ const AdminSections = () => {
   const [editContentTitle, setEditContentTitle] = useState("");
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
-  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image">("link");
+  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editUploading, setEditUploading] = useState(false);
 
@@ -80,7 +80,7 @@ const AdminSections = () => {
   const [showForm, setShowForm] = useState<string | null>(null); // tabId
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
-  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image">("youtube");
+  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -186,7 +186,12 @@ const AdminSections = () => {
     setContentType("youtube");
   };
 
-  const handleFileUpload = async (file: globalThis.File, sectionId: string, tabId: string) => {
+  const handleFileUpload = async (
+    file: globalThis.File,
+    sectionId: string,
+    tabId: string,
+    forcedType?: "pdf" | "image" | "video"
+  ) => {
     if (!user) return;
     setUploading(true);
     const fileExt = file.name.split(".").pop();
@@ -205,6 +210,8 @@ const AdminSections = () => {
     const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
 
     const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+    const isVideo = /\.(mp4|webm|mov|m4v|ogv)$/i.test(file.name);
+    const resolvedType = forcedType ?? (isVideo ? "video" : isImage ? "image" : "pdf");
     const nextOrder = contentsByTab[tabId]?.length ?? 0;
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
@@ -212,14 +219,20 @@ const AdminSections = () => {
       user_id: user.id,
       title: contentTitle.trim() || file.name,
       description: contentDesc.trim() || null,
-      type: isImage ? "image" : "pdf",
+      type: resolvedType,
       url: urlData.publicUrl,
       sort_order: nextOrder,
     });
 
     if (error) toast.error("Erro ao salvar");
     else {
-      toast.success(isImage ? "Imagem enviada!" : "PDF enviado!");
+      toast.success(
+        resolvedType === "video"
+          ? "Vídeo enviado!"
+          : resolvedType === "image"
+          ? "Imagem enviada!"
+          : "PDF enviado!"
+      );
       resetContentForm();
       fetchTabContents(tabId);
     }
@@ -230,13 +243,19 @@ const AdminSections = () => {
     if (!contentTitle.trim() || !user) return;
 
     // Validações de upload/URL
-    if (contentType === "pdf" || contentType === "image") {
+    if (contentType === "pdf" || contentType === "image" || contentType === "video") {
       const file = fileInputRef.current?.files?.[0];
       if (!file) {
-        toast.error(contentType === "pdf" ? "Selecione um arquivo PDF" : "Selecione uma imagem");
+        toast.error(
+          contentType === "pdf"
+            ? "Selecione um arquivo PDF"
+            : contentType === "image"
+            ? "Selecione uma imagem"
+            : "Selecione um arquivo de vídeo (MP4)"
+        );
         return;
       }
-      await handleFileUpload(file, sectionId, tabId);
+      await handleFileUpload(file, sectionId, tabId, contentType);
       return;
     }
 
@@ -370,7 +389,7 @@ const AdminSections = () => {
     setEditContentTitle(c.title);
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
-    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image") || "link");
+    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
   };
 
   const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
@@ -386,7 +405,7 @@ const AdminSections = () => {
     };
     // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
     const file = editFileInputRef.current?.files?.[0];
-    if ((type === "pdf" || type === "image") && file) {
+    if ((type === "pdf" || type === "image" || type === "video") && file) {
       setEditUploading(true);
       const fileExt = file.name.split(".").pop();
       const filePath = `sections/edit/${Date.now()}.${fileExt}`;
@@ -402,10 +421,16 @@ const AdminSections = () => {
       updates.url = urlData.publicUrl;
       updates.youtube_id = null;
       setEditUploading(false);
-    } else if (type === "pdf" || type === "image") {
+    } else if (type === "pdf" || type === "image" || type === "video") {
       // Sem novo arquivo: exigir que já exista URL salva
       if (!currentUrl) {
-        toast.error(type === "pdf" ? "Selecione um arquivo PDF" : "Selecione uma imagem");
+        toast.error(
+          type === "pdf"
+            ? "Selecione um arquivo PDF"
+            : type === "image"
+            ? "Selecione uma imagem"
+            : "Selecione um arquivo de vídeo (MP4)"
+        );
         return;
       }
       // mantém URL atual
@@ -617,23 +642,30 @@ const AdminSections = () => {
                               />
                               <select
                                 value={editContentType}
-                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image")}
+                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image" | "video")}
                                 className="h-7 text-xs w-full bg-background border border-input rounded-md px-2"
                               >
                                 <option value="link">Link</option>
-                                <option value="youtube">Vídeo</option>
+                                <option value="youtube">Link de Vídeo (YouTube/Vimeo)</option>
+                                <option value="video">Vídeo MP4 (upload)</option>
                                 <option value="pdf">PDF</option>
                                 <option value="image">Imagem</option>
                               </select>
-                              {editContentType === "pdf" || editContentType === "image" ? (
+                              {editContentType === "pdf" || editContentType === "image" || editContentType === "video" ? (
                                 <div className="space-y-1">
                                   <input
                                     ref={editFileInputRef}
                                     type="file"
-                                    accept={editContentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
+                                    accept={
+                                      editContentType === "pdf"
+                                        ? ".pdf"
+                                        : editContentType === "image"
+                                        ? "image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                                        : "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                                    }
                                     className="text-[10px] w-full"
                                   />
-                                  {c.url && (c.type === "pdf" || c.type === "image") && (
+                                  {c.url && (c.type === "pdf" || c.type === "image" || c.type === "video") && (
                                     <p className="text-[9px] text-muted-foreground truncate">
                                       Atual: {c.url.split("/").pop()}
                                     </p>
@@ -743,7 +775,8 @@ const AdminSections = () => {
                           <div className="flex gap-1">
                              {(
                                [
-                                 { type: "youtube" as const, icon: Youtube, label: "Vídeo" },
+                                 { type: "youtube" as const, icon: Youtube, label: "Link Vídeo" },
+                                 { type: "video" as const, icon: Youtube, label: "MP4" },
                                  { type: "pdf" as const, icon: Upload, label: "PDF" },
                                  { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                  { type: "link" as const, icon: File, label: "Link" },
@@ -774,11 +807,17 @@ const AdminSections = () => {
                             placeholder="Descrição (opcional)"
                             className="h-7 text-xs"
                           />
-                           {contentType === "pdf" || contentType === "image" ? (
+                           {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                             <input
                               ref={fileInputRef}
                               type="file"
-                              accept={contentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
+                              accept={
+                                contentType === "pdf"
+                                  ? ".pdf"
+                                  : contentType === "image"
+                                  ? "image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                                  : "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                              }
                               className="w-full text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-primary file:text-primary-foreground"
                             />
                           ) : (
