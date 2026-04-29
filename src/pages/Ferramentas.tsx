@@ -1,6 +1,7 @@
 import { ArrowLeft, Wrench, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
+import CalculadoraCollapsible from "@/components/CalculadoraCollapsible";
 
 const Ferramentas = () => {
   const navigate = useNavigate();
@@ -21,6 +22,10 @@ const Ferramentas = () => {
 
       <div className="px-5 mt-6">
         <SectionContentList sectionId="ferramentas" />
+
+        <div className="mt-6">
+          <CalculadoraCollapsible />
+        </div>
       </div>
     </div>
   );
