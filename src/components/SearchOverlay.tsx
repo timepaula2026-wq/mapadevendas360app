@@ -20,6 +20,7 @@ const GRID_SECTIONS = [
   { id: "loja", label: "Loja", route: "/loja" },
   { id: "locacao", label: "Locação de Materiais", route: "/locacao" },
   { id: "presenca", label: "Presença Treinamentos", route: "/presenca-treinamentos" },
+  { id: "comissao", label: "Calculadora de Comissão", route: "/vendas?calc=1" },
 ];
 
 interface SearchResult {

@@ -1,12 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { Calculator, ChevronDown } from "lucide-react";
 import CalculadoraComissao from "@/components/CalculadoraComissao";
 
 const CalculadoraCollapsible = () => {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("calc") === "1") {
+      setOpen(true);
+      // scroll into view after render
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [location.search]);
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div ref={containerRef} className="rounded-xl border border-border bg-card overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
