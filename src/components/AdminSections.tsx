@@ -72,7 +72,7 @@ const AdminSections = () => {
   const [editContentTitle, setEditContentTitle] = useState("");
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
-  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image">("link");
+  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editUploading, setEditUploading] = useState(false);
 
@@ -80,7 +80,7 @@ const AdminSections = () => {
   const [showForm, setShowForm] = useState<string | null>(null); // tabId
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
-  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image">("youtube");
+  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
