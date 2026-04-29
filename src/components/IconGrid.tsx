@@ -116,8 +116,8 @@ const IconGrid = () => {
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
       {orderedItems.map((item) => {
         const locked = isLocked(item);
         return (
@@ -127,15 +127,15 @@ const IconGrid = () => {
             className="group"
           >
             <div
-              className={`relative w-full aspect-square rounded-xl bg-gradient-to-br from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] flex flex-col items-center justify-center gap-3 shadow-lg shadow-black/20 border border-white/10 transition-all duration-200 p-4 ${locked ? "opacity-60" : "group-hover:scale-105 group-hover:shadow-xl group-hover:brightness-110 group-active:scale-95 group-active:brightness-90"}`}
+              className={`relative w-full aspect-square rounded-xl bg-gradient-to-br from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg shadow-black/20 border border-white/10 transition-all duration-200 p-3 sm:p-4 ${locked ? "opacity-60" : "group-hover:scale-105 group-hover:shadow-xl group-hover:brightness-110 group-active:scale-95 group-active:brightness-90"}`}
             >
               {locked && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
                   <Lock className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <item.icon className="w-14 h-14 text-white shrink-0 transition-transform duration-200 group-hover:scale-110 drop-shadow-sm" strokeWidth={1.4} />
-              <span className="text-sm font-semibold text-white text-center leading-tight line-clamp-2 px-1 drop-shadow-sm">
+              <item.icon className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-white shrink-0 transition-transform duration-200 group-hover:scale-110 drop-shadow-sm" strokeWidth={1.4} />
+              <span className="text-xs sm:text-sm font-semibold text-white text-center leading-tight line-clamp-2 px-1 drop-shadow-sm">
                 {item.label}
               </span>
             </div>
