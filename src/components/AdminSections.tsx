@@ -229,8 +229,19 @@ const AdminSections = () => {
   const handleAddContent = async (sectionId: string, tabId: string) => {
     if (!contentTitle.trim() || !user) return;
 
-    if ((contentType === "pdf" || contentType === "image") && fileInputRef.current?.files?.[0]) {
-      await handleFileUpload(fileInputRef.current.files[0], sectionId, tabId);
+    // Validações de upload/URL
+    if (contentType === "pdf" || contentType === "image") {
+      const file = fileInputRef.current?.files?.[0];
+      if (!file) {
+        toast.error(contentType === "pdf" ? "Selecione um arquivo PDF" : "Selecione uma imagem");
+        return;
+      }
+      await handleFileUpload(file, sectionId, tabId);
+      return;
+    }
+
+    if (!contentUrl.trim()) {
+      toast.error(contentType === "youtube" ? "Informe a URL do vídeo" : "Informe a URL do link");
       return;
     }
 
@@ -242,7 +253,7 @@ const AdminSections = () => {
       title: contentTitle.trim(),
       description: contentDesc.trim() || null,
       type: contentType,
-      url: contentUrl || null,
+      url: contentUrl.trim(),
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
       sort_order: nextOrder,
     });
@@ -365,6 +376,9 @@ const AdminSections = () => {
   const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
     if (!editContentTitle.trim()) return;
     const type = editContentType;
+    // Buscar URL atual do conteúdo para preservar se nada novo for fornecido
+    const currentContent = contentsByTab[tabId]?.find((c) => c.id === contentId);
+    const currentUrl = currentContent?.url || null;
     const updates: Record<string, unknown> = {
       title: editContentTitle.trim(),
       description: editContentDesc.trim() || null,
@@ -388,8 +402,20 @@ const AdminSections = () => {
       updates.url = urlData.publicUrl;
       updates.youtube_id = null;
       setEditUploading(false);
-    } else if (type !== "pdf" && type !== "image") {
-      updates.url = editContentUrl || null;
+    } else if (type === "pdf" || type === "image") {
+      // Sem novo arquivo: exigir que já exista URL salva
+      if (!currentUrl) {
+        toast.error(type === "pdf" ? "Selecione um arquivo PDF" : "Selecione uma imagem");
+        return;
+      }
+      // mantém URL atual
+    } else {
+      // Tipos baseados em URL (youtube/link)
+      if (!editContentUrl.trim()) {
+        toast.error(type === "youtube" ? "Informe a URL do vídeo" : "Informe a URL do link");
+        return;
+      }
+      updates.url = editContentUrl.trim();
       if (type === "youtube") {
         updates.youtube_id = extractYoutubeId(editContentUrl);
       } else {
