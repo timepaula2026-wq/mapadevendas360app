@@ -85,15 +85,36 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
   // Loading state para PDF (iOS demora a renderizar o primeiro frame)
   const [pdfLoaded, setPdfLoaded] = useState(false);
-  useEffect(() => {
-    if (open && type === "pdf") setPdfLoaded(false);
-  }, [open, url, type]);
+  // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
+  const [useFallback, setUseFallback] = useState(false);
 
   // iOS Safari não rola dentro de <object>; usamos Google Docs Viewer como alternativa
   const isIOS =
     typeof navigator !== "undefined" &&
     /iPad|iPhone|iPod/.test(navigator.userAgent) &&
     !(window as unknown as { MSStream?: unknown }).MSStream;
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|iPad|iPhone|iPod|Mobile/i.test(navigator.userAgent);
+
+  useEffect(() => {
+    if (!(open && type === "pdf")) return;
+    setPdfLoaded(false);
+    // No iOS já vai direto pro gview; em outros mobiles, ativamos o fallback
+    // se o iframe nativo não disparar onLoad em até 4s.
+    setUseFallback(isIOS);
+    if (isIOS || !isMobile) return;
+    const t = window.setTimeout(() => {
+      setPdfLoaded((loaded) => {
+        if (!loaded) {
+          setUseFallback(true);
+          setPdfLoaded(false);
+        }
+        return loaded;
+      });
+    }, 4000);
+    return () => window.clearTimeout(t);
+  }, [open, url, type, isIOS, isMobile]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
@@ -232,13 +253,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           ) : type === "pdf" && url ? (
             <div className="relative w-full h-full">
               {!pdfLoaded && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted z-10">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   <p className="text-xs text-muted-foreground">Carregando PDF…</p>
+                  {isMobile && !useFallback && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { setUseFallback(true); setPdfLoaded(false); }}
+                    >
+                      Tentar visualizador alternativo
+                    </Button>
+                  )}
                 </div>
               )}
-              {isIOS ? (
+              {useFallback ? (
                 <iframe
+                  key="gview"
                   src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
                   className="w-full h-full border-0"
                   title={title}
@@ -247,6 +278,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 />
               ) : (
                 <iframe
+                  key="native"
                   src={`${url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
                   className="w-full h-full border-0"
                   title={title}
