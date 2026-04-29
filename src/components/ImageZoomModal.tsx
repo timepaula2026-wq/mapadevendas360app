@@ -3,13 +3,15 @@ import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 
 interface Props {
   src: string;
+  title?: string | null;
+  description?: string | null;
   onClose: () => void;
 }
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 5;
 
-const ImageZoomModal = ({ src, onClose }: Props) => {
+const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
@@ -164,6 +166,27 @@ const ImageZoomModal = ({ src, onClose }: Props) => {
           }}
         />
       </div>
+
+      {/* Caption */}
+      {(title || description) && (
+        <div
+          className="absolute bottom-0 inset-x-0 z-10 bg-gradient-to-t from-black/85 via-black/55 to-transparent px-4 pt-8 pb-5 sm:pb-6"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="max-w-3xl mx-auto">
+            {title && (
+              <h3 className="text-white font-semibold text-sm sm:text-base leading-tight drop-shadow">
+                {title}
+              </h3>
+            )}
+            {description && (
+              <p className="text-white/85 text-xs sm:text-sm leading-relaxed mt-1 drop-shadow whitespace-pre-line">
+                {description}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

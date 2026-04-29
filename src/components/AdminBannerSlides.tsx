@@ -8,6 +8,7 @@ import { toast } from "sonner";
 interface BannerSlide {
   id: string;
   title: string | null;
+  description: string | null;
   image_url: string | null;
   video_url: string | null;
   youtube_id: string | null;
@@ -46,6 +47,7 @@ const AdminBannerSlides = () => {
   // Form state
   const [type, setType] = useState<"image" | "video">("image");
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<globalThis.File | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [linkType, setLinkType] = useState<"none" | "internal" | "external">("none");
@@ -97,6 +99,7 @@ const AdminBannerSlides = () => {
 
     const { error } = await supabase.from("banner_slides").insert({
       title: title.trim() || null,
+      description: description.trim() || null,
       type,
       image_url: finalImageUrl,
       youtube_id: ytId,
@@ -131,6 +134,7 @@ const AdminBannerSlides = () => {
     setShowForm(false);
     setType("image");
     setTitle("");
+    setDescription("");
     setImageFile(null);
     setImagePreview(null);
     setYoutubeUrl("");
@@ -182,6 +186,14 @@ const AdminBannerSlides = () => {
           </div>
 
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título (opcional)" className="h-9 text-sm" />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Descrição / legenda (opcional)"
+            rows={2}
+            maxLength={300}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
 
           {type === "image" ? (
             <div className="space-y-2">
