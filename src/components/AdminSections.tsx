@@ -871,6 +871,7 @@ const AdminSections = () => {
                           />
                            {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                             <input
+                              key={contentType}
                               ref={fileInputRef}
                               type="file"
                               accept={
