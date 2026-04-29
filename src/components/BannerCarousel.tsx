@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, ZoomIn, X } from "lucide-react";
+import ImageZoomModal from "@/components/ImageZoomModal";
 
 interface BannerSlide {
   id: string;
@@ -19,6 +20,7 @@ const BannerCarousel = () => {
   const [slides, setSlides] = useState<BannerSlide[]>([]);
   const [current, setCurrent] = useState(0);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +53,9 @@ const BannerCarousel = () => {
       navigate(slide.link_url);
     } else if (slide.link_type === "external" && slide.link_url) {
       window.open(slide.link_url, "_blank");
+    } else if (slide.type === "image" && slide.image_url) {
+      // No link configured: open zoom view
+      setZoomImage(slide.image_url);
     }
   }, [navigate]);
 
@@ -67,6 +72,7 @@ const BannerCarousel = () => {
   }
 
   return (
+    <>
     <div className="relative w-full overflow-hidden rounded-xl aspect-video sm:aspect-[16/9] max-h-[420px] bg-black">
       {/* Video overlay */}
       {playingVideo && (
@@ -95,12 +101,23 @@ const BannerCarousel = () => {
           }`}
         >
           {slide.type === "image" && slide.image_url ? (
-            <img
-              src={slide.image_url}
-              alt={slide.title || "Banner"}
-              className="w-full h-full object-contain"
-              loading="lazy"
-            />
+            <>
+              <img
+                src={slide.image_url}
+                alt={slide.title || "Banner"}
+                className="w-full h-full object-contain select-none"
+                loading="lazy"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              <button
+                onClick={(e) => { e.stopPropagation(); setZoomImage(slide.image_url!); }}
+                aria-label="Ampliar imagem"
+                className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+            </>
           ) : slide.type === "video" && slide.youtube_id ? (
             <div className="w-full h-full relative">
               <img
@@ -160,6 +177,10 @@ const BannerCarousel = () => {
         </div>
       )}
     </div>
+    {zoomImage && (
+      <ImageZoomModal src={zoomImage} onClose={() => setZoomImage(null)} />
+    )}
+    </>
   );
 };
 
