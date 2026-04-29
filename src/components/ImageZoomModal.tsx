@@ -17,7 +17,16 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   const [ty, setTy] = useState(0);
 
   const dragRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
-  const pinchRef = useRef<{ dist: number; scale: number } | null>(null);
+  const pinchRef = useRef<{
+    dist: number;
+    scale: number;
+    tx: number;
+    ty: number;
+    // midpoint relative to stage center, in screen px (not scaled)
+    mx: number;
+    my: number;
+  } | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const lastTapRef = useRef<number>(0);
 
   // Lock body scroll
@@ -42,12 +51,31 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
     setScale((s) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, +(s + delta).toFixed(2))));
   }, []);
 
+  // Helper: midpoint of two touches relative to the stage center
+  const midpointRelToCenter = (t1: React.Touch, t2: React.Touch) => {
+    const rect = stageRef.current?.getBoundingClientRect();
+    const cx = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const cy = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+    return {
+      mx: (t1.clientX + t2.clientX) / 2 - cx,
+      my: (t1.clientY + t2.clientY) / 2 - cy,
+    };
+  };
+
   // Touch handlers (pinch + pan + double-tap)
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
-      pinchRef.current = { dist: Math.hypot(dx, dy), scale };
+      const { mx, my } = midpointRelToCenter(e.touches[0], e.touches[1]);
+      pinchRef.current = {
+        dist: Math.hypot(dx, dy),
+        scale,
+        tx,
+        ty,
+        mx,
+        my,
+      };
     } else if (e.touches.length === 1) {
       const now = Date.now();
       if (now - lastTapRef.current < 280) {
@@ -67,8 +95,23 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.hypot(dx, dy);
-      const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pinchRef.current.scale * (dist / pinchRef.current.dist)));
+      const start = pinchRef.current;
+      const rawScale = start.scale * (dist / start.dist);
+      const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, rawScale));
+      const ratio = next / start.scale;
+
+      // Current midpoint (allows panning while pinching)
+      const { mx, my } = midpointRelToCenter(e.touches[0], e.touches[1]);
+      const panDx = mx - start.mx;
+      const panDy = my - start.my;
+
+      // Keep finger midpoint fixed while scaling, then add pan delta so
+      // users can drag with the pinch gesture as well.
+      const nextTx = mx - (start.mx - start.tx) * ratio + panDx;
+      const nextTy = my - (start.my - start.ty) * ratio + panDy;
       setScale(next);
+      setTx(nextTx);
+      setTy(nextTy);
     } else if (e.touches.length === 1 && dragRef.current && scale > 1) {
       setTx(dragRef.current.tx + (e.touches[0].clientX - dragRef.current.x));
       setTy(dragRef.current.ty + (e.touches[0].clientY - dragRef.current.y));
@@ -91,7 +134,19 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
 
   const onWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    zoomBy(e.deltaY < 0 ? 0.2 : -0.2);
+    const rect = stageRef.current?.getBoundingClientRect();
+    const cx = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const cy = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+    const mx = e.clientX - cx;
+    const my = e.clientY - cy;
+    const delta = e.deltaY < 0 ? 0.2 : -0.2;
+    setScale((s) => {
+      const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, +(s + delta).toFixed(2)));
+      const ratio = next / s;
+      setTx((t) => mx - (mx - t) * ratio);
+      setTy((t) => my - (my - t) * ratio);
+      return next;
+    });
   };
 
   return (
@@ -139,6 +194,7 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
 
       {/* Image stage */}
       <div
+        ref={stageRef}
         className="w-full h-full flex items-center justify-center overflow-hidden touch-none"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={onTouchStart}
