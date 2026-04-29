@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/compressImage";
 import AdminIconOrder from "@/components/AdminIconOrder";
+import { DEFAULT_GRID_SECTIONS, DEFAULT_SECTION_LABELS } from "@/lib/sections";
 
 interface SectionContent {
   id: string;
@@ -44,24 +45,9 @@ interface SectionTab {
   sort_order: number | null;
 }
 
-const DEFAULT_SECTIONS = [
-  { id: "trilha", label: "Trilha do Iniciante" },
-  { id: "vendas", label: "Central de Vendas & CRM" },
-  { id: "ferramentas", label: "Acessos de Ferramentas" },
-  { id: "carreira", label: "Plano de Carreira" },
-  { id: "apresentacao", label: "Apresentação de Produtos" },
-  { id: "sorteios", label: "Sorteios & Comunicados" },
-  { id: "credito", label: "Liberação de Crédito" },
-  { id: "jornada", label: "Jornada Impacto" },
-  { id: "equipe", label: "Gestão de Equipe" },
-  { id: "cliente", label: "Área do Cliente" },
-  { id: "analise", label: "Plataforma de Análise" },
-  { id: "presenca", label: "Presença Treinamentos" },
-];
-
 const AdminSections = () => {
   const { user } = useAuth();
-  const [sections, setSections] = useState<{ id: string; label: string }[]>(DEFAULT_SECTIONS);
+  const [sections, setSections] = useState<{ id: string; label: string }[]>(DEFAULT_GRID_SECTIONS.map(({ id, label }) => ({ id, label })));
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedTab, setExpandedTab] = useState<string | null>(null);
   const [tabsBySection, setTabsBySection] = useState<Record<string, SectionTab[]>>({});
@@ -97,13 +83,12 @@ const AdminSections = () => {
       .select("id, sort_order, visible, custom_label, is_custom")
       .order("sort_order", { ascending: true });
     if (data && data.length > 0) {
-      const defaultMap = Object.fromEntries(DEFAULT_SECTIONS.map((s) => [s.id, s.label]));
       const merged = (data as Array<{
         id: string; sort_order: number; visible: boolean;
         custom_label?: string | null; is_custom?: boolean | null;
       }>)
-        .filter((d) => defaultMap[d.id] || d.is_custom)
-        .map((d) => ({ id: d.id, label: d.custom_label || defaultMap[d.id] || d.id }));
+        .filter((d) => d.visible && (DEFAULT_SECTION_LABELS[d.id] || d.is_custom))
+        .map((d) => ({ id: d.id, label: d.custom_label || DEFAULT_SECTION_LABELS[d.id] || d.id }));
       if (merged.length > 0) setSections(merged);
     }
   };
