@@ -50,9 +50,12 @@ const TrilhaIniciante = () => {
 
       if (visible.length > 0) {
         setSections(visible);
-        if (!visible.find((s) => s.id === activeSection)) {
-          setActiveSection(visible[0].id);
-        }
+        // Mantém "trilha" como ativo se estiver visível; senão usa o primeiro disponível.
+        setActiveSection((curr) => {
+          if (visible.find((s) => s.id === curr)) return curr;
+          if (visible.find((s) => s.id === "trilha")) return "trilha";
+          return visible[0].id;
+        });
       }
     };
     fetchOrder();
