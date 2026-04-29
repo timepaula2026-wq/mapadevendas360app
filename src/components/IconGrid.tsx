@@ -133,21 +133,22 @@ const IconGrid = () => {
       <style>{`
         .icon-grid-responsive {
           display: grid;
-          gap: 0.75rem;
+          gap: 0.5rem;
           grid-template-columns: repeat(${settings.grid_cols_mobile}, minmax(0, 1fr));
           --icon-size: ${Math.round(settings.icon_size_mobile * zoom)}px;
-          --label-size: ${0.75 * zoom}rem;
+          --label-size: ${0.65 * zoom}rem;
         }
         @media (min-width: 640px) {
           .icon-grid-responsive {
-            gap: 1rem;
+            gap: 0.75rem;
             grid-template-columns: repeat(${settings.grid_cols_tablet}, minmax(0, 1fr));
             --icon-size: ${Math.round(settings.icon_size_tablet * zoom)}px;
-            --label-size: ${0.875 * zoom}rem;
+            --label-size: ${0.75 * zoom}rem;
           }
         }
         @media (min-width: 1024px) {
           .icon-grid-responsive {
+            gap: 1rem;
             grid-template-columns: repeat(${settings.grid_cols_desktop}, minmax(0, 1fr));
             --icon-size: ${Math.round(settings.icon_size_desktop * zoom)}px;
             --label-size: ${0.875 * zoom}rem;
@@ -164,7 +165,7 @@ const IconGrid = () => {
             className="group"
           >
             <div
-              className={`relative w-full aspect-square rounded-xl bg-gradient-to-br from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg shadow-black/20 border border-white/10 transition-all duration-200 p-3 sm:p-4 ${locked ? "opacity-60" : "group-hover:scale-105 group-hover:shadow-xl group-hover:brightness-110 group-active:scale-95 group-active:brightness-90"}`}
+              className={`relative w-full aspect-square rounded-xl bg-gradient-to-br from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] flex flex-col items-center justify-center gap-1 sm:gap-2 shadow-md shadow-black/20 border border-white/10 transition-all duration-200 p-1.5 sm:p-3 ${locked ? "opacity-60" : "group-hover:scale-105 group-hover:shadow-xl group-hover:brightness-110 group-active:scale-95 group-active:brightness-90"}`}
             >
               {locked && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
