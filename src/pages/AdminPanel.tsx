@@ -461,11 +461,6 @@ const AdminPanel = () => {
             <AdminSections />
           </TabsContent>
 
-          {/* ===== ICON ORDER TAB ===== */}
-          <TabsContent value="icon-order">
-            <AdminIconOrder />
-          </TabsContent>
-
           {/* ===== USERS TAB ===== */}
           <TabsContent value="users">
             {usersLoading ? (
