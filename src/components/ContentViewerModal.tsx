@@ -124,7 +124,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId }: Cont
 
         {/* Content */}
         <div className="flex-1 min-h-0 bg-muted">
-          {isVideoType && videoInfo?.embedUrl ? (
+          {!url && !youtubeId ? (
+            <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Este conteúdo está sem arquivo ou link. Edite no painel administrativo e adicione o arquivo ou URL.
+              </p>
+            </div>
+          ) : isVideoType && videoInfo?.embedUrl ? (
             <iframe
               src={videoInfo.embedUrl}
               className="w-full h-full"
