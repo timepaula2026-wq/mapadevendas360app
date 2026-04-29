@@ -192,9 +192,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   <Button onClick={handlePrint} size="sm">
                     <Printer className="w-4 h-4 mr-2" /> Imprimir
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleDownload}>
-                    <Download className="w-4 h-4 mr-2" /> Baixar
-                  </Button>
+                  {allowDownload && (
+                    <Button variant="outline" size="sm" onClick={handleDownload}>
+                      <Download className="w-4 h-4 mr-2" /> Baixar
+                    </Button>
+                  )}
                 </div>
               </div>
             </object>
