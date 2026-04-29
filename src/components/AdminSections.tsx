@@ -15,6 +15,7 @@ import {
   ArrowUp,
   ArrowDown,
   Image as ImageIcon,
+  GripVertical,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +25,48 @@ import { toast } from "sonner";
 import { compressImage } from "@/lib/compressImage";
 import AdminIconOrder from "@/components/AdminIconOrder";
 import { DEFAULT_GRID_SECTIONS, DEFAULT_SECTION_LABELS } from "@/lib/sections";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { ReactNode, CSSProperties } from "react";
+
+// Sortable wrapper using render-prop so we can keep the existing JSX intact.
+const Sortable = ({
+  id,
+  children,
+}: {
+  id: string;
+  children: (h: {
+    listeners: ReturnType<typeof useSortable>["listeners"];
+    attributes: ReturnType<typeof useSortable>["attributes"];
+  }) => ReactNode;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ listeners, attributes })}
+    </div>
+  );
+};
 
 interface SectionContent {
   id: string;
