@@ -118,7 +118,7 @@ const SortableIconItem = ({
   );
 };
 
-const AdminIconOrder = () => {
+const AdminIconOrder = ({ onChange }: { onChange?: () => void } = {}) => {
   const [items, setItems] = useState<IconOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -161,6 +161,7 @@ const AdminIconOrder = () => {
       supabase.from("icon_grid_order").update({ sort_order: index }).eq("id", item.id)
     );
     await Promise.all(updates);
+    onChange?.();
     toast.success("Ordem salva!");
   };
 
@@ -176,7 +177,10 @@ const AdminIconOrder = () => {
       .update({ visible: newVisible })
       .eq("id", id);
     if (error) toast.error("Erro ao atualizar visibilidade");
-    else toast.success(newVisible ? "Ícone visível" : "Ícone oculto");
+    else {
+      onChange?.();
+      toast.success(newVisible ? "Ícone visível" : "Ícone oculto");
+    }
   };
 
   const handleRename = async (id: string, label: string) => {
@@ -187,17 +191,23 @@ const AdminIconOrder = () => {
       .update({ custom_label: newLabel })
       .eq("id", id);
     if (error) toast.error("Erro ao renomear");
-    else toast.success("Nome atualizado!");
+    else {
+      onChange?.();
+      toast.success("Nome atualizado!");
+    }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este ícone da grade? Você poderá restaurá-lo recriando o registro.")) return;
+    if (!confirm("Excluir esta seção da tela inicial e da lista de seções? Os conteúdos vinculados a ela também serão removidos.")) return;
     setItems((prev) => prev.filter((i) => i.id !== id));
+    await supabase.from("section_contents").delete().eq("section_id", id);
+    await supabase.from("section_tabs").delete().eq("section_id", id);
     const { error } = await supabase.from("icon_grid_order").delete().eq("id", id);
     if (error) {
       toast.error("Erro ao excluir");
       fetchOrder();
     } else {
+      onChange?.();
       toast.success("Ícone removido da grade");
     }
   };
@@ -235,6 +245,7 @@ const AdminIconOrder = () => {
     toast.success("Aba criada na tela inicial!");
     setNewName("");
     setCreating(false);
+    onChange?.();
     fetchOrder();
   };
 
