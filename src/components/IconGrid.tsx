@@ -117,7 +117,20 @@ const IconGrid = () => {
   }
 
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+    <div
+      className="grid gap-3 sm:gap-4"
+      style={{
+        gridTemplateColumns: `repeat(var(--grid-cols-mobile, ${settings.grid_cols_mobile}), minmax(0, 1fr))`,
+      }}
+    >
+      <style>{`
+        @media (min-width: 640px) {
+          .icon-grid-responsive { grid-template-columns: repeat(${settings.grid_cols_tablet}, minmax(0, 1fr)) !important; }
+        }
+        @media (min-width: 1024px) {
+          .icon-grid-responsive { grid-template-columns: repeat(${settings.grid_cols_desktop}, minmax(0, 1fr)) !important; }
+        }
+      `}</style>
       {orderedItems.map((item) => {
         const locked = isLocked(item);
         return (
@@ -134,7 +147,11 @@ const IconGrid = () => {
                   <Lock className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <item.icon className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-white shrink-0 transition-transform duration-200 group-hover:scale-110 drop-shadow-sm" strokeWidth={1.4} />
+              <item.icon
+                className="text-white shrink-0 transition-transform duration-200 group-hover:scale-110 drop-shadow-sm"
+                strokeWidth={1.4}
+                style={{ width: "var(--icon-size)", height: "var(--icon-size)" }}
+              />
               <span className="text-xs sm:text-sm font-semibold text-white text-center leading-tight line-clamp-2 px-1 drop-shadow-sm">
                 {item.label}
               </span>
