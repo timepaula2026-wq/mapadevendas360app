@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -12,7 +12,6 @@ import AdminSections from "@/components/AdminSections";
 import AdminProducts from "@/components/AdminProducts";
 import AdminBannerSlides from "@/components/AdminBannerSlides";
 import AdminNotifications from "@/components/AdminNotifications";
-import AdminIconOrder from "@/components/AdminIconOrder";
 
 interface Training {
   id: string;
@@ -291,9 +290,6 @@ const AdminPanel = () => {
               <TabsTrigger value="stats" className="flex-1 gap-1">
                   <Layers className="w-4 h-4" /> Resumo
                 </TabsTrigger>
-              <TabsTrigger value="icon-order" className="flex-1 gap-1">
-                <LayoutGrid className="w-4 h-4" /> Ordem
-              </TabsTrigger>
            </TabsList>
 
           {/* ===== TRAININGS TAB ===== */}
