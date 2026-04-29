@@ -136,7 +136,8 @@ const IconGrid = () => {
           gap: 0.5rem;
           grid-template-columns: repeat(${settings.grid_cols_mobile}, minmax(0, 1fr));
           --icon-size: ${Math.round(settings.icon_size_mobile * zoom)}px;
-          --label-size: ${0.65 * zoom}rem;
+          --label-size: ${0.6 * zoom}rem;
+          --label-leading: 1.05;
         }
         @media (min-width: 640px) {
           .icon-grid-responsive {
@@ -144,6 +145,7 @@ const IconGrid = () => {
             grid-template-columns: repeat(${settings.grid_cols_tablet}, minmax(0, 1fr));
             --icon-size: ${Math.round(settings.icon_size_tablet * zoom)}px;
             --label-size: ${0.75 * zoom}rem;
+            --label-leading: 1.15;
           }
         }
         @media (min-width: 1024px) {
@@ -152,6 +154,7 @@ const IconGrid = () => {
             grid-template-columns: repeat(${settings.grid_cols_desktop}, minmax(0, 1fr));
             --icon-size: ${Math.round(settings.icon_size_desktop * zoom)}px;
             --label-size: ${0.875 * zoom}rem;
+            --label-leading: 1.2;
           }
         }
       `}</style>
@@ -178,8 +181,12 @@ const IconGrid = () => {
                 style={{ width: "var(--icon-size)", height: "var(--icon-size)" }}
               />
               <span
-                className="font-semibold text-white text-center leading-tight line-clamp-2 px-1 drop-shadow-sm"
-                style={{ fontSize: "var(--label-size)" }}
+                className="font-semibold text-white text-center line-clamp-2 px-0.5 drop-shadow-sm break-words"
+                style={{
+                  fontSize: "var(--label-size)",
+                  lineHeight: "var(--label-leading)",
+                  letterSpacing: "-0.01em",
+                }}
               >
                 {item.label}
               </span>
