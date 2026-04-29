@@ -94,13 +94,16 @@ const AdminSections = () => {
   const fetchSections = async () => {
     const { data } = await supabase
       .from("icon_grid_order")
-      .select("id, sort_order, visible, custom_label")
+      .select("id, sort_order, visible, custom_label, is_custom")
       .order("sort_order", { ascending: true });
     if (data && data.length > 0) {
       const defaultMap = Object.fromEntries(DEFAULT_SECTIONS.map((s) => [s.id, s.label]));
-      const merged = (data as { id: string; sort_order: number; visible: boolean; custom_label?: string | null }[])
-        .filter((d) => defaultMap[d.id]) // só seções de conteúdo
-        .map((d) => ({ id: d.id, label: d.custom_label || defaultMap[d.id] }));
+      const merged = (data as Array<{
+        id: string; sort_order: number; visible: boolean;
+        custom_label?: string | null; is_custom?: boolean | null;
+      }>)
+        .filter((d) => defaultMap[d.id] || d.is_custom)
+        .map((d) => ({ id: d.id, label: d.custom_label || defaultMap[d.id] || d.id }));
       if (merged.length > 0) setSections(merged);
     }
   };
