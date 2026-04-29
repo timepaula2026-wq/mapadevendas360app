@@ -29,6 +29,7 @@ interface SectionContent {
   id: string;
   section_id: string;
   tab_id: string | null;
+  parent_id: string | null;
   title: string;
   description: string | null;
   type: string;
@@ -68,7 +69,8 @@ const AdminSections = () => {
   const [editUploading, setEditUploading] = useState(false);
 
   // Form for adding content to a tab
-  const [showForm, setShowForm] = useState<string | null>(null); // tabId
+  const [showForm, setShowForm] = useState<string | null>(null); // tabId (for new top-level content)
+  const [showSubForm, setShowSubForm] = useState<string | null>(null); // parentId (for new sub-content)
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
