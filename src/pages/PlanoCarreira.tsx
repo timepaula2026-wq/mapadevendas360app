@@ -1,7 +1,8 @@
 import { ArrowLeft, Trophy, Star, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
-import CalculadoraComissao from "@/components/CalculadoraComissao";
+import CalculadoraCollapsible from "@/components/CalculadoraCollapsible";
+import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 
 const levels = [
   { name: "Consultor Iniciante", requirement: "0 - 5 vendas", current: true },
@@ -28,7 +29,15 @@ const PlanoCarreira = () => {
         <p className="text-white/70 text-sm mt-2">Evolua dentro da empresa e conquiste novos níveis.</p>
       </div>
 
-      <div className="px-5 mt-6 space-y-3">
+      <div className="px-5 mt-6">
+        {/* Agenda Online no topo */}
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>
+          <AgendaOnlineBlock />
+        </div>
+      </div>
+
+      <div className="px-5 mt-2 space-y-3">
         {levels.map((l, i) => (
           <div key={i} className={`flex items-center gap-4 p-4 rounded-xl border ${l.current ? "bg-primary/10 border-primary" : "bg-card border-border"}`}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${l.current ? "bg-primary" : "bg-muted"}`}>
@@ -48,8 +57,9 @@ const PlanoCarreira = () => {
         <h2 className="text-sm font-semibold text-foreground mb-3">Conteúdos</h2>
         <SectionContentList sectionId="carreira" />
 
-        <h2 className="text-sm font-semibold text-foreground mb-3 mt-6">Calculadora de Comissão</h2>
-        <CalculadoraComissao />
+        <div className="mt-6">
+          <CalculadoraCollapsible />
+        </div>
       </div>
     </div>
   );
