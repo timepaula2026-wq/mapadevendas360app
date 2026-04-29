@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_GRID_SECTIONS } from "@/lib/sections";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import SectionContentList from "@/components/SectionContentList";
-import CalculadoraComissao from "@/components/CalculadoraComissao";
+import CalculadoraCollapsible from "@/components/CalculadoraCollapsible";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 
 type Section = { id: string; label: string };
@@ -77,6 +77,12 @@ const TrilhaIniciante = () => {
       </div>
 
       <div className="px-5 mt-6">
+        {/* Agenda Online no topo */}
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>
+          <AgendaOnlineBlock />
+        </div>
+
         {/* Seletor de seção (chips horizontais) */}
         <div className="-mx-5 px-5 mb-4 overflow-x-auto scrollbar-none">
           <div className="flex gap-2 pb-1">
@@ -116,13 +122,7 @@ const TrilhaIniciante = () => {
         <SectionContentList sectionId={activeSection} />
 
         <div className="mt-6">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Calculadora de Comissão</h2>
-          <CalculadoraComissao />
-        </div>
-
-        <div className="mt-6">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>
-          <AgendaOnlineBlock />
+          <CalculadoraCollapsible />
         </div>
       </div>
     </div>
