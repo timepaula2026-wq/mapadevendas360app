@@ -137,7 +137,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
       // Bloqueia edição/cópia/extração via flags do PDF (proteção declarativa).
       const stamped = await pdfDoc.save({ useObjectStreams: false });
-      const blob = new Blob([stamped], { type: "application/pdf" });
+      const blob = new Blob([stamped as BlobPart], { type: "application/pdf" });
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
