@@ -15,6 +15,7 @@ import {
   ArrowUp,
   ArrowDown,
   Image as ImageIcon,
+  GripVertical,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +25,48 @@ import { toast } from "sonner";
 import { compressImage } from "@/lib/compressImage";
 import AdminIconOrder from "@/components/AdminIconOrder";
 import { DEFAULT_GRID_SECTIONS, DEFAULT_SECTION_LABELS } from "@/lib/sections";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { ReactNode, CSSProperties } from "react";
+
+// Sortable wrapper using render-prop so we can keep the existing JSX intact.
+const Sortable = ({
+  id,
+  children,
+}: {
+  id: string;
+  children: (h: {
+    listeners: ReturnType<typeof useSortable>["listeners"];
+    attributes: ReturnType<typeof useSortable>["attributes"];
+  }) => ReactNode;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ listeners, attributes })}
+    </div>
+  );
+};
 
 interface SectionContent {
   id: string;
@@ -48,6 +91,10 @@ interface SectionTab {
 
 const AdminSections = () => {
   const { user } = useAuth();
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
   const [sections, setSections] = useState<{ id: string; label: string }[]>(DEFAULT_GRID_SECTIONS.map(({ id, label }) => ({ id, label })));
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedTab, setExpandedTab] = useState<string | null>(null);
@@ -403,6 +450,67 @@ const AdminSections = () => {
     }
   };
 
+  // Drag-and-drop reordering for parent contents within a tab.
+  // Children (parent_id != null) keep their relative order untouched.
+  const handleDragEndParents = async (tabId: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const list = contentsByTab[tabId] || [];
+    const parents = list.filter((x) => !x.parent_id);
+    const oldIdx = parents.findIndex((p) => p.id === active.id);
+    const newIdx = parents.findIndex((p) => p.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const reordered = arrayMove(parents, oldIdx, newIdx);
+    // Reindex parents 0..N-1, keep children unchanged but interleaved after their parent for display order.
+    const reindexedParents = reordered.map((p, i) => ({ ...p, sort_order: i }));
+    // Rebuild full list: each parent followed by its children (children keep their own sort_order).
+    const childrenByParent = list.reduce<Record<string, typeof list>>((acc, c) => {
+      if (c.parent_id) (acc[c.parent_id] ||= []).push(c);
+      return acc;
+    }, {});
+    const nextFull: typeof list = [];
+    reindexedParents.forEach((p) => {
+      nextFull.push(p);
+      (childrenByParent[p.id] || []).forEach((ch) => nextFull.push(ch));
+    });
+    setContentsByTab((prev) => ({ ...prev, [tabId]: nextFull }));
+    const ok = await persistReindex("section_contents", reindexedParents);
+    if (!ok) {
+      toast.error("Erro ao reordenar");
+      fetchTabContents(tabId);
+    }
+  };
+
+  // Drag-and-drop reordering for sub-contents under a given parent.
+  const handleDragEndChildren = async (
+    tabId: string,
+    parentId: string,
+    event: DragEndEvent
+  ) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const list = contentsByTab[tabId] || [];
+    const kids = list.filter((x) => x.parent_id === parentId);
+    const oldIdx = kids.findIndex((k) => k.id === active.id);
+    const newIdx = kids.findIndex((k) => k.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const reordered = arrayMove(kids, oldIdx, newIdx);
+    const reindexedKids = reordered.map((k, i) => ({ ...k, sort_order: i }));
+    // Update local state preserving parents and other groups.
+    const nextFull = list.map((c) => {
+      if (c.parent_id !== parentId) return c;
+      const updated = reindexedKids.find((r) => r.id === c.id);
+      return updated || c;
+    });
+    // Sort so kids appear in their new order in lookups.
+    setContentsByTab((prev) => ({ ...prev, [tabId]: nextFull }));
+    const ok = await persistReindex("section_contents", reindexedKids);
+    if (!ok) {
+      toast.error("Erro ao reordenar");
+      fetchTabContents(tabId);
+    }
+  };
+
   const handleReorderTab = async (sectionId: string, index: number, direction: -1 | 1) => {
     const list = tabsBySection[sectionId];
     if (!list) return;
@@ -681,11 +789,17 @@ const AdminSections = () => {
                         const all = contentsByTab[tab.id] || [];
                         const parents = all.filter((x) => !x.parent_id);
                         const childrenOf = (pid: string) => all.filter((x) => x.parent_id === pid);
-                        return parents.map((c, idx) => (
-                        <div
-                          key={c.id}
-                          className="px-2 py-1 bg-background rounded"
+                        return (
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(e) => handleDragEndParents(tab.id, e)}
                         >
+                          <SortableContext items={parents.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+                          {parents.map((c, idx) => (
+                          <Sortable key={c.id} id={c.id}>
+                          {(h) => (
+                          <div className="px-2 py-1 bg-background rounded">
                           {editingContent === c.id ? (
                             <div className="space-y-1.5 p-1">
                               <Input
@@ -772,6 +886,15 @@ const AdminSections = () => {
                             </div>
                           ) : (
                           <div className="flex items-center gap-2">
+                          <button
+                            {...h.listeners}
+                            {...h.attributes}
+                            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"
+                            title="Arrastar para reordenar"
+                            aria-label="Arrastar"
+                          >
+                            <GripVertical className="w-3.5 h-3.5" />
+                          </button>
                           {c.type === "youtube" ? (
                             <Youtube className="w-3 h-3 text-red-500 shrink-0" />
                           ) : c.type === "pdf" ? (
@@ -780,24 +903,6 @@ const AdminSections = () => {
                             <File className="w-3 h-3 text-muted-foreground shrink-0" />
                           )}
                           <span className="text-[11px] flex-1 truncate">{c.title}</span>
-                          <div className="flex flex-col -space-y-0.5">
-                            <button
-                              onClick={() => handleReorderContent(tab.id, idx, -1)}
-                              disabled={idx === 0}
-                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              title="Mover para cima"
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => handleReorderContent(tab.id, idx, 1)}
-                              disabled={idx === (contentsByTab[tab.id]?.length ?? 0) - 1}
-                              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              title="Mover para baixo"
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                            </button>
-                          </div>
                           {(tabsBySection[section.id]?.length ?? 0) > 1 && (
                             <select
                               value=""
@@ -835,8 +940,28 @@ const AdminSections = () => {
                           {/* Sub-conteúdos (filhos) */}
                           {editingContent !== c.id && childrenOf(c.id).length > 0 && (
                             <div className="mt-1 ml-4 pl-2 border-l-2 border-primary/30 space-y-1">
+                              <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={(e) => handleDragEndChildren(tab.id, c.id, e)}
+                              >
+                                <SortableContext
+                                  items={childrenOf(c.id).map((s) => s.id)}
+                                  strategy={verticalListSortingStrategy}
+                                >
                               {childrenOf(c.id).map((sub) => (
-                                <div key={sub.id} className="flex items-center gap-2 px-2 py-1 bg-secondary/40 rounded">
+                                <Sortable key={sub.id} id={sub.id}>
+                                {(sh) => (
+                                <div className="flex items-center gap-2 px-2 py-1 bg-secondary/40 rounded">
+                                  <button
+                                    {...sh.listeners}
+                                    {...sh.attributes}
+                                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"
+                                    title="Arrastar para reordenar"
+                                    aria-label="Arrastar"
+                                  >
+                                    <GripVertical className="w-3 h-3" />
+                                  </button>
                                   {sub.type === "youtube" ? (
                                     <Youtube className="w-3 h-3 text-red-500 shrink-0" />
                                   ) : sub.type === "pdf" ? (
@@ -861,7 +986,11 @@ const AdminSections = () => {
                                     <Trash2 className="w-3 h-3" />
                                   </button>
                                 </div>
+                                )}
+                                </Sortable>
                               ))}
+                                </SortableContext>
+                              </DndContext>
                             </div>
                           )}
                           {/* Botão / formulário de sub-conteúdo */}
@@ -973,7 +1102,12 @@ const AdminSections = () => {
                             </div>
                           )}
                         </div>
-                      ));
+                          )}
+                          </Sortable>
+                          ))}
+                          </SortableContext>
+                        </DndContext>
+                        );
                       })()}
 
                       {showForm !== tab.id ? (
