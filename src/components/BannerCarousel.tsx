@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Play, ZoomIn, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, ZoomIn } from "lucide-react";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import VideoZoomModal from "@/components/VideoZoomModal";
 
 interface BannerSlide {
   id: string;
@@ -74,24 +75,6 @@ const BannerCarousel = () => {
   return (
     <>
     <div className="relative w-full overflow-hidden rounded-xl aspect-video sm:aspect-[16/9] max-h-[420px] bg-black">
-      {/* Video overlay */}
-      {playingVideo && (
-        <div className="absolute inset-0 z-20 bg-black rounded-xl">
-          <iframe
-            src={`https://www.youtube.com/embed/${playingVideo}?autoplay=1`}
-            className="w-full h-full rounded-xl"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-          />
-          <button
-            onClick={() => setPlayingVideo(null)}
-            className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold z-30"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
       {slides.map((slide, i) => (
         <div
           key={slide.id}
@@ -179,6 +162,9 @@ const BannerCarousel = () => {
     </div>
     {zoomImage && (
       <ImageZoomModal src={zoomImage} onClose={() => setZoomImage(null)} />
+    )}
+    {playingVideo && (
+      <VideoZoomModal youtubeId={playingVideo} onClose={() => setPlayingVideo(null)} />
     )}
     </>
   );
