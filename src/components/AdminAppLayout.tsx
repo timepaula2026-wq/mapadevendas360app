@@ -53,6 +53,12 @@ const AdminAppLayout = () => {
         show_header: settings.show_header,
         display_mode: settings.display_mode,
         favicon_url: settings.favicon_url,
+        grid_cols_mobile: settings.grid_cols_mobile,
+        grid_cols_tablet: settings.grid_cols_tablet,
+        grid_cols_desktop: settings.grid_cols_desktop,
+        icon_size_mobile: settings.icon_size_mobile,
+        icon_size_tablet: settings.icon_size_tablet,
+        icon_size_desktop: settings.icon_size_desktop,
       })
       .eq("id", "default");
     setSaving(false);
