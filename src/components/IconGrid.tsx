@@ -57,13 +57,13 @@ const IconGrid = () => {
     const fetchOrder = async () => {
       const { data } = await supabase
         .from("icon_grid_order")
-        .select("id, sort_order, visible")
+        .select("id, sort_order, visible, custom_label")
         .order("sort_order", { ascending: true });
 
       if (data && data.length > 0) {
-        const visible = (data as { id: string; sort_order: number; visible: boolean }[])
+        const visible = (data as { id: string; sort_order: number; visible: boolean; custom_label?: string | null }[])
           .filter((d) => d.visible && ALL_ITEMS[d.id])
-          .map((d) => ALL_ITEMS[d.id]);
+          .map((d) => ({ ...ALL_ITEMS[d.id], label: d.custom_label || ALL_ITEMS[d.id].label }));
         setOrderedItems(visible);
       }
     };
