@@ -156,7 +156,11 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* Top bar */}
-      <div className="absolute top-0 inset-x-0 flex items-center justify-between p-3 z-10" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="absolute top-0 inset-x-0 flex items-center justify-between p-3 z-10"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex gap-2">
           <button
             onClick={() => zoomBy(-0.5)}
@@ -183,14 +187,20 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
             {Math.round(scale * 100)}%
           </span>
         </div>
-        <button
-          onClick={onClose}
-          className="w-9 h-9 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20"
-          aria-label="Fechar"
-        >
-          <X className="w-5 h-5" />
-        </button>
       </div>
+
+      {/* Prominent floating close button (respects iPhone notch) */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="absolute z-20 w-12 h-12 rounded-full bg-black/70 ring-1 ring-white/30 backdrop-blur flex items-center justify-center text-white hover:bg-black/85 active:scale-95 transition shadow-lg"
+        style={{
+          top: "max(0.75rem, env(safe-area-inset-top))",
+          right: "max(0.75rem, env(safe-area-inset-right))",
+        }}
+        aria-label="Fechar"
+      >
+        <X className="w-6 h-6" />
+      </button>
 
       {/* Image stage */}
       <div
