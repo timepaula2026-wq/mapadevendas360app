@@ -186,7 +186,12 @@ const AdminSections = () => {
     setContentType("youtube");
   };
 
-  const handleFileUpload = async (file: globalThis.File, sectionId: string, tabId: string) => {
+  const handleFileUpload = async (
+    file: globalThis.File,
+    sectionId: string,
+    tabId: string,
+    forcedType?: "pdf" | "image" | "video"
+  ) => {
     if (!user) return;
     setUploading(true);
     const fileExt = file.name.split(".").pop();
@@ -205,6 +210,8 @@ const AdminSections = () => {
     const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
 
     const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+    const isVideo = /\.(mp4|webm|mov|m4v|ogv)$/i.test(file.name);
+    const resolvedType = forcedType ?? (isVideo ? "video" : isImage ? "image" : "pdf");
     const nextOrder = contentsByTab[tabId]?.length ?? 0;
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
@@ -212,14 +219,20 @@ const AdminSections = () => {
       user_id: user.id,
       title: contentTitle.trim() || file.name,
       description: contentDesc.trim() || null,
-      type: isImage ? "image" : "pdf",
+      type: resolvedType,
       url: urlData.publicUrl,
       sort_order: nextOrder,
     });
 
     if (error) toast.error("Erro ao salvar");
     else {
-      toast.success(isImage ? "Imagem enviada!" : "PDF enviado!");
+      toast.success(
+        resolvedType === "video"
+          ? "Vídeo enviado!"
+          : resolvedType === "image"
+          ? "Imagem enviada!"
+          : "PDF enviado!"
+      );
       resetContentForm();
       fetchTabContents(tabId);
     }
@@ -230,13 +243,19 @@ const AdminSections = () => {
     if (!contentTitle.trim() || !user) return;
 
     // Validações de upload/URL
-    if (contentType === "pdf" || contentType === "image") {
+    if (contentType === "pdf" || contentType === "image" || contentType === "video") {
       const file = fileInputRef.current?.files?.[0];
       if (!file) {
-        toast.error(contentType === "pdf" ? "Selecione um arquivo PDF" : "Selecione uma imagem");
+        toast.error(
+          contentType === "pdf"
+            ? "Selecione um arquivo PDF"
+            : contentType === "image"
+            ? "Selecione uma imagem"
+            : "Selecione um arquivo de vídeo (MP4)"
+        );
         return;
       }
-      await handleFileUpload(file, sectionId, tabId);
+      await handleFileUpload(file, sectionId, tabId, contentType);
       return;
     }
 
