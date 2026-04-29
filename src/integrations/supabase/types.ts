@@ -255,21 +255,30 @@ export type Database = {
       icon_grid_order: {
         Row: {
           custom_label: string | null
+          icon_name: string | null
           id: string
+          is_custom: boolean
+          route: string | null
           sort_order: number
           updated_at: string
           visible: boolean
         }
         Insert: {
           custom_label?: string | null
+          icon_name?: string | null
           id: string
+          is_custom?: boolean
+          route?: string | null
           sort_order?: number
           updated_at?: string
           visible?: boolean
         }
         Update: {
           custom_label?: string | null
+          icon_name?: string | null
           id?: string
+          is_custom?: boolean
+          route?: string | null
           sort_order?: number
           updated_at?: string
           visible?: boolean
