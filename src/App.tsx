@@ -34,6 +34,7 @@ import FaleComPaula from "./pages/FaleComPaula";
 import Comissao from "./pages/Comissao";
 import EscolaLideres from "./pages/EscolaLideres";
 import TermoCorrespondente from "./pages/TermoCorrespondente";
+import CustomSection from "./pages/CustomSection";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -107,6 +108,7 @@ const App = () => (
             <Route path="/comissao" element={<ProtectedRoute><Comissao /></ProtectedRoute>} />
             <Route path="/lideres" element={<ProtectedRoute><EscolaLideres /></ProtectedRoute>} />
             <Route path="/termo-correspondente" element={<ProtectedRoute><TermoCorrespondente /></ProtectedRoute>} />
+            <Route path="/c/:slug" element={<ProtectedRoute><CustomSection /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
