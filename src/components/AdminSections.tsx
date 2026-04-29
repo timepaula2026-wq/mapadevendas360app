@@ -72,6 +72,9 @@ const AdminSections = () => {
   const [editContentTitle, setEditContentTitle] = useState("");
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
+  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image">("link");
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+  const [editUploading, setEditUploading] = useState(false);
 
   // Form for adding content to a tab
   const [showForm, setShowForm] = useState<string | null>(null); // tabId
@@ -350,18 +353,41 @@ const AdminSections = () => {
     setEditContentTitle(c.title);
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
+    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image") || "link");
   };
 
-  const handleSaveEditContent = async (contentId: string, tabId: string, type: string) => {
+  const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
     if (!editContentTitle.trim()) return;
+    const type = editContentType;
     const updates: Record<string, unknown> = {
       title: editContentTitle.trim(),
       description: editContentDesc.trim() || null,
+      type,
     };
-    if (type !== "pdf" && type !== "image") {
+    // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
+    const file = editFileInputRef.current?.files?.[0];
+    if ((type === "pdf" || type === "image") && file) {
+      setEditUploading(true);
+      const fileExt = file.name.split(".").pop();
+      const filePath = `sections/edit/${Date.now()}.${fileExt}`;
+      const { error: upErr } = await supabase.storage
+        .from("training-files")
+        .upload(filePath, file);
+      if (upErr) {
+        toast.error("Erro no upload: " + upErr.message);
+        setEditUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
+      updates.url = urlData.publicUrl;
+      updates.youtube_id = null;
+      setEditUploading(false);
+    } else if (type !== "pdf" && type !== "image") {
       updates.url = editContentUrl || null;
       if (type === "youtube") {
         updates.youtube_id = extractYoutubeId(editContentUrl);
+      } else {
+        updates.youtube_id = null;
       }
     }
     const { error } = await supabase
@@ -557,11 +583,35 @@ const AdminSections = () => {
                                 placeholder="Descrição (opcional)"
                                 className="h-7 text-xs"
                               />
-                              {c.type !== "pdf" && c.type !== "image" && (
+                              <select
+                                value={editContentType}
+                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image")}
+                                className="h-7 text-xs w-full bg-background border border-input rounded-md px-2"
+                              >
+                                <option value="link">Link</option>
+                                <option value="youtube">Vídeo</option>
+                                <option value="pdf">PDF</option>
+                                <option value="image">Imagem</option>
+                              </select>
+                              {editContentType === "pdf" || editContentType === "image" ? (
+                                <div className="space-y-1">
+                                  <input
+                                    ref={editFileInputRef}
+                                    type="file"
+                                    accept={editContentType === "pdf" ? ".pdf" : "image/png,image/jpeg,image/jpg,image/webp,image/gif"}
+                                    className="text-[10px] w-full"
+                                  />
+                                  {c.url && (c.type === "pdf" || c.type === "image") && (
+                                    <p className="text-[9px] text-muted-foreground truncate">
+                                      Atual: {c.url.split("/").pop()}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
                                 <Input
                                   value={editContentUrl}
                                   onChange={(e) => setEditContentUrl(e.target.value)}
-                                  placeholder={c.type === "youtube" ? "URL do YouTube" : "URL do link"}
+                                  placeholder={editContentType === "youtube" ? "URL do vídeo (YouTube, Vimeo, Drive...)" : "URL do link"}
                                   className="h-7 text-xs"
                                 />
                               )}
@@ -570,9 +620,9 @@ const AdminSections = () => {
                                   size="sm"
                                   className="h-6 text-[10px] flex-1"
                                   onClick={() => handleSaveEditContent(c.id, tab.id, c.type)}
-                                  disabled={!editContentTitle.trim()}
+                                  disabled={!editContentTitle.trim() || editUploading}
                                 >
-                                  Salvar
+                                  {editUploading ? "Enviando..." : "Salvar"}
                                 </Button>
                                 <Button
                                   size="sm"
