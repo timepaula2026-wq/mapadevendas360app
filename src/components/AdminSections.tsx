@@ -205,6 +205,7 @@ const AdminSections = () => {
     const { data: urlData } = supabase.storage.from("training-files").getPublicUrl(filePath);
 
     const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+    const nextOrder = contentsByTab[tabId]?.length ?? 0;
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
@@ -213,6 +214,7 @@ const AdminSections = () => {
       description: contentDesc.trim() || null,
       type: isImage ? "image" : "pdf",
       url: urlData.publicUrl,
+      sort_order: nextOrder,
     });
 
     if (error) toast.error("Erro ao salvar");
@@ -232,6 +234,7 @@ const AdminSections = () => {
       return;
     }
 
+    const nextOrder = contentsByTab[tabId]?.length ?? 0;
     const { error } = await supabase.from("section_contents").insert({
       section_id: sectionId,
       tab_id: tabId,
@@ -241,6 +244,7 @@ const AdminSections = () => {
       type: contentType,
       url: contentUrl || null,
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
+      sort_order: nextOrder,
     });
 
     if (error) toast.error("Erro ao adicionar");
