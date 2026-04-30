@@ -1,4 +1,4 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
   const [pdfZoom, setPdfZoom] = useState(1);
+  // Rotação de mídia (vídeo/imagem): 0 / 90 / 180 / 270
+  const [mediaRotation, setMediaRotation] = useState(0);
+  const rotateMedia = () => setMediaRotation((r) => (r + 90) % 360);
+  const isMediaType = isVideoType || type === "image";
 
   const PDF_MIN_ZOOM = 1;
   const PDF_MAX_ZOOM = 3;
@@ -132,6 +136,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }, 4000);
     return () => window.clearTimeout(t);
   }, [open, url, type, isMobile, isIOS]);
+
+  // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
+  useEffect(() => {
+    if (open) setMediaRotation(0);
+  }, [open, url, type]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
