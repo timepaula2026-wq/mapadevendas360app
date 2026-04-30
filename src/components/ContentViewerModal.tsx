@@ -1,4 +1,4 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -316,6 +316,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             {type === "pdf" && url && allowDownload && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload} title="Baixar">
                 <Download className="w-4 h-4" />
+              </Button>
+            )}
+            {url && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  const win = window.open(url, "_blank", "noopener,noreferrer");
+                  if (!win) window.location.href = url;
+                }}
+                title="Abrir em nova aba"
+                aria-label="Abrir em nova aba"
+              >
+                <ExternalLink className="w-4 h-4" />
               </Button>
             )}
           </div>
