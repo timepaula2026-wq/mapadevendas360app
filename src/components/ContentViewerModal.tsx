@@ -356,13 +356,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 </div>
               )}
               <div
-                className="origin-top-left"
+                className="relative"
                 style={{
-                  width: `${100 / pdfZoom}%`,
-                  height: `${100 / pdfZoom}%`,
-                  transform: `scale(${pdfZoom})`,
-                  transformOrigin: "top left",
-                  transition: "transform 0.18s ease-out",
+                  width: `${100 * pdfZoom}%`,
+                  height: `${100 * pdfZoom}%`,
+                  transition: "width 0.18s ease-out, height 0.18s ease-out",
                 }}
               >
               {useFallback ? (
