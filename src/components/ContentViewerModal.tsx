@@ -1,4 +1,4 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -318,6 +318,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 <Download className="w-4 h-4" />
               </Button>
             )}
+            {url && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  const win = window.open(url, "_blank", "noopener,noreferrer");
+                  if (!win) window.location.href = url;
+                }}
+                title="Abrir em nova aba"
+                aria-label="Abrir em nova aba"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -376,6 +391,15 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               <p className="text-sm text-muted-foreground max-w-md">
                 Este vídeo não permite visualização incorporada.
               </p>
+              <Button
+                onClick={() => {
+                  const win = window.open(url, "_blank", "noopener,noreferrer");
+                  if (!win) window.location.href = url;
+                }}
+                className="gap-2"
+              >
+                <ExternalLink className="w-4 h-4" /> Abrir em nova aba
+              </Button>
             </div>
           ) : type === "pdf" && url ? (
             <div
@@ -533,6 +557,15 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                     <p className="text-sm text-muted-foreground max-w-md">
                       Este conteúdo não permite visualização incorporada.
                     </p>
+                    <Button
+                      onClick={() => {
+                        const win = window.open(url, "_blank", "noopener,noreferrer");
+                        if (!win) window.location.href = url;
+                      }}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" /> Abrir em nova aba
+                    </Button>
                   </div>
                 );
               }

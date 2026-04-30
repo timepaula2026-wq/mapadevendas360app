@@ -44,6 +44,7 @@ const ContentRow = ({
     url: string | null;
     youtubeId: string | null;
     allowDownload: boolean;
+    openMode: "iframe" | "newtab";
   }) => void;
   state?: RowState;
 }) => {
@@ -61,6 +62,7 @@ const ContentRow = ({
           url: c.url,
           youtubeId: c.youtube_id,
           allowDownload: !!c.allow_download,
+          openMode: (c.open_mode === "newtab" ? "newtab" : "iframe"),
         });
       }}
       disabled={isLocked}
@@ -148,6 +150,30 @@ const SectionContentList = ({
   const [openTab, setOpenTab] = useState<string | null>(null);
   const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
   const { completed, markCompleted, issueCertificate, hasCertificate } = useTrilhaProgress();
+
+  const handleOpenContent = (v: {
+    id: string;
+    title: string;
+    type: string;
+    url: string | null;
+    youtubeId: string | null;
+    allowDownload: boolean;
+    openMode: "iframe" | "newtab";
+  }) => {
+    // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
+    // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.
+    if (v.openMode === "newtab" && v.url) {
+      const win = window.open(v.url, "_blank", "noopener,noreferrer");
+      if (!win) {
+        // Pop-up bloqueado: navega na própria janela como fallback
+        window.location.href = v.url;
+      }
+      // Marca progresso da Trilha mesmo abrindo em nova aba
+      if (trilhaMode) markCompleted(v.id, sectionId);
+      return;
+    }
+    setViewer(v);
+  };
   const [certModal, setCertModal] = useState<{
     title: string;
     subtitle?: string;
@@ -248,13 +274,13 @@ const SectionContentList = ({
     const parentIdx = sequence.indexOf(c.id);
     const parentState = stateForSequence(sequence, parentIdx);
     if (kids.length === 0) {
-      return <ContentRow key={c.id} c={c} onOpen={setViewer} state={parentState} />;
+      return <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} />;
     }
     return (
       <div key={c.id} className="space-y-2">
         <div className="flex items-stretch gap-2">
           <div className="flex-1">
-            <ContentRow c={c} onOpen={setViewer} state={parentState} />
+            <ContentRow c={c} onOpen={handleOpenContent} state={parentState} />
           </div>
           <button
             onClick={() => setOpenParents((p) => ({ ...p, [c.id]: !isOpen }))}
@@ -274,7 +300,7 @@ const SectionContentList = ({
             {kids.map((k) => {
               const kIdx = sequence.indexOf(k.id);
               const kState = stateForSequence(sequence, kIdx);
-              return <ContentRow key={k.id} c={k} onOpen={setViewer} state={kState} />;
+              return <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} />;
             })}
           </div>
         )}

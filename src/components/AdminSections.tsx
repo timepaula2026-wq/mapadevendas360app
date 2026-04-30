@@ -80,6 +80,7 @@ interface SectionContent {
   youtube_id: string | null;
   sort_order: number | null;
   allow_download?: boolean | null;
+  open_mode?: "iframe" | "newtab" | null;
 }
 
 interface SectionTab {
@@ -112,6 +113,7 @@ const AdminSections = () => {
   const [editContentUrl, setEditContentUrl] = useState("");
   const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
   const [editContentAllowDownload, setEditContentAllowDownload] = useState(false);
+  const [editContentOpenMode, setEditContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editUploading, setEditUploading] = useState(false);
 
@@ -123,6 +125,7 @@ const AdminSections = () => {
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [contentAllowDownload, setContentAllowDownload] = useState(false);
+  const [contentOpenMode, setContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -247,6 +250,7 @@ const AdminSections = () => {
     setContentUrl("");
     setContentType("youtube");
     setContentAllowDownload(false);
+    setContentOpenMode("iframe");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -302,6 +306,7 @@ const AdminSections = () => {
       url: urlData.publicUrl,
       sort_order: nextOrder,
       allow_download: resolvedType === "pdf" ? contentAllowDownload : false,
+      open_mode: "iframe",
     });
 
     if (error) toast.error("Erro ao salvar");
@@ -357,6 +362,7 @@ const AdminSections = () => {
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
       sort_order: nextOrder,
       allow_download: false,
+      open_mode: contentType === "link" || contentType === "youtube" ? contentOpenMode : "iframe",
     });
 
     if (error) toast.error("Erro ao adicionar");
@@ -534,6 +540,9 @@ const AdminSections = () => {
     setEditContentUrl(c.url || "");
     setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
     setEditContentAllowDownload(!!(c as unknown as { allow_download?: boolean }).allow_download);
+    setEditContentOpenMode(
+      ((c as unknown as { open_mode?: string }).open_mode === "newtab" ? "newtab" : "iframe")
+    );
   };
 
   const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
@@ -547,6 +556,7 @@ const AdminSections = () => {
       description: editContentDesc.trim() || null,
       type,
       allow_download: type === "pdf" ? editContentAllowDownload : false,
+      open_mode: type === "link" || type === "youtube" ? editContentOpenMode : "iframe",
     };
     // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
     const file = editFileInputRef.current?.files?.[0];
@@ -865,6 +875,22 @@ const AdminSections = () => {
                                   Permitir download deste PDF
                                 </label>
                               )}
+                              {(editContentType === "link" || editContentType === "youtube") && (
+                                <div className="space-y-1">
+                                  <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
+                                  <select
+                                    value={editContentOpenMode}
+                                    onChange={(e) => setEditContentOpenMode(e.target.value as "iframe" | "newtab")}
+                                    className="w-full h-7 text-[11px] px-2 rounded border border-input bg-background"
+                                  >
+                                    <option value="iframe">Dentro do app (iframe)</option>
+                                    <option value="newtab">Nova aba do navegador</option>
+                                  </select>
+                                  <p className="text-[9px] text-muted-foreground">
+                                    Use "Nova aba" para sites com login (CRM, ERP) que bloqueiam iframes.
+                                  </p>
+                                </div>
+                              )}
                               <div className="flex gap-1">
                                 <Button
                                   size="sm"
@@ -1081,6 +1107,19 @@ const AdminSections = () => {
                                   Permitir download
                                 </label>
                               )}
+                              {(contentType === "link" || contentType === "youtube") && (
+                                <div className="space-y-1">
+                                  <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
+                                  <select
+                                    value={contentOpenMode}
+                                    onChange={(e) => setContentOpenMode(e.target.value as "iframe" | "newtab")}
+                                    className="w-full h-7 text-[11px] px-2 rounded border border-input bg-background"
+                                  >
+                                    <option value="iframe">Dentro do app (iframe)</option>
+                                    <option value="newtab">Nova aba do navegador</option>
+                                  </select>
+                                </div>
+                              )}
                               <div className="flex gap-1">
                                 <Button
                                   onClick={() => handleAddContent(section.id, tab.id, c.id)}
@@ -1190,6 +1229,22 @@ const AdminSections = () => {
                               />
                               Permitir que usuários baixem este PDF
                             </label>
+                          )}
+                          {(contentType === "link" || contentType === "youtube") && (
+                            <div className="space-y-1">
+                              <label className="text-[11px] text-muted-foreground">Modo de abertura</label>
+                              <select
+                                value={contentOpenMode}
+                                onChange={(e) => setContentOpenMode(e.target.value as "iframe" | "newtab")}
+                                className="w-full h-7 text-[11px] px-2 rounded border border-input bg-background"
+                              >
+                                <option value="iframe">Dentro do app (iframe)</option>
+                                <option value="newtab">Nova aba do navegador</option>
+                              </select>
+                              <p className="text-[10px] text-muted-foreground">
+                                Use "Nova aba" para sites com login (CRM, ERP) que bloqueiam iframes.
+                              </p>
+                            </div>
                           )}
                           <div className="flex gap-1">
                             <Button
