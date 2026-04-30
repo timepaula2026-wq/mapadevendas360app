@@ -359,7 +359,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               ) : (
                 <iframe
                   key="native"
-                  src={`${url}#toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=1&view=FitH&pagemode=none`}
+                  src={`${url}#toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=1&view=Fit&zoom=page-fit&pagemode=none`}
                   className="w-full h-full border-0"
                   title={title}
                   loading="eager"
