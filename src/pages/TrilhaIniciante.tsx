@@ -24,6 +24,19 @@ const TrilhaIniciante = () => {
   const [displayName, setDisplayName] = useState<string>("Consultor(a)");
   const [globalCertOpen, setGlobalCertOpen] = useState(false);
   const [globalCertIssuedAt, setGlobalCertIssuedAt] = useState<string | undefined>();
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [globalCertPending, setGlobalCertPending] = useState(false);
+
+  // Escuta sinal do SectionContentList para saber se algum visualizador
+  // de conteúdo está aberto. Usamos isso para adiar o certificado global.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ open: boolean }>).detail;
+      setViewerOpen(!!detail?.open);
+    };
+    window.addEventListener("trilha:viewer", handler);
+    return () => window.removeEventListener("trilha:viewer", handler);
+  }, []);
 
   const { completed, issueCertificate, hasCertificate } = useTrilhaProgress();
   const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
@@ -149,12 +162,24 @@ const TrilhaIniciante = () => {
         });
         if (cert) {
           setGlobalCertIssuedAt(cert.issued_at);
-          setGlobalCertOpen(true);
+          setGlobalCertPending(true);
         }
       })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completedPerSection, sectionTotals, sections]);
+
+  // Só abre o certificado global quando NÃO houver visualizador de conteúdo
+  // aberto — assim ele não aparece por cima do último conteúdo da Trilha.
+  // Damos também um pequeno atraso para o certificado de "seção" aparecer primeiro.
+  useEffect(() => {
+    if (!globalCertPending || viewerOpen || globalCertOpen) return;
+    const t = setTimeout(() => {
+      setGlobalCertOpen(true);
+      setGlobalCertPending(false);
+    }, 600);
+    return () => clearTimeout(t);
+  }, [globalCertPending, viewerOpen, globalCertOpen]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
