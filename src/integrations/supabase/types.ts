@@ -799,6 +799,60 @@ export type Database = {
         }
         Relationships: []
       }
+      trilha_certificates: {
+        Row: {
+          id: string
+          issued_at: string
+          scope: string
+          scope_ref: string | null
+          section_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          issued_at?: string
+          scope?: string
+          scope_ref?: string | null
+          section_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          issued_at?: string
+          scope?: string
+          scope_ref?: string | null
+          section_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trilha_progress: {
+        Row: {
+          completed_at: string
+          content_id: string
+          id: string
+          section_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          content_id: string
+          id?: string
+          section_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          content_id?: string
+          id?: string
+          section_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

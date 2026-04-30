@@ -14,6 +14,8 @@ interface ContentViewerModalProps {
   youtubeId: string | null;
   /** Quando true, exibe o botão de baixar (apenas para PDF). */
   allowDownload?: boolean;
+  /** Disparado uma vez ao abrir um conteúdo válido (usado para marcar progresso). */
+  onOpened?: () => void;
 }
 
 // Detects video provider and returns an embeddable URL when possible.
@@ -73,7 +75,7 @@ const getVideoEmbed = (
   return { embedUrl: null, isVideo: false, provider: "unknown" };
 };
 
-const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false }: ContentViewerModalProps) => {
+const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened }: ContentViewerModalProps) => {
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
   const isLinkVideo = type === "youtube";
@@ -141,6 +143,14 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   useEffect(() => {
     if (open) setMediaRotation(0);
   }, [open, url, type]);
+
+  // Marca o conteúdo como concluído ao abrir (uma vez por abertura)
+  useEffect(() => {
+    if (open && (url || youtubeId) && onOpened) {
+      onOpened();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, url, youtubeId]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
