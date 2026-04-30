@@ -1107,6 +1107,19 @@ const AdminSections = () => {
                                   Permitir download
                                 </label>
                               )}
+                              {(contentType === "link" || contentType === "youtube") && (
+                                <div className="space-y-1">
+                                  <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
+                                  <select
+                                    value={contentOpenMode}
+                                    onChange={(e) => setContentOpenMode(e.target.value as "iframe" | "newtab")}
+                                    className="w-full h-7 text-[11px] px-2 rounded border border-input bg-background"
+                                  >
+                                    <option value="iframe">Dentro do app (iframe)</option>
+                                    <option value="newtab">Nova aba do navegador</option>
+                                  </select>
+                                </div>
+                              )}
                               <div className="flex gap-1">
                                 <Button
                                   onClick={() => handleAddContent(section.id, tab.id, c.id)}
