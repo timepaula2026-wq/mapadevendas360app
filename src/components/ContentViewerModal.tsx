@@ -1,4 +1,4 @@
-import { Printer, Download, ZoomIn, Loader2 } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [pdfLoaded, setPdfLoaded] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
   const [useFallback, setUseFallback] = useState(false);
+  // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
+  // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
+  const [pdfZoom, setPdfZoom] = useState(1);
+
+  const PDF_MIN_ZOOM = 1;
+  const PDF_MAX_ZOOM = 3;
+  const PDF_ZOOM_STEP = 0.25;
+  const zoomIn = () =>
+    setPdfZoom((z) => Math.min(PDF_MAX_ZOOM, +(z + PDF_ZOOM_STEP).toFixed(2)));
+  const zoomOut = () =>
+    setPdfZoom((z) => Math.max(PDF_MIN_ZOOM, +(z - PDF_ZOOM_STEP).toFixed(2)));
+  const zoomFit = () => setPdfZoom(1);
 
   // iOS Safari não rola dentro de <object>; usamos Google Docs Viewer como alternativa
   const isIOS =
@@ -101,6 +113,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   useEffect(() => {
     if (!(open && type === "pdf")) return;
     setPdfLoaded(false);
+    // Sempre inicia em Fit (100%) — sem zoom inicial nem corte central.
+    setPdfZoom(1);
     // No iOS o renderer nativo de PDF abre travado em zoom e não rola direito.
     // Usamos o Google Docs Viewer por padrão no iOS para garantir leitura
     // confortável (página inteira + rolagem). Em desktop/Android usamos o
@@ -224,6 +238,45 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-1 mr-8">
+            {type === "pdf" && url && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={zoomOut}
+                  disabled={pdfZoom <= PDF_MIN_ZOOM}
+                  title="Diminuir zoom"
+                  aria-label="Diminuir zoom"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={zoomFit}
+                  title="Ajustar à página (Fit)"
+                  aria-label="Ajustar à página"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={zoomIn}
+                  disabled={pdfZoom >= PDF_MAX_ZOOM}
+                  title="Aumentar zoom"
+                  aria-label="Aumentar zoom"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                <span className="text-[11px] tabular-nums text-muted-foreground w-10 text-center select-none">
+                  {Math.round(pdfZoom * 100)}%
+                </span>
+              </>
+            )}
             {(type === "pdf" || type === "image") && url && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrint} title="Imprimir">
                 <Printer className="w-4 h-4" />
@@ -278,7 +331,15 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               </p>
             </div>
           ) : type === "pdf" && url ? (
-            <div className="relative w-full h-full" style={{ touchAction: "pan-y" }}>
+            <div
+              className="relative w-full h-full bg-muted"
+              style={{
+                touchAction: pdfZoom > 1 ? "pan-x pan-y" : "pan-y",
+                overflow: pdfZoom > 1 ? "auto" : "hidden",
+                WebkitOverflowScrolling: "touch",
+                overscrollBehavior: "contain",
+              }}
+            >
               {!pdfLoaded && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -294,6 +355,14 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   )}
                 </div>
               )}
+              <div
+                className="relative"
+                style={{
+                  width: `${100 * pdfZoom}%`,
+                  height: `${100 * pdfZoom}%`,
+                  transition: "width 0.18s ease-out, height 0.18s ease-out",
+                }}
+              >
               {useFallback ? (
                 // No iOS o iframe do gview NÃO recebe gestos de scroll por toque
                 // (Safari trava o ponteiro dentro do iframe). Solução: envolver o
@@ -368,6 +437,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   style={{ touchAction: "pan-y" }}
                 />
               )}
+              </div>
             </div>
           ) : type === "image" && url ? (
             <div className="relative w-full h-full flex items-center justify-center bg-black/40 p-4">
