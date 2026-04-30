@@ -531,8 +531,6 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             </div>
           ) : type === "pdf" && url ? (
             <div
-              ref={pdfScrollRef}
-              onScroll={handlePdfScroll}
               className="relative w-full h-full bg-muted"
               style={{
                 touchAction: pdfZoom > 1 ? "pan-x pan-y" : "pan-y",
@@ -540,6 +538,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 WebkitOverflowScrolling: "touch",
                 overscrollBehavior: "contain",
               }}
+              ref={pdfZoom > 1 ? pdfScrollRef : undefined}
+              onScroll={pdfZoom > 1 ? handlePdfScroll : undefined}
             >
               {!pdfLoaded && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
@@ -572,6 +572,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 // pai — que respeita inertial scroll do iOS.
                 isIOS ? (
                   <div
+                    ref={pdfScrollRef}
+                    onScroll={handlePdfScroll}
                     className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-muted"
                     style={{
                       WebkitOverflowScrolling: "touch",
@@ -600,6 +602,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   // possamos detectar quando o usuário rolou todo o PDF
                   // (necessário para liberar a próxima aba na Trilha).
                   <div
+                    ref={pdfScrollRef}
+                    onScroll={handlePdfScroll}
                     className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-muted"
                     style={{ overscrollBehavior: "contain" }}
                   >
@@ -621,6 +625,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 // (overflow-auto + inertial scroll) e iframe com altura intrínseca
                 // grande para que o scroll aconteça no container, não no iframe.
                 <div
+                  ref={pdfScrollRef}
+                  onScroll={handlePdfScroll}
                   className="absolute inset-0 overflow-auto bg-muted"
                   style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                 >
