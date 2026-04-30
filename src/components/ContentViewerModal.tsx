@@ -286,6 +286,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 </span>
               </>
             )}
+            {isMediaType && url && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={rotateMedia}
+                title="Girar (horizontal/vertical)"
+                aria-label="Girar mídia 90 graus"
+              >
+                <RotateCw className="w-4 h-4" />
+              </Button>
+            )}
             {(type === "pdf" || type === "image") && url && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrint} title="Imprimir">
                 <Printer className="w-4 h-4" />
