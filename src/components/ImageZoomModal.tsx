@@ -158,7 +158,8 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   const onTouchEnd = (e: React.TouchEvent) => {
     const g = gestureRef.current;
     const ended = e.touches.length === 0;
-    // Close only on a clean tap on the backdrop (no pinch, no pan, short, not zoomed)
+    // Clean tap on the backdrop (no pinch, no pan, short).
+    // If zoomed: reset to original size. If already at original: close.
     if (
       ended &&
       g &&
@@ -166,10 +167,13 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       !g.moved &&
       !g.multiTouch &&
       Date.now() - g.startTime < 300 &&
-      scale <= 1 &&
       !pinchRef.current
     ) {
-      onClose();
+      if (scale > 1) {
+        reset();
+      } else {
+        onClose();
+      }
     }
     if (ended) {
       dragRef.current = null;
@@ -282,8 +286,12 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
         onClick={(e) => {
           // Mouse-only path. Touch close is handled in onTouchEnd to avoid
           // conflicting with pinch/pan gestures (synthetic clicks are ignored).
-          if (e.target === e.currentTarget && scale <= 1 && e.detail > 0) {
-            onClose();
+          if (e.target === e.currentTarget && e.detail > 0) {
+            if (scale > 1) {
+              reset();
+            } else {
+              onClose();
+            }
           }
         }}
         onTouchStart={onTouchStart}
