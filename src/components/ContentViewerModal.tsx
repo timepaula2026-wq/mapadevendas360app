@@ -331,7 +331,15 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               </p>
             </div>
           ) : type === "pdf" && url ? (
-            <div className="relative w-full h-full" style={{ touchAction: "pan-y" }}>
+            <div
+              className="relative w-full h-full bg-muted"
+              style={{
+                touchAction: pdfZoom > 1 ? "pan-x pan-y" : "pan-y",
+                overflow: pdfZoom > 1 ? "auto" : "hidden",
+                WebkitOverflowScrolling: "touch",
+                overscrollBehavior: "contain",
+              }}
+            >
               {!pdfLoaded && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -347,6 +355,16 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   )}
                 </div>
               )}
+              <div
+                className="absolute inset-0"
+                style={{
+                  width: `${100 * pdfZoom}%`,
+                  height: `${100 * pdfZoom}%`,
+                  transform: `scale(${pdfZoom})`,
+                  transformOrigin: "top left",
+                  transition: "transform 0.18s ease-out",
+                }}
+              >
               {useFallback ? (
                 // No iOS o iframe do gview NÃO recebe gestos de scroll por toque
                 // (Safari trava o ponteiro dentro do iframe). Solução: envolver o
@@ -421,6 +439,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   style={{ touchAction: "pan-y" }}
                 />
               )}
+              </div>
             </div>
           ) : type === "image" && url ? (
             <div className="relative w-full h-full flex items-center justify-center bg-black/40 p-4">
