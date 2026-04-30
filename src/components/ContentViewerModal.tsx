@@ -116,7 +116,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       });
     }, 4000);
     return () => window.clearTimeout(t);
-  }, [open, url, type, isMobile]);
+  }, [open, url, type, isMobile, isIOS]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
