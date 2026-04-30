@@ -44,6 +44,7 @@ const ContentRow = ({
     url: string | null;
     youtubeId: string | null;
     allowDownload: boolean;
+    openMode: "iframe" | "newtab";
   }) => void;
   state?: RowState;
 }) => {
@@ -61,6 +62,7 @@ const ContentRow = ({
           url: c.url,
           youtubeId: c.youtube_id,
           allowDownload: !!c.allow_download,
+          openMode: (c.open_mode === "newtab" ? "newtab" : "iframe"),
         });
       }}
       disabled={isLocked}
