@@ -251,7 +251,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               </p>
             </div>
           ) : type === "pdf" && url ? (
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full" style={{ touchAction: "pan-y" }}>
               {!pdfLoaded && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -275,7 +275,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   title={title}
                   loading="eager"
                   onLoad={() => setPdfLoaded(true)}
-                  style={{ WebkitOverflowScrolling: "touch" }}
+                  style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                 />
               ) : isIOS ? (
                 // iOS Safari NÃO rola dentro do iframe de PDF: o conteúdo fica
@@ -284,7 +284,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 // grande para que o scroll aconteça no container, não no iframe.
                 <div
                   className="absolute inset-0 overflow-auto bg-muted"
-                  style={{ WebkitOverflowScrolling: "touch" }}
+                  style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                 >
                   <iframe
                     key="native-ios"
@@ -294,7 +294,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                     referrerPolicy="no-referrer"
                     onLoad={() => setPdfLoaded(true)}
                     className="block w-full border-0"
-                    style={{ height: "300vh", minHeight: "300vh" }}
+                    style={{ height: "300vh", minHeight: "300vh", touchAction: "pan-y" }}
                     scrolling="no"
                   />
                 </div>
@@ -307,6 +307,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   loading="eager"
                   referrerPolicy="no-referrer"
                   onLoad={() => setPdfLoaded(true)}
+                  style={{ touchAction: "pan-y" }}
                 />
               )}
             </div>
