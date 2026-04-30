@@ -9,7 +9,7 @@ interface Props {
 }
 
 const MIN_SCALE = 1;
-const MAX_SCALE = 5;
+const MAX_SCALE = 8;
 
 const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   const [scale, setScale] = useState(1);
@@ -229,21 +229,24 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       >
         <div className="flex gap-2">
           <button
-            onClick={() => zoomBy(-0.5)}
+            onClick={(e) => { e.stopPropagation(); zoomBy(-0.5); }}
+            onTouchEnd={(e) => { e.stopPropagation(); }}
             className="w-9 h-9 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20"
             aria-label="Diminuir zoom"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
           <button
-            onClick={() => zoomBy(0.5)}
+            onClick={(e) => { e.stopPropagation(); zoomBy(0.5); }}
+            onTouchEnd={(e) => { e.stopPropagation(); }}
             className="w-9 h-9 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20"
             aria-label="Aumentar zoom"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
-            onClick={reset}
+            onClick={(e) => { e.stopPropagation(); reset(); }}
+            onTouchEnd={(e) => { e.stopPropagation(); }}
             className="w-9 h-9 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20"
             aria-label="Resetar zoom"
           >
