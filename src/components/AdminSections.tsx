@@ -875,6 +875,22 @@ const AdminSections = () => {
                                   Permitir download deste PDF
                                 </label>
                               )}
+                              {(editContentType === "link" || editContentType === "youtube") && (
+                                <div className="space-y-1">
+                                  <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
+                                  <select
+                                    value={editContentOpenMode}
+                                    onChange={(e) => setEditContentOpenMode(e.target.value as "iframe" | "newtab")}
+                                    className="w-full h-7 text-[11px] px-2 rounded border border-input bg-background"
+                                  >
+                                    <option value="iframe">Dentro do app (iframe)</option>
+                                    <option value="newtab">Nova aba do navegador</option>
+                                  </select>
+                                  <p className="text-[9px] text-muted-foreground">
+                                    Use "Nova aba" para sites com login (CRM, ERP) que bloqueiam iframes.
+                                  </p>
+                                </div>
+                              )}
                               <div className="flex gap-1">
                                 <Button
                                   size="sm"
