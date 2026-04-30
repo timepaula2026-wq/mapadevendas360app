@@ -100,9 +100,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   useEffect(() => {
     if (!(open && type === "pdf")) return;
     setPdfLoaded(false);
-    // Tentar SEMPRE o visualizador nativo primeiro (URL direta = mais rápido,
-    // sem proxy externo). Só cai para o gview se demorar demais no mobile.
-    setUseFallback(false);
+    // No iOS o renderer nativo de PDF abre travado em zoom e não rola direito.
+    // Usamos o Google Docs Viewer por padrão no iOS para garantir leitura
+    // confortável (página inteira + rolagem). Em desktop/Android usamos o
+    // visualizador nativo (mais rápido).
+    setUseFallback(isIOS);
     if (!isMobile) return;
     const t = window.setTimeout(() => {
       setPdfLoaded((loaded) => {
@@ -114,7 +116,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       });
     }, 4000);
     return () => window.clearTimeout(t);
-  }, [open, url, type, isMobile]);
+  }, [open, url, type, isMobile, isIOS]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
