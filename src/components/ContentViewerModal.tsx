@@ -356,10 +356,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 </div>
               )}
               <div
-                className="absolute inset-0"
+                className="origin-top-left"
                 style={{
-                  width: `${100 * pdfZoom}%`,
-                  height: `${100 * pdfZoom}%`,
+                  width: `${100 / pdfZoom}%`,
+                  height: `${100 / pdfZoom}%`,
                   transform: `scale(${pdfZoom})`,
                   transformOrigin: "top left",
                   transition: "transform 0.18s ease-out",
