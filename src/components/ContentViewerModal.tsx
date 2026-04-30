@@ -295,15 +295,46 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 </div>
               )}
               {useFallback ? (
-                <iframe
-                  key="gview"
-                  src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
-                  className="w-full h-full border-0"
-                  title={title}
-                  loading="eager"
-                  onLoad={() => setPdfLoaded(true)}
-                  style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
-                />
+                // No iOS o iframe do gview NÃO recebe gestos de scroll por toque
+                // (Safari trava o ponteiro dentro do iframe). Solução: envolver o
+                // iframe num wrapper rolável e aumentar a altura intrínseca do
+                // iframe para que TODA a navegação aconteça no scroll do wrapper
+                // pai — que respeita inertial scroll do iOS.
+                isIOS ? (
+                  <div
+                    className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-muted"
+                    style={{
+                      WebkitOverflowScrolling: "touch",
+                      touchAction: "pan-y",
+                      overscrollBehavior: "contain",
+                    }}
+                  >
+                    <iframe
+                      key="gview-ios"
+                      src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
+                      title={title}
+                      loading="eager"
+                      onLoad={() => setPdfLoaded(true)}
+                      className="block w-full border-0 pointer-events-none"
+                      style={{
+                        height: "400vh",
+                        minHeight: "400vh",
+                        touchAction: "pan-y",
+                      }}
+                      scrolling="no"
+                    />
+                  </div>
+                ) : (
+                  <iframe
+                    key="gview"
+                    src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
+                    className="w-full h-full border-0"
+                    title={title}
+                    loading="eager"
+                    onLoad={() => setPdfLoaded(true)}
+                    style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+                  />
+                )
               ) : isIOS ? (
                 // iOS Safari NÃO rola dentro do iframe de PDF: o conteúdo fica
                 // travado na primeira página. Solução: container pai rolável
