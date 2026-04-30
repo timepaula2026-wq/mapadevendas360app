@@ -113,6 +113,7 @@ const AdminSections = () => {
   const [editContentUrl, setEditContentUrl] = useState("");
   const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
   const [editContentAllowDownload, setEditContentAllowDownload] = useState(false);
+  const [editContentOpenMode, setEditContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editUploading, setEditUploading] = useState(false);
 
@@ -249,6 +250,7 @@ const AdminSections = () => {
     setContentUrl("");
     setContentType("youtube");
     setContentAllowDownload(false);
+    setContentOpenMode("iframe");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
