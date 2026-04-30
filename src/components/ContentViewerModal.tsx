@@ -39,7 +39,7 @@ const getVideoEmbed = (
   const ytId = youtubeId || (ytMatch ? ytMatch[1] : null);
   if (ytId) {
     return {
-      embedUrl: `https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`,
+      embedUrl: `https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1&enablejsapi=1`,
       isVideo: true,
       provider: "youtube",
     };
@@ -49,7 +49,7 @@ const getVideoEmbed = (
   const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if (vimeoMatch) {
     return {
-      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&api=1`,
       isVideo: true,
       provider: "vimeo",
     };
