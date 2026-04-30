@@ -1,8 +1,9 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2, FastForward } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
 
 interface ContentViewerModalProps {
@@ -84,6 +85,7 @@ const getVideoEmbed = (
 };
 
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened, onCompleted }: ContentViewerModalProps) => {
+  const { isAdmin } = useIsAdmin();
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
   const isLinkVideo = type === "youtube";
@@ -441,6 +443,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   </span>
                 </span>
               )
+            )}
+            {isAdmin && requiresWatch && !completedFlag && (url || youtubeId) && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-[11px] gap-1 mr-1 border-primary/40 text-primary hover:text-primary hover:bg-primary/10"
+                onClick={() => {
+                  fireCompleted();
+                  toast.success("Conteúdo marcado como concluído (modo admin)");
+                }}
+                title="Atalho de admin: marca como visto sem precisar assistir/rolar tudo"
+              >
+                <FastForward className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Concluir (admin)</span>
+              </Button>
             )}
             {type === "pdf" && url && (
               <>
