@@ -152,7 +152,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     // Usamos o Google Docs Viewer por padrão no iOS para garantir leitura
     // confortável (página inteira + rolagem). Em desktop/Android usamos o
     // visualizador nativo (mais rápido).
-    setUseFallback(isIOS);
+    // Quando o modo Trilha está ativo (onCompleted definido), forçamos o
+    // visualizador alternativo (gview) também no desktop/Android — assim a
+    // rolagem acontece em um wrapper DOM real e conseguimos detectar o
+    // "leu até o fim" (impossível dentro do iframe nativo de PDF).
+    setUseFallback(isIOS || !!onCompleted);
     if (!isMobile) return;
     const t = window.setTimeout(() => {
       setPdfLoaded((loaded) => {
@@ -164,7 +168,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       });
     }, 4000);
     return () => window.clearTimeout(t);
-  }, [open, url, type, isMobile, isIOS]);
+  }, [open, url, type, isMobile, isIOS, onCompleted]);
 
   // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
   useEffect(() => {
