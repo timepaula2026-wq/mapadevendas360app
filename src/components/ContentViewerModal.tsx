@@ -528,8 +528,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 onEnded={() => fireCompleted()}
                 onTimeUpdate={(e) => {
                   const v = e.currentTarget;
-                  if (v.duration > 0 && v.currentTime / v.duration >= 0.95) {
-                    fireCompleted();
+                  if (v.duration > 0) {
+                    const pct = (v.currentTime / v.duration) * 100;
+                    updateProgress(pct);
+                    if (pct >= 95) fireCompleted();
                   }
                 }}
                 className="object-contain"
