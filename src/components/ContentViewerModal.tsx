@@ -1,4 +1,4 @@
-import { Printer, Download, ZoomIn, Loader2 } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [pdfLoaded, setPdfLoaded] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
   const [useFallback, setUseFallback] = useState(false);
+  // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
+  // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
+  const [pdfZoom, setPdfZoom] = useState(1);
+
+  const PDF_MIN_ZOOM = 1;
+  const PDF_MAX_ZOOM = 3;
+  const PDF_ZOOM_STEP = 0.25;
+  const zoomIn = () =>
+    setPdfZoom((z) => Math.min(PDF_MAX_ZOOM, +(z + PDF_ZOOM_STEP).toFixed(2)));
+  const zoomOut = () =>
+    setPdfZoom((z) => Math.max(PDF_MIN_ZOOM, +(z - PDF_ZOOM_STEP).toFixed(2)));
+  const zoomFit = () => setPdfZoom(1);
 
   // iOS Safari não rola dentro de <object>; usamos Google Docs Viewer como alternativa
   const isIOS =
@@ -101,6 +113,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   useEffect(() => {
     if (!(open && type === "pdf")) return;
     setPdfLoaded(false);
+    // Sempre inicia em Fit (100%) — sem zoom inicial nem corte central.
+    setPdfZoom(1);
     // No iOS o renderer nativo de PDF abre travado em zoom e não rola direito.
     // Usamos o Google Docs Viewer por padrão no iOS para garantir leitura
     // confortável (página inteira + rolagem). Em desktop/Android usamos o
