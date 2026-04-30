@@ -444,6 +444,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 </span>
               )
             )}
+            {isAdmin && requiresWatch && !completedFlag && (url || youtubeId) && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-[11px] gap-1 mr-1 border-primary/40 text-primary hover:text-primary hover:bg-primary/10"
+                onClick={() => {
+                  fireCompleted();
+                  toast.success("Conteúdo marcado como concluído (modo admin)");
+                }}
+                title="Atalho de admin: marca como visto sem precisar assistir/rolar tudo"
+              >
+                <FastForward className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Concluir (admin)</span>
+              </Button>
+            )}
             {type === "pdf" && url && (
               <>
                 <Button
