@@ -85,6 +85,7 @@ const getVideoEmbed = (
 };
 
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened, onCompleted }: ContentViewerModalProps) => {
+  const { isAdmin } = useIsAdmin();
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
   const isLinkVideo = type === "youtube";
