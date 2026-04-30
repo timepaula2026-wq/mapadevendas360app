@@ -151,6 +151,14 @@ const SectionContentList = ({
   const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
   const { completed, markCompleted, issueCertificate, hasCertificate } = useTrilhaProgress();
 
+  // Sinaliza globalmente quando o visualizador está aberto, para que outros
+  // componentes (ex.: certificado global da Trilha) possam aguardar.
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("trilha:viewer", { detail: { open: !!viewer } })
+    );
+  }, [viewer]);
+
   const handleOpenContent = (v: {
     id: string;
     title: string;
