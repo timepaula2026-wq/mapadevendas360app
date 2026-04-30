@@ -151,6 +151,14 @@ const SectionContentList = ({
   const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
   const { completed, markCompleted, issueCertificate, hasCertificate } = useTrilhaProgress();
 
+  // Sinaliza globalmente quando o visualizador está aberto, para que outros
+  // componentes (ex.: certificado global da Trilha) possam aguardar.
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("trilha:viewer", { detail: { open: !!viewer } })
+    );
+  }, [viewer]);
+
   const handleOpenContent = (v: {
     id: string;
     title: string;
@@ -180,6 +188,22 @@ const SectionContentList = ({
     scope: "tab" | "section" | "global";
     issuedAt?: string;
   } | null>(null);
+  // Fila de certificados pendentes: só exibimos quando nenhum visualizador
+  // estiver aberto, para evitar que o "Parabéns" apareça antes do usuário
+  // terminar de ver o último conteúdo.
+  const [pendingCerts, setPendingCerts] = useState<Array<{
+    title: string;
+    subtitle?: string;
+    scope: "tab" | "section" | "global";
+    issuedAt?: string;
+  }>>([]);
+
+  const enqueueCert = (c: {
+    title: string;
+    subtitle?: string;
+    scope: "tab" | "section" | "global";
+    issuedAt?: string;
+  }) => setPendingCerts((q) => [...q, c]);
 
   const orphanContents = contents.filter((c) => !c.tab_id && !c.parent_id);
   const childrenByParent: Record<string, SectionContent[]> = {};
@@ -225,7 +249,7 @@ const SectionContentList = ({
           title: `${sectionLabel || sectionId} — ${t.title}`,
         });
         if (cert) {
-          setCertModal({
+          enqueueCert({
             title: t.title,
             subtitle: sectionLabel,
             scope: "tab",
@@ -246,7 +270,7 @@ const SectionContentList = ({
           title: sectionLabel || sectionId,
         });
         if (cert) {
-          setCertModal({
+          enqueueCert({
             title: sectionLabel || sectionId,
             subtitle: "Você concluiu todos os conteúdos desta seção",
             scope: "section",
@@ -257,6 +281,16 @@ const SectionContentList = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completed, contents, tabs, trilhaMode, sectionId, sectionLabel]);
+
+  // Quando o visualizador está fechado e há certificado(s) na fila, exibe o próximo.
+  useEffect(() => {
+    if (viewer) return;
+    if (certModal) return;
+    if (pendingCerts.length === 0) return;
+    const [next, ...rest] = pendingCerts;
+    setCertModal(next);
+    setPendingCerts(rest);
+  }, [viewer, certModal, pendingCerts]);
 
   if (loading) {
     return (
