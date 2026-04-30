@@ -679,6 +679,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          open_mode: string
           parent_id: string | null
           section_id: string
           sort_order: number | null
@@ -694,6 +695,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          open_mode?: string
           parent_id?: string | null
           section_id: string
           sort_order?: number | null
@@ -709,6 +711,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          open_mode?: string
           parent_id?: string | null
           section_id?: string
           sort_order?: number | null
