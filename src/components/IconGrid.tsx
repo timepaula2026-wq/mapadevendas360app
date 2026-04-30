@@ -6,7 +6,6 @@ import { DYNAMIC_ICONS } from "@/lib/iconPicker";
 import { DEFAULT_GRID_SECTIONS, DEFAULT_SECTION_IDS } from "@/lib/sections";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { useAppSettings } from "@/hooks/useAppSettings";
-import { useGridZoom } from "@/hooks/useGridZoom";
 import { toast } from "sonner";
 
 interface GridItem {
@@ -37,7 +36,6 @@ const IconGrid = () => {
   const navigate = useNavigate();
   const { roles: userRoles } = useUserRoles();
   const { settings } = useAppSettings();
-  const { zoom } = useGridZoom();
   const [orderedItems, setOrderedItems] = useState<GridItem[]>(DEFAULT_SECTION_IDS.map((id) => ALL_ITEMS[id]));
 
   useEffect(() => {
@@ -93,10 +91,7 @@ const IconGrid = () => {
 
   if (settings.display_mode === "list") {
     return (
-      <div
-        className="flex flex-col gap-2"
-        style={{ fontSize: `${zoom}em` }}
-      >
+      <div className="flex flex-col gap-2">
         {orderedItems.map((item) => {
           const locked = isLocked(item);
           return (
@@ -105,15 +100,8 @@ const IconGrid = () => {
               onClick={() => handleClick(item)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)] border border-white/10 shadow shadow-black/20 transition-all ${locked ? "opacity-60" : "hover:brightness-110 active:brightness-90"}`}
             >
-              <div
-                className="rounded-lg bg-white/10 flex items-center justify-center shrink-0 relative"
-                style={{ width: `${2.5 * zoom}rem`, height: `${2.5 * zoom}rem` }}
-              >
-                <item.icon
-                  className="text-white"
-                  strokeWidth={1.6}
-                  style={{ width: `${1.5 * zoom}rem`, height: `${1.5 * zoom}rem` }}
-                />
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0 relative">
+                <item.icon className="w-6 h-6 text-white" strokeWidth={1.6} />
                 {locked && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black/70 flex items-center justify-center">
                     <Lock className="w-2.5 h-2.5 text-white" />
@@ -135,16 +123,16 @@ const IconGrid = () => {
           display: grid;
           gap: 0.5rem;
           grid-template-columns: repeat(${settings.grid_cols_mobile}, minmax(0, 1fr));
-          --icon-size: ${Math.round(settings.icon_size_mobile * zoom)}px;
-          --label-size: ${0.6 * zoom}rem;
+          --icon-size: ${settings.icon_size_mobile}px;
+          --label-size: 0.6rem;
           --label-leading: 1.05;
         }
         @media (min-width: 640px) {
           .icon-grid-responsive {
             gap: 0.75rem;
             grid-template-columns: repeat(${settings.grid_cols_tablet}, minmax(0, 1fr));
-            --icon-size: ${Math.round(settings.icon_size_tablet * zoom)}px;
-            --label-size: ${0.75 * zoom}rem;
+            --icon-size: ${settings.icon_size_tablet}px;
+            --label-size: 0.75rem;
             --label-leading: 1.15;
           }
         }
@@ -152,8 +140,8 @@ const IconGrid = () => {
           .icon-grid-responsive {
             gap: 1rem;
             grid-template-columns: repeat(${settings.grid_cols_desktop}, minmax(0, 1fr));
-            --icon-size: ${Math.round(settings.icon_size_desktop * zoom)}px;
-            --label-size: ${0.875 * zoom}rem;
+            --icon-size: ${settings.icon_size_desktop}px;
+            --label-size: 0.875rem;
             --label-leading: 1.2;
           }
         }
