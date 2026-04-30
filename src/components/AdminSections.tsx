@@ -80,6 +80,7 @@ interface SectionContent {
   youtube_id: string | null;
   sort_order: number | null;
   allow_download?: boolean | null;
+  open_mode?: "iframe" | "newtab" | null;
 }
 
 interface SectionTab {
@@ -123,6 +124,7 @@ const AdminSections = () => {
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [contentAllowDownload, setContentAllowDownload] = useState(false);
+  const [contentOpenMode, setContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
