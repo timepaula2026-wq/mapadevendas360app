@@ -1,5 +1,5 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
@@ -16,6 +16,14 @@ interface ContentViewerModalProps {
   allowDownload?: boolean;
   /** Disparado uma vez ao abrir um conteúdo válido (usado para marcar progresso). */
   onOpened?: () => void;
+  /**
+   * Disparado quando o conteúdo é EFETIVAMENTE consumido:
+   *  - vídeo (MP4/YouTube/Vimeo): ao terminar o vídeo (≥95%);
+   *  - PDF: quando o usuário rola até o final (≥95% da altura);
+   *  - imagem/link/outros: imediatamente ao abrir.
+   * Quando informado, é a fonte oficial de "concluído" para a Trilha.
+   */
+  onCompleted?: () => void;
 }
 
 // Detects video provider and returns an embeddable URL when possible.
@@ -31,7 +39,7 @@ const getVideoEmbed = (
   const ytId = youtubeId || (ytMatch ? ytMatch[1] : null);
   if (ytId) {
     return {
-      embedUrl: `https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`,
+      embedUrl: `https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1&enablejsapi=1`,
       isVideo: true,
       provider: "youtube",
     };
@@ -41,7 +49,7 @@ const getVideoEmbed = (
   const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if (vimeoMatch) {
     return {
-      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&api=1`,
       isVideo: true,
       provider: "vimeo",
     };
@@ -75,7 +83,7 @@ const getVideoEmbed = (
   return { embedUrl: null, isVideo: false, provider: "unknown" };
 };
 
-const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened }: ContentViewerModalProps) => {
+const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened, onCompleted }: ContentViewerModalProps) => {
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
   const isLinkVideo = type === "youtube";
@@ -97,6 +105,25 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [mediaRotation, setMediaRotation] = useState(0);
   const rotateMedia = () => setMediaRotation((r) => (r + 90) % 360);
   const isMediaType = isVideoType || type === "image";
+
+  // Estado de "consumiu o conteúdo" (rolou o PDF até o fim ou viu o vídeo todo)
+  const [completedFlag, setCompletedFlag] = useState(false);
+  const completedRef = useRef(false);
+  const fireCompleted = () => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setCompletedFlag(true);
+    onCompleted?.();
+  };
+  const requiresWatch = type === "youtube" || type === "video" || type === "pdf";
+
+  // Reset de progresso a cada abertura
+  useEffect(() => {
+    if (open) {
+      completedRef.current = false;
+      setCompletedFlag(false);
+    }
+  }, [open, url, type]);
 
   const PDF_MIN_ZOOM = 1;
   const PDF_MAX_ZOOM = 3;
@@ -125,7 +152,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     // Usamos o Google Docs Viewer por padrão no iOS para garantir leitura
     // confortável (página inteira + rolagem). Em desktop/Android usamos o
     // visualizador nativo (mais rápido).
-    setUseFallback(isIOS);
+    // Quando o modo Trilha está ativo (onCompleted definido), forçamos o
+    // visualizador alternativo (gview) também no desktop/Android — assim a
+    // rolagem acontece em um wrapper DOM real e conseguimos detectar o
+    // "leu até o fim" (impossível dentro do iframe nativo de PDF).
+    setUseFallback(isIOS || !!onCompleted);
     if (!isMobile) return;
     const t = window.setTimeout(() => {
       setPdfLoaded((loaded) => {
@@ -137,7 +168,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       });
     }, 4000);
     return () => window.clearTimeout(t);
-  }, [open, url, type, isMobile, isIOS]);
+  }, [open, url, type, isMobile, isIOS, onCompleted]);
 
   // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
   useEffect(() => {
@@ -151,6 +182,95 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, youtubeId]);
+
+  // Para tipos que NÃO exigem assistir (imagem/link/outros), conclui ao abrir.
+  useEffect(() => {
+    if (!open) return;
+    if (!(url || youtubeId)) return;
+    if (!requiresWatch) fireCompleted();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, url, youtubeId, type]);
+
+  // ===== Detecção de "vídeo terminado" para YouTube e Vimeo via postMessage =====
+  useEffect(() => {
+    if (!open) return;
+    if (type !== "youtube") return;
+    const handler = (e: MessageEvent) => {
+      try {
+        const origin = e.origin || "";
+        // YouTube
+        if (origin.includes("youtube.com")) {
+          const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+          // info events: data?.info?.playerState; onStateChange: data?.event === "infoDelivery"
+          const state = data?.info?.playerState ?? data?.info;
+          if (state === 0) fireCompleted(); // ENDED
+          return;
+        }
+        // Vimeo
+        if (origin.includes("vimeo.com")) {
+          const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+          if (data?.event === "ended") fireCompleted();
+          return;
+        }
+      } catch {
+        /* noop */
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, type]);
+
+  // Refs e handlers para detectar fim de scroll do PDF
+  const pdfScrollRef = useRef<HTMLDivElement | null>(null);
+  const handlePdfScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollHeight <= el.clientHeight + 4) {
+      fireCompleted();
+      return;
+    }
+    const ratio = (el.scrollTop + el.clientHeight) / el.scrollHeight;
+    if (ratio >= 0.95) fireCompleted();
+  };
+  // Quando o PDF carrega e cabe inteiro sem scroll, considera concluído.
+  useEffect(() => {
+    if (!open || type !== "pdf" || !pdfLoaded) return;
+    const el = pdfScrollRef.current;
+    if (!el) return;
+    const t = window.setTimeout(() => {
+      if (el.scrollHeight <= el.clientHeight + 4) fireCompleted();
+    }, 400);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, type, pdfLoaded]);
+
+  // Ref do iframe de vídeo (YT/Vimeo) para enviar handshake postMessage.
+  const videoIframeRef = useRef<HTMLIFrameElement | null>(null);
+  useEffect(() => {
+    if (!open || type !== "youtube") return;
+    const iframe = videoIframeRef.current;
+    if (!iframe) return;
+    const sendHandshake = () => {
+      try {
+        // YouTube IFrame API: registra listener de eventos
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ event: "listening", id: 1, channel: "widget" }),
+          "*"
+        );
+        // Vimeo Player API: assina o evento "ended"
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ method: "addEventListener", value: "ended" }),
+          "*"
+        );
+      } catch {
+        /* noop */
+      }
+    };
+    iframe.addEventListener("load", sendHandshake);
+    // Tenta também imediatamente caso o iframe já esteja carregado
+    sendHandshake();
+    return () => iframe.removeEventListener("load", sendHandshake);
+  }, [open, type, url, youtubeId]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
@@ -257,6 +377,17 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-1 mr-8">
+            {requiresWatch && (url || youtubeId) && (
+              completedFlag ? (
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-emerald-500 px-2 py-1 rounded-full bg-emerald-500/10 mr-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Concluído
+                </span>
+              ) : (
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground px-2 py-1 rounded-full bg-secondary mr-1">
+                  {type === "pdf" ? "Role até o fim para concluir" : "Assista até o fim para concluir"}
+                </span>
+              )
+            )}
             {type === "pdf" && url && (
               <>
                 <Button
@@ -357,6 +488,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 controlsList="nodownload noremoteplayback noplaybackrate"
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
+                onEnded={() => fireCompleted()}
+                onTimeUpdate={(e) => {
+                  const v = e.currentTarget;
+                  if (v.duration > 0 && v.currentTime / v.duration >= 0.95) {
+                    fireCompleted();
+                  }
+                }}
                 className="object-contain"
                 style={{
                   width: mediaRotation % 180 === 0 ? "100%" : "100vh",
@@ -373,6 +511,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           ) : isLinkVideo && videoInfo?.embedUrl ? (
             <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
               <iframe
+                ref={videoIframeRef}
                 src={videoInfo.embedUrl}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
@@ -410,6 +549,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 WebkitOverflowScrolling: "touch",
                 overscrollBehavior: "contain",
               }}
+              ref={pdfZoom > 1 ? pdfScrollRef : undefined}
+              onScroll={pdfZoom > 1 ? handlePdfScroll : undefined}
             >
               {!pdfLoaded && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
@@ -442,6 +583,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 // pai — que respeita inertial scroll do iOS.
                 isIOS ? (
                   <div
+                    ref={pdfScrollRef}
+                    onScroll={handlePdfScroll}
                     className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-muted"
                     style={{
                       WebkitOverflowScrolling: "touch",
@@ -465,15 +608,27 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                     />
                   </div>
                 ) : (
-                  <iframe
-                    key="gview"
-                    src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
-                    className="w-full h-full border-0"
-                    title={title}
-                    loading="eager"
-                    onLoad={() => setPdfLoaded(true)}
-                    style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
-                  />
+                  // Desktop/Android com gview: mesmo padrão do iOS — wrapper
+                  // rolável + iframe com altura intrínseca grande, para que
+                  // possamos detectar quando o usuário rolou todo o PDF
+                  // (necessário para liberar a próxima aba na Trilha).
+                  <div
+                    ref={pdfScrollRef}
+                    onScroll={handlePdfScroll}
+                    className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-muted"
+                    style={{ overscrollBehavior: "contain" }}
+                  >
+                    <iframe
+                      key="gview"
+                      src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
+                      title={title}
+                      loading="eager"
+                      onLoad={() => setPdfLoaded(true)}
+                      className="block w-full border-0 pointer-events-none"
+                      style={{ height: "400vh", minHeight: "400vh" }}
+                      scrolling="no"
+                    />
+                  </div>
                 )
               ) : isIOS ? (
                 // iOS Safari NÃO rola dentro do iframe de PDF: o conteúdo fica
@@ -481,6 +636,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 // (overflow-auto + inertial scroll) e iframe com altura intrínseca
                 // grande para que o scroll aconteça no container, não no iframe.
                 <div
+                  ref={pdfScrollRef}
+                  onScroll={handlePdfScroll}
                   className="absolute inset-0 overflow-auto bg-muted"
                   style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                 >
