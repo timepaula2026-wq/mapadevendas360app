@@ -595,15 +595,25 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                     />
                   </div>
                 ) : (
-                  <iframe
-                    key="gview"
-                    src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
-                    className="w-full h-full border-0"
-                    title={title}
-                    loading="eager"
-                    onLoad={() => setPdfLoaded(true)}
-                    style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
-                  />
+                  // Desktop/Android com gview: mesmo padrão do iOS — wrapper
+                  // rolável + iframe com altura intrínseca grande, para que
+                  // possamos detectar quando o usuário rolou todo o PDF
+                  // (necessário para liberar a próxima aba na Trilha).
+                  <div
+                    className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-muted"
+                    style={{ overscrollBehavior: "contain" }}
+                  >
+                    <iframe
+                      key="gview"
+                      src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`}
+                      title={title}
+                      loading="eager"
+                      onLoad={() => setPdfLoaded(true)}
+                      className="block w-full border-0 pointer-events-none"
+                      style={{ height: "400vh", minHeight: "400vh" }}
+                      scrolling="no"
+                    />
+                  </div>
                 )
               ) : isIOS ? (
                 // iOS Safari NÃO rola dentro do iframe de PDF: o conteúdo fica
