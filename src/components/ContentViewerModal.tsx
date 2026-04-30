@@ -420,8 +420,25 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   <CheckCircle2 className="w-3.5 h-3.5" /> Concluído
                 </span>
               ) : (
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground px-2 py-1 rounded-full bg-secondary mr-1">
-                  {type === "pdf" ? "Role até o fim para concluir" : "Assista até o fim para concluir"}
+                <span
+                  className="hidden sm:inline-flex items-center gap-2 text-[11px] font-medium text-muted-foreground pl-2 pr-1 py-1 rounded-full bg-secondary mr-1"
+                  title={type === "pdf" ? "Role até o fim para concluir" : "Assista até o fim para concluir"}
+                >
+                  <span className="hidden md:inline">
+                    {type === "pdf" ? "Leitura" : "Reprodução"}
+                  </span>
+                  <span
+                    className="relative h-1.5 w-16 rounded-full bg-background/60 overflow-hidden"
+                    aria-label="Progresso"
+                  >
+                    <span
+                      className="absolute inset-y-0 left-0 bg-primary transition-[width] duration-200"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </span>
+                  <span className="tabular-nums text-foreground/80 px-1 min-w-[2.5rem] text-center">
+                    {progress}%
+                  </span>
                 </span>
               )
             )}
