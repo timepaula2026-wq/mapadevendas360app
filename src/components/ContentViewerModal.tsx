@@ -238,6 +238,45 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-1 mr-8">
+            {type === "pdf" && url && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={zoomOut}
+                  disabled={pdfZoom <= PDF_MIN_ZOOM}
+                  title="Diminuir zoom"
+                  aria-label="Diminuir zoom"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={zoomFit}
+                  title="Ajustar à página (Fit)"
+                  aria-label="Ajustar à página"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={zoomIn}
+                  disabled={pdfZoom >= PDF_MAX_ZOOM}
+                  title="Aumentar zoom"
+                  aria-label="Aumentar zoom"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                <span className="text-[11px] tabular-nums text-muted-foreground w-10 text-center select-none">
+                  {Math.round(pdfZoom * 100)}%
+                </span>
+              </>
+            )}
             {(type === "pdf" || type === "image") && url && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrint} title="Imprimir">
                 <Printer className="w-4 h-4" />
