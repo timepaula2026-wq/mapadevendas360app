@@ -274,13 +274,13 @@ const SectionContentList = ({
     const parentIdx = sequence.indexOf(c.id);
     const parentState = stateForSequence(sequence, parentIdx);
     if (kids.length === 0) {
-      return <ContentRow key={c.id} c={c} onOpen={setViewer} state={parentState} />;
+      return <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} />;
     }
     return (
       <div key={c.id} className="space-y-2">
         <div className="flex items-stretch gap-2">
           <div className="flex-1">
-            <ContentRow c={c} onOpen={setViewer} state={parentState} />
+            <ContentRow c={c} onOpen={handleOpenContent} state={parentState} />
           </div>
           <button
             onClick={() => setOpenParents((p) => ({ ...p, [c.id]: !isOpen }))}
@@ -300,7 +300,7 @@ const SectionContentList = ({
             {kids.map((k) => {
               const kIdx = sequence.indexOf(k.id);
               const kState = stateForSequence(sequence, kIdx);
-              return <ContentRow key={k.id} c={k} onOpen={setViewer} state={kState} />;
+              return <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} />;
             })}
           </div>
         )}
