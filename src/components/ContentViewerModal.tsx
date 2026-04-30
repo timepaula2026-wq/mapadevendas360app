@@ -557,6 +557,15 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                     <p className="text-sm text-muted-foreground max-w-md">
                       Este conteúdo não permite visualização incorporada.
                     </p>
+                    <Button
+                      onClick={() => {
+                        const win = window.open(url, "_blank", "noopener,noreferrer");
+                        if (!win) window.location.href = url;
+                      }}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" /> Abrir em nova aba
+                    </Button>
                   </div>
                 );
               }
