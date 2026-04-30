@@ -527,6 +527,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             </div>
           ) : type === "pdf" && url ? (
             <div
+              ref={pdfScrollRef}
+              onScroll={handlePdfScroll}
               className="relative w-full h-full bg-muted"
               style={{
                 touchAction: pdfZoom > 1 ? "pan-x pan-y" : "pan-y",
