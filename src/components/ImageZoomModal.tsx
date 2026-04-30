@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { X, ZoomIn, ZoomOut, RotateCcw, RotateCw } from "lucide-react";
 
 interface Props {
   src: string;
@@ -15,6 +15,7 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
+  const [rotation, setRotation] = useState(0);
 
   const dragRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const pinchRef = useRef<{
@@ -66,7 +67,8 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const reset = useCallback(() => { setScale(1); setTx(0); setTy(0); }, []);
+  const reset = useCallback(() => { setScale(1); setTx(0); setTy(0); setRotation(0); }, []);
+  const rotate = useCallback(() => setRotation((r) => (r + 90) % 360), []);
 
   const zoomBy = useCallback((delta: number) => {
     setScale((s) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, +(s + delta).toFixed(2))));
@@ -229,7 +231,7 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
       >
         <div className="flex gap-2">
           <button
-            onClick={(e) => { e.stopPropagation(); zoomBy(-0.5); }}
+            onClick={(e) => { e.stopPropagation(); zoomBy(-1); }}
             onTouchEnd={(e) => { e.stopPropagation(); }}
             className="w-9 h-9 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20"
             aria-label="Diminuir zoom"
@@ -237,12 +239,21 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
             <ZoomOut className="w-4 h-4" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); zoomBy(0.5); }}
+            onClick={(e) => { e.stopPropagation(); zoomBy(1); }}
             onTouchEnd={(e) => { e.stopPropagation(); }}
             className="w-9 h-9 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20"
             aria-label="Aumentar zoom"
           >
             <ZoomIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); rotate(); }}
+            onTouchEnd={(e) => { e.stopPropagation(); }}
+            className="w-9 h-9 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20"
+            aria-label="Rotacionar 90 graus"
+            title="Girar (horizontal/vertical)"
+          >
+            <RotateCw className="w-4 h-4" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); reset(); }}
@@ -316,7 +327,7 @@ const ImageZoomModal = ({ src, title, description, onClose }: Props) => {
           onClick={(e) => e.stopPropagation()}
           className="max-w-[95vw] max-h-[90vh] object-contain"
           style={{
-            transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
+            transform: `translate(${tx}px, ${ty}px) rotate(${rotation}deg) scale(${scale})`,
             transition: dragRef.current || pinchRef.current ? "none" : "transform 0.15s ease-out",
             WebkitUserSelect: "none",
             userSelect: "none",

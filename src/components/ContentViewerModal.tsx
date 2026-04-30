@@ -1,4 +1,4 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
   const [pdfZoom, setPdfZoom] = useState(1);
+  // Rotação de mídia (vídeo/imagem): 0 / 90 / 180 / 270
+  const [mediaRotation, setMediaRotation] = useState(0);
+  const rotateMedia = () => setMediaRotation((r) => (r + 90) % 360);
+  const isMediaType = isVideoType || type === "image";
 
   const PDF_MIN_ZOOM = 1;
   const PDF_MAX_ZOOM = 3;
@@ -132,6 +136,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }, 4000);
     return () => window.clearTimeout(t);
   }, [open, url, type, isMobile, isIOS]);
+
+  // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
+  useEffect(() => {
+    if (open) setMediaRotation(0);
+  }, [open, url, type]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
@@ -277,6 +286,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 </span>
               </>
             )}
+            {isMediaType && url && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={rotateMedia}
+                title="Girar (horizontal/vertical)"
+                aria-label="Girar mídia 90 graus"
+              >
+                <RotateCw className="w-4 h-4" />
+              </Button>
+            )}
             {(type === "pdf" || type === "image") && url && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrint} title="Imprimir">
                 <Printer className="w-4 h-4" />
@@ -302,7 +323,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               </p>
             </div>
           ) : isFileVideo && url ? (
-            <div className="w-full h-full flex items-center justify-center bg-black">
+            <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
               <video
                 src={url}
                 controls
@@ -311,19 +332,35 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 controlsList="nodownload noremoteplayback noplaybackrate"
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-full h-full object-contain"
+                className="object-contain"
+                style={{
+                  width: mediaRotation % 180 === 0 ? "100%" : "100vh",
+                  height: mediaRotation % 180 === 0 ? "100%" : "100vw",
+                  maxWidth: mediaRotation % 180 === 0 ? "100%" : "100vh",
+                  maxHeight: mediaRotation % 180 === 0 ? "100%" : "100vw",
+                  transform: `rotate(${mediaRotation}deg)`,
+                  transition: "transform 0.2s ease-out",
+                }}
               >
                 Seu navegador não suporta a reprodução deste vídeo.
               </video>
             </div>
           ) : isLinkVideo && videoInfo?.embedUrl ? (
-            <iframe
-              src={videoInfo.embedUrl}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              allowFullScreen
-              title={title}
-            />
+            <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
+              <iframe
+                src={videoInfo.embedUrl}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                title={title}
+                style={{
+                  width: mediaRotation % 180 === 0 ? "100%" : "100vh",
+                  height: mediaRotation % 180 === 0 ? "100%" : "100vw",
+                  border: 0,
+                  transform: `rotate(${mediaRotation}deg)`,
+                  transition: "transform 0.2s ease-out",
+                }}
+              />
+            </div>
           ) : isLinkVideo && url ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
@@ -447,6 +484,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 className="max-w-full max-h-full w-auto h-auto object-contain cursor-zoom-in"
                 draggable={false}
                 onClick={() => setZoomImage(url)}
+                style={{
+                  transform: `rotate(${mediaRotation}deg)`,
+                  transition: "transform 0.2s ease-out",
+                }}
               />
               <button
                 type="button"
