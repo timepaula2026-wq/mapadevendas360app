@@ -150,6 +150,30 @@ const SectionContentList = ({
   const [openTab, setOpenTab] = useState<string | null>(null);
   const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
   const { completed, markCompleted, issueCertificate, hasCertificate } = useTrilhaProgress();
+
+  const handleOpenContent = (v: {
+    id: string;
+    title: string;
+    type: string;
+    url: string | null;
+    youtubeId: string | null;
+    allowDownload: boolean;
+    openMode: "iframe" | "newtab";
+  }) => {
+    // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
+    // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.
+    if (v.openMode === "newtab" && v.url) {
+      const win = window.open(v.url, "_blank", "noopener,noreferrer");
+      if (!win) {
+        // Pop-up bloqueado: navega na própria janela como fallback
+        window.location.href = v.url;
+      }
+      // Marca progresso da Trilha mesmo abrindo em nova aba
+      if (trilhaMode) markCompleted(v.id, sectionId);
+      return;
+    }
+    setViewer(v);
+  };
   const [certModal, setCertModal] = useState<{
     title: string;
     subtitle?: string;
