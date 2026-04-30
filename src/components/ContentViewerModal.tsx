@@ -377,6 +377,17 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
           <div className="flex items-center gap-1 mr-8">
+            {requiresWatch && (url || youtubeId) && (
+              completedFlag ? (
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-emerald-500 px-2 py-1 rounded-full bg-emerald-500/10 mr-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Concluído
+                </span>
+              ) : (
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground px-2 py-1 rounded-full bg-secondary mr-1">
+                  {type === "pdf" ? "Role até o fim para concluir" : "Assista até o fim para concluir"}
+                </span>
+              )
+            )}
             {type === "pdf" && url && (
               <>
                 <Button
