@@ -306,6 +306,7 @@ const AdminSections = () => {
       url: urlData.publicUrl,
       sort_order: nextOrder,
       allow_download: resolvedType === "pdf" ? contentAllowDownload : false,
+      open_mode: "iframe",
     });
 
     if (error) toast.error("Erro ao salvar");
@@ -361,6 +362,7 @@ const AdminSections = () => {
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
       sort_order: nextOrder,
       allow_download: false,
+      open_mode: contentType === "link" || contentType === "youtube" ? contentOpenMode : "iframe",
     });
 
     if (error) toast.error("Erro ao adicionar");
@@ -538,6 +540,9 @@ const AdminSections = () => {
     setEditContentUrl(c.url || "");
     setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
     setEditContentAllowDownload(!!(c as unknown as { allow_download?: boolean }).allow_download);
+    setEditContentOpenMode(
+      ((c as unknown as { open_mode?: string }).open_mode === "newtab" ? "newtab" : "iframe")
+    );
   };
 
   const handleSaveEditContent = async (contentId: string, tabId: string, _origType: string) => {
@@ -551,6 +556,7 @@ const AdminSections = () => {
       description: editContentDesc.trim() || null,
       type,
       allow_download: type === "pdf" ? editContentAllowDownload : false,
+      open_mode: type === "link" || type === "youtube" ? editContentOpenMode : "iframe",
     };
     // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
     const file = editFileInputRef.current?.files?.[0];
