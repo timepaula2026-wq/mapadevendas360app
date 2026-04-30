@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import { toast } from "sonner";
 
 interface ContentViewerModalProps {
   open: boolean;
@@ -141,8 +142,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
   const handleDownload = async () => {
     if (!url) return;
+    const safeName = (title || "arquivo").replace(/\.pdf$/i, "") + ".pdf";
+
+    // Fallback: abre a URL direta em nova aba (último recurso quando o fetch
+    // falha por CORS ou o navegador bloqueia o download programático).
+    const openDirect = () => {
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      if (!win) {
+        // Pop-up bloqueado: navega na própria janela
+        window.location.href = url;
+      }
+    };
+
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { mode: "cors" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const original = await res.arrayBuffer();
 
       // Aplica marca d'água "Mapa de Vendas" embutida em todas as páginas do PDF.
@@ -175,20 +189,31 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
         }
       });
 
-      // Bloqueia edição/cópia/extração via flags do PDF (proteção declarativa).
       const stamped = await pdfDoc.save({ useObjectStreams: false });
       const blob = new Blob([stamped as BlobPart], { type: "application/pdf" });
       const blobUrl = URL.createObjectURL(blob);
+
+      // iOS Safari ignora o atributo `download` em blobs — precisa abrir em
+      // nova aba para que o usuário use o "Compartilhar > Salvar em arquivos".
+      if (isIOS) {
+        const win = window.open(blobUrl, "_blank", "noopener,noreferrer");
+        if (!win) window.location.href = blobUrl;
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+        return;
+      }
+
       const a = document.createElement("a");
       a.href = blobUrl;
-      const safeName = (title || "arquivo").replace(/\.pdf$/i, "");
-      a.download = `${safeName}.pdf`;
+      a.download = safeName;
+      a.rel = "noopener";
       document.body.appendChild(a);
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-    } catch {
-      /* noop */
+    } catch (err) {
+      console.error("Falha ao baixar PDF com marca d'água:", err);
+      toast.message("Abrindo PDF em nova aba para download…");
+      openDirect();
     }
   };
 
