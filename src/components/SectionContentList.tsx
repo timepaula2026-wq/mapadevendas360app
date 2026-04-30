@@ -500,9 +500,9 @@ const SectionContentList = ({
           url={viewer.url}
           youtubeId={viewer.youtubeId}
           allowDownload={viewer.allowDownload}
-          onOpened={() => {
-            if (trilhaMode) markCompleted(viewer.id, sectionId);
-          }}
+          onCompleted={
+            trilhaMode ? () => markCompleted(viewer.id, sectionId) : undefined
+          }
         />
       )}
 
