@@ -109,10 +109,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // Estado de "consumiu o conteúdo" (rolou o PDF até o fim ou viu o vídeo todo)
   const [completedFlag, setCompletedFlag] = useState(false);
   const completedRef = useRef(false);
+  // Progresso 0-100 para vídeo/PDF, exibido no header.
+  const [progress, setProgress] = useState(0);
+  const updateProgress = (pct: number) => {
+    if (!Number.isFinite(pct)) return;
+    const clamped = Math.max(0, Math.min(100, Math.round(pct)));
+    setProgress((prev) => (clamped > prev ? clamped : prev));
+  };
   const fireCompleted = () => {
     if (completedRef.current) return;
     completedRef.current = true;
     setCompletedFlag(true);
+    setProgress(100);
     onCompleted?.();
   };
   const requiresWatch = type === "youtube" || type === "video" || type === "pdf";
@@ -122,6 +130,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     if (open) {
       completedRef.current = false;
       setCompletedFlag(false);
+      setProgress(0);
     }
   }, [open, url, type]);
 
@@ -201,15 +210,26 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
         // YouTube
         if (origin.includes("youtube.com")) {
           const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
-          // info events: data?.info?.playerState; onStateChange: data?.event === "infoDelivery"
-          const state = data?.info?.playerState ?? data?.info;
-          if (state === 0) fireCompleted(); // ENDED
+          const info = data?.info;
+          // ENDED
+          const state = info?.playerState ?? data?.info;
+          if (state === 0) fireCompleted();
+          // Progresso: currentTime / duration
+          const ct = typeof info?.currentTime === "number" ? info.currentTime : null;
+          const dur = typeof info?.duration === "number" ? info.duration : null;
+          if (ct != null && dur && dur > 0) {
+            updateProgress((ct / dur) * 100);
+          }
           return;
         }
         // Vimeo
         if (origin.includes("vimeo.com")) {
           const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
           if (data?.event === "ended") fireCompleted();
+          if (data?.event === "playProgress" || data?.event === "timeupdate") {
+            const pct = typeof data?.data?.percent === "number" ? data.data.percent * 100 : null;
+            if (pct != null) updateProgress(pct);
+          }
           return;
         }
       } catch {
@@ -226,10 +246,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const handlePdfScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
     if (el.scrollHeight <= el.clientHeight + 4) {
+      updateProgress(100);
       fireCompleted();
       return;
     }
     const ratio = (el.scrollTop + el.clientHeight) / el.scrollHeight;
+    updateProgress(ratio * 100);
     if (ratio >= 0.95) fireCompleted();
   };
   // Quando o PDF carrega e cabe inteiro sem scroll, considera concluído.
@@ -257,9 +279,24 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           JSON.stringify({ event: "listening", id: 1, channel: "widget" }),
           "*"
         );
+        // YouTube: assina onStateChange (necessário para receber infoDelivery
+        // com currentTime/duration usados no cálculo de progresso).
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ event: "command", func: "addEventListener", args: ["onStateChange"], id: 1, channel: "widget" }),
+          "*"
+        );
         // Vimeo Player API: assina o evento "ended"
         iframe.contentWindow?.postMessage(
           JSON.stringify({ method: "addEventListener", value: "ended" }),
+          "*"
+        );
+        // Vimeo: assina progresso
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ method: "addEventListener", value: "playProgress" }),
+          "*"
+        );
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ method: "addEventListener", value: "timeupdate" }),
           "*"
         );
       } catch {
@@ -383,8 +420,25 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   <CheckCircle2 className="w-3.5 h-3.5" /> Concluído
                 </span>
               ) : (
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground px-2 py-1 rounded-full bg-secondary mr-1">
-                  {type === "pdf" ? "Role até o fim para concluir" : "Assista até o fim para concluir"}
+                <span
+                  className="hidden sm:inline-flex items-center gap-2 text-[11px] font-medium text-muted-foreground pl-2 pr-1 py-1 rounded-full bg-secondary mr-1"
+                  title={type === "pdf" ? "Role até o fim para concluir" : "Assista até o fim para concluir"}
+                >
+                  <span className="hidden md:inline">
+                    {type === "pdf" ? "Leitura" : "Reprodução"}
+                  </span>
+                  <span
+                    className="relative h-1.5 w-16 rounded-full bg-background/60 overflow-hidden"
+                    aria-label="Progresso"
+                  >
+                    <span
+                      className="absolute inset-y-0 left-0 bg-primary transition-[width] duration-200"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </span>
+                  <span className="tabular-nums text-foreground/80 px-1 min-w-[2.5rem] text-center">
+                    {progress}%
+                  </span>
                 </span>
               )
             )}
@@ -491,8 +545,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 onEnded={() => fireCompleted()}
                 onTimeUpdate={(e) => {
                   const v = e.currentTarget;
-                  if (v.duration > 0 && v.currentTime / v.duration >= 0.95) {
-                    fireCompleted();
+                  if (v.duration > 0) {
+                    const pct = (v.currentTime / v.duration) * 100;
+                    updateProgress(pct);
+                    if (pct >= 95) fireCompleted();
                   }
                 }}
                 className="object-contain"
