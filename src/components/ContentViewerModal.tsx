@@ -1,5 +1,5 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
@@ -16,6 +16,14 @@ interface ContentViewerModalProps {
   allowDownload?: boolean;
   /** Disparado uma vez ao abrir um conteúdo válido (usado para marcar progresso). */
   onOpened?: () => void;
+  /**
+   * Disparado quando o conteúdo é EFETIVAMENTE consumido:
+   *  - vídeo (MP4/YouTube/Vimeo): ao terminar o vídeo (≥95%);
+   *  - PDF: quando o usuário rola até o final (≥95% da altura);
+   *  - imagem/link/outros: imediatamente ao abrir.
+   * Quando informado, é a fonte oficial de "concluído" para a Trilha.
+   */
+  onCompleted?: () => void;
 }
 
 // Detects video provider and returns an embeddable URL when possible.
@@ -75,7 +83,7 @@ const getVideoEmbed = (
   return { embedUrl: null, isVideo: false, provider: "unknown" };
 };
 
-const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened }: ContentViewerModalProps) => {
+const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened, onCompleted }: ContentViewerModalProps) => {
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
   const isLinkVideo = type === "youtube";
@@ -97,6 +105,25 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [mediaRotation, setMediaRotation] = useState(0);
   const rotateMedia = () => setMediaRotation((r) => (r + 90) % 360);
   const isMediaType = isVideoType || type === "image";
+
+  // Estado de "consumiu o conteúdo" (rolou o PDF até o fim ou viu o vídeo todo)
+  const [completedFlag, setCompletedFlag] = useState(false);
+  const completedRef = useRef(false);
+  const fireCompleted = () => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setCompletedFlag(true);
+    onCompleted?.();
+  };
+  const requiresWatch = type === "youtube" || type === "video" || type === "pdf";
+
+  // Reset de progresso a cada abertura
+  useEffect(() => {
+    if (open) {
+      completedRef.current = false;
+      setCompletedFlag(false);
+    }
+  }, [open, url, type]);
 
   const PDF_MIN_ZOOM = 1;
   const PDF_MAX_ZOOM = 3;
@@ -151,6 +178,67 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, youtubeId]);
+
+  // Para tipos que NÃO exigem assistir (imagem/link/outros), conclui ao abrir.
+  useEffect(() => {
+    if (!open) return;
+    if (!(url || youtubeId)) return;
+    if (!requiresWatch) fireCompleted();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, url, youtubeId, type]);
+
+  // ===== Detecção de "vídeo terminado" para YouTube e Vimeo via postMessage =====
+  useEffect(() => {
+    if (!open) return;
+    if (type !== "youtube") return;
+    const handler = (e: MessageEvent) => {
+      try {
+        const origin = e.origin || "";
+        // YouTube
+        if (origin.includes("youtube.com")) {
+          const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+          // info events: data?.info?.playerState; onStateChange: data?.event === "infoDelivery"
+          const state = data?.info?.playerState ?? data?.info;
+          if (state === 0) fireCompleted(); // ENDED
+          return;
+        }
+        // Vimeo
+        if (origin.includes("vimeo.com")) {
+          const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+          if (data?.event === "ended") fireCompleted();
+          return;
+        }
+      } catch {
+        /* noop */
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, type]);
+
+  // Refs e handlers para detectar fim de scroll do PDF
+  const pdfScrollRef = useRef<HTMLDivElement | null>(null);
+  const handlePdfScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollHeight <= el.clientHeight + 4) {
+      fireCompleted();
+      return;
+    }
+    const ratio = (el.scrollTop + el.clientHeight) / el.scrollHeight;
+    if (ratio >= 0.95) fireCompleted();
+  };
+  // Quando o PDF carrega e cabe inteiro sem scroll, considera concluído.
+  useEffect(() => {
+    if (!open || type !== "pdf" || !pdfLoaded) return;
+    const el = pdfScrollRef.current;
+    if (!el) return;
+    const t = window.setTimeout(() => {
+      if (el.scrollHeight <= el.clientHeight + 4) fireCompleted();
+    }, 400);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, type, pdfLoaded]);
 
   const handlePrint = () => {
     if (isVideoType || !url) return;
