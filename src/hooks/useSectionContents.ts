@@ -13,6 +13,7 @@ export interface SectionContent {
   tab_id: string | null;
   parent_id: string | null;
   allow_download?: boolean | null;
+  open_mode?: "iframe" | "newtab" | null;
 }
 
 export interface SectionTab {
