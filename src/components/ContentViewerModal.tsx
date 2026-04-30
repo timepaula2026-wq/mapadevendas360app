@@ -1,8 +1,9 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2, FastForward } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
 
 interface ContentViewerModalProps {
