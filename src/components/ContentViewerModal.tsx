@@ -240,6 +240,34 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, type, pdfLoaded]);
 
+  // Ref do iframe de vídeo (YT/Vimeo) para enviar handshake postMessage.
+  const videoIframeRef = useRef<HTMLIFrameElement | null>(null);
+  useEffect(() => {
+    if (!open || type !== "youtube") return;
+    const iframe = videoIframeRef.current;
+    if (!iframe) return;
+    const sendHandshake = () => {
+      try {
+        // YouTube IFrame API: registra listener de eventos
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ event: "listening", id: 1, channel: "widget" }),
+          "*"
+        );
+        // Vimeo Player API: assina o evento "ended"
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ method: "addEventListener", value: "ended" }),
+          "*"
+        );
+      } catch {
+        /* noop */
+      }
+    };
+    iframe.addEventListener("load", sendHandshake);
+    // Tenta também imediatamente caso o iframe já esteja carregado
+    sendHandshake();
+    return () => iframe.removeEventListener("load", sendHandshake);
+  }, [open, type, url, youtubeId]);
+
   const handlePrint = () => {
     if (isVideoType || !url) return;
     const iframe = document.createElement("iframe");
