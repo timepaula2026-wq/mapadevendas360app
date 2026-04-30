@@ -473,6 +473,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 controlsList="nodownload noremoteplayback noplaybackrate"
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
+                onEnded={() => fireCompleted()}
+                onTimeUpdate={(e) => {
+                  const v = e.currentTarget;
+                  if (v.duration > 0 && v.currentTime / v.duration >= 0.95) {
+                    fireCompleted();
+                  }
+                }}
                 className="object-contain"
                 style={{
                   width: mediaRotation % 180 === 0 ? "100%" : "100vh",
@@ -489,6 +496,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           ) : isLinkVideo && videoInfo?.embedUrl ? (
             <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
               <iframe
+                ref={videoIframeRef}
                 src={videoInfo.embedUrl}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
