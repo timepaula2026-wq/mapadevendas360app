@@ -123,6 +123,8 @@ const IconGrid = () => {
           display: grid;
           gap: 10px;
           grid-template-columns: repeat(4, minmax(0, 1fr));
+          align-items: start;
+          justify-items: center;
           --icon-size: 36px;
           --label-size: 0.7rem;
           --label-leading: 1.1;
@@ -145,6 +147,12 @@ const IconGrid = () => {
             --label-leading: 1.2;
           }
         }
+        .icon-grid-responsive > button {
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          height: auto;
+          min-height: 0;
+        }
       `}</style>
       <div className="icon-grid-responsive">
       {orderedItems.map((item) => {
@@ -153,10 +161,10 @@ const IconGrid = () => {
           <button
             key={item.id}
             onClick={() => handleClick(item)}
-            className="group min-h-[72px]"
+            className="group"
           >
             <div
-              className={`bento-card relative w-full aspect-square flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-2xl ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
+              className={`bento-card relative w-full h-full flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-2xl ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
             >
               {locked && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center z-10">
