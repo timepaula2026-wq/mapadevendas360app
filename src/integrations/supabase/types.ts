@@ -17,6 +17,8 @@ export type Database = {
       app_settings: {
         Row: {
           background_color: string
+          banner_shape: string
+          banner_square_size: number
           display_mode: string
           favicon_url: string | null
           grid_cols_desktop: number
@@ -36,6 +38,8 @@ export type Database = {
         }
         Insert: {
           background_color?: string
+          banner_shape?: string
+          banner_square_size?: number
           display_mode?: string
           favicon_url?: string | null
           grid_cols_desktop?: number
@@ -55,6 +59,8 @@ export type Database = {
         }
         Update: {
           background_color?: string
+          banner_shape?: string
+          banner_square_size?: number
           display_mode?: string
           favicon_url?: string | null
           grid_cols_desktop?: number
