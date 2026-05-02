@@ -85,7 +85,7 @@ const Index = () => {
       </div>
 
       {/* Icon Grid — 4 cols x 3 rows */}
-      <div className="px-4 pt-2 pb-4">
+      <div className="px-4 pt-2 pb-4" style={{ paddingTop: 8, paddingBottom: 16 }}>
         <IconGrid />
       </div>
 
