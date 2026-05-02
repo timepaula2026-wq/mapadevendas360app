@@ -18,6 +18,8 @@ export interface AppSettings {
   icon_size_mobile: number;
   icon_size_tablet: number;
   icon_size_desktop: number;
+  banner_shape: string;
+  banner_square_size: number;
 }
 
 const DEFAULT: AppSettings = {
@@ -37,6 +39,8 @@ const DEFAULT: AppSettings = {
   icon_size_mobile: 36,
   icon_size_tablet: 48,
   icon_size_desktop: 56,
+  banner_shape: "wide",
+  banner_square_size: 300,
 };
 
 export const useAppSettings = () => {

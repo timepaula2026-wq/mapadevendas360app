@@ -1,0 +1,3 @@
+ALTER TABLE public.app_settings
+  ADD COLUMN IF NOT EXISTS banner_shape TEXT NOT NULL DEFAULT 'wide',
+  ADD COLUMN IF NOT EXISTS banner_square_size INTEGER NOT NULL DEFAULT 300;

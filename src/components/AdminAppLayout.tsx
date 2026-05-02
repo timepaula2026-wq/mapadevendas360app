@@ -59,6 +59,8 @@ const AdminAppLayout = () => {
         icon_size_mobile: settings.icon_size_mobile,
         icon_size_tablet: settings.icon_size_tablet,
         icon_size_desktop: settings.icon_size_desktop,
+        banner_shape: settings.banner_shape,
+        banner_square_size: settings.banner_square_size,
       })
       .eq("id", "default");
     setSaving(false);
@@ -219,6 +221,65 @@ const AdminAppLayout = () => {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Banner do topo */}
+      <section className="bg-card border border-border rounded-xl p-4 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Banner do topo</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Escolha o formato do banner exibido na tela inicial.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Formato</Label>
+          <div className="flex gap-2">
+            {[
+              { value: "wide", label: "Largo (16:6)" },
+              { value: "square", label: "Quadrado (1:1)" },
+            ].map((m) => (
+              <button
+                key={m.value}
+                onClick={() => update({ banner_shape: m.value })}
+                className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors ${
+                  settings.banner_shape === m.value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-muted-foreground border-border hover:text-foreground"
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {settings.banner_shape === "square" && (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Tamanho do banner quadrado</Label>
+            <div className="flex gap-2">
+              {[
+                { value: 300, label: "300×300 (leve)" },
+                { value: 512, label: "512×512 (alta)" },
+              ].map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => update({ banner_square_size: s.value })}
+                  className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors ${
+                    settings.banner_square_size === s.value
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Para melhor resultado, faça upload de imagens nesta proporção em <strong>Banners</strong>.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Grade responsiva */}

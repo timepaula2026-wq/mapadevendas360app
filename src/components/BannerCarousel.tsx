@@ -18,7 +18,11 @@ interface BannerSlide {
   sort_order: number | null;
 }
 
-const BannerCarousel = () => {
+interface BannerCarouselProps {
+  square?: boolean;
+}
+
+const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
   const [slides, setSlides] = useState<BannerSlide[]>([]);
   const [current, setCurrent] = useState(0);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
@@ -71,13 +75,13 @@ const BannerCarousel = () => {
       { id: "3", title: "Acompanhe seu Progresso", gradient: "from-emerald-600/80 to-emerald-900/80", subtitle: "Evolua na sua jornada de aprendizado" },
     ];
     return (
-      <FallbackCarousel slides={fallback} current={current} setCurrent={setCurrent} />
+      <FallbackCarousel slides={fallback} current={current} setCurrent={setCurrent} square={square} />
     );
   }
 
   return (
     <>
-    <div className="relative w-full overflow-hidden rounded-xl aspect-video sm:aspect-[16/9] max-h-[420px] bg-black">
+    <div className={`relative w-full h-full overflow-hidden rounded-xl bg-black ${square ? "aspect-square" : "aspect-video sm:aspect-[16/9] max-h-[420px]"}`}>
       {slides.map((slide, i) => (
         <div
           key={slide.id}
@@ -194,12 +198,13 @@ const BannerCarousel = () => {
 };
 
 // Fallback when no slides in DB
-const FallbackCarousel = ({ slides, current, setCurrent }: {
+const FallbackCarousel = ({ slides, current, setCurrent, square = false }: {
   slides: { id: string; title: string; gradient: string; subtitle: string }[];
   current: number;
   setCurrent: (n: number) => void;
+  square?: boolean;
 }) => (
-  <div className="relative w-full overflow-hidden rounded-xl aspect-video sm:aspect-[16/9] max-h-[420px]">
+  <div className={`relative w-full h-full overflow-hidden rounded-xl ${square ? "aspect-square" : "aspect-video sm:aspect-[16/9] max-h-[420px]"}`}>
     {slides.map((slide, i) => (
       <div
         key={slide.id}
