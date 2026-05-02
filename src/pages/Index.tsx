@@ -67,8 +67,8 @@ const Index = () => {
       <div className="hero-radial px-4 pt-2 mb-2 flex justify-center">
         {settings.banner_shape === "square" ? (
           <div
-            className="rounded-2xl overflow-hidden p-3 bg-card/40 w-full"
-            style={{ aspectRatio: "1 / 1" }}
+            className="rounded-2xl overflow-hidden bg-card/40 w-full"
+            style={{ aspectRatio: "1 / 1", padding: "12px" }}
           >
             <div className="w-full h-full rounded-xl overflow-hidden">
               <BannerCarousel square />
