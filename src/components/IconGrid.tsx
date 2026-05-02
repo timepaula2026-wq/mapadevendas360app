@@ -121,24 +121,24 @@ const IconGrid = () => {
       <style>{`
         .icon-grid-responsive {
           display: grid;
-          gap: 0.5rem;
-          grid-template-columns: repeat(${settings.grid_cols_mobile}, minmax(0, 1fr));
-          --icon-size: ${settings.icon_size_mobile}px;
-          --label-size: 0.6rem;
-          --label-leading: 1.05;
+          gap: 12px;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          --icon-size: 28px;
+          --label-size: 0.7rem;
+          --label-leading: 1.1;
         }
         @media (min-width: 640px) {
           .icon-grid-responsive {
-            gap: 0.75rem;
+            gap: 14px;
             grid-template-columns: repeat(${settings.grid_cols_tablet}, minmax(0, 1fr));
             --icon-size: ${settings.icon_size_tablet}px;
-            --label-size: 0.75rem;
+            --label-size: 0.8rem;
             --label-leading: 1.15;
           }
         }
         @media (min-width: 1024px) {
           .icon-grid-responsive {
-            gap: 1rem;
+            gap: 16px;
             grid-template-columns: repeat(${settings.grid_cols_desktop}, minmax(0, 1fr));
             --icon-size: ${settings.icon_size_desktop}px;
             --label-size: 0.875rem;
@@ -153,17 +153,17 @@ const IconGrid = () => {
           <button
             key={item.id}
             onClick={() => handleClick(item)}
-            className="group"
+            className="group min-h-[72px]"
           >
             <div
-              className={`bento-card relative w-full aspect-square flex flex-col items-stretch justify-between p-2.5 sm:p-3.5 ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
+              className={`bento-card relative w-full aspect-square flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
             >
               {locked && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center z-10">
                   <Lock className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex items-center justify-center">
                 <item.icon
                   className="text-primary shrink-0 transition-transform duration-200 group-hover:scale-110"
                   strokeWidth={1.5}
@@ -171,7 +171,7 @@ const IconGrid = () => {
                 />
               </div>
               <span
-                className="font-medium text-foreground/90 text-left line-clamp-2 break-words"
+                className="font-medium text-foreground/90 text-center line-clamp-2 break-words w-full"
                 style={{
                   fontSize: "var(--label-size)",
                   lineHeight: "var(--label-leading)",
