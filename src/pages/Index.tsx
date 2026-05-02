@@ -63,15 +63,18 @@ const Index = () => {
         </header>
       )}
 
-      {/* Banner */}
-      <div className="hero-radial px-4 pt-4 mb-8">
-        <div className="rounded-3xl overflow-hidden">
+      {/* Banner — proporção 16:6 */}
+      <div className="hero-radial px-4 pt-4 mb-4">
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ aspectRatio: "16 / 6", maxHeight: 180, minHeight: 150 }}
+        >
           <BannerCarousel />
         </div>
       </div>
 
-      {/* Icon Grid */}
-      <div className="px-4 mt-4">
+      {/* Icon Grid — 4 cols x 3 rows */}
+      <div className="px-4 py-4">
         <IconGrid />
       </div>
 
