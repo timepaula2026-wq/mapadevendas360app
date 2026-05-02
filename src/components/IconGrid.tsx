@@ -122,12 +122,12 @@ const IconGrid = () => {
         .icon-grid-responsive {
           display: grid;
           gap: 10px;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          grid-template-columns: repeat(4, 1fr);
           align-items: start;
           justify-items: center;
-          --icon-size: 36px;
-          --label-size: 0.7rem;
-          --label-leading: 1.1;
+          --icon-size: 24px;
+          --label-size: 11px;
+          --label-leading: 1.2;
         }
         @media (min-width: 640px) {
           .icon-grid-responsive {
@@ -149,9 +149,9 @@ const IconGrid = () => {
         }
         .icon-grid-responsive > button {
           width: 100%;
-          aspect-ratio: 1 / 1;
-          height: auto;
+          height: 90px;
           min-height: 0;
+          overflow: hidden;
         }
       `}</style>
       <div className="icon-grid-responsive">
@@ -164,14 +164,14 @@ const IconGrid = () => {
             className="group"
           >
             <div
-              className={`bento-card relative w-full h-full flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-2xl ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
+              className={`bento-card relative w-full h-full flex flex-col items-center justify-center p-2 rounded-2xl overflow-hidden ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
             >
               {locked && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center z-10">
                   <Lock className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center" style={{ marginBottom: 4 }}>
                 <item.icon
                   className="text-primary shrink-0 transition-transform duration-200 group-hover:scale-110"
                   strokeWidth={1.5}
@@ -179,11 +179,15 @@ const IconGrid = () => {
                 />
               </div>
               <span
-                className="font-medium text-foreground/90 text-center line-clamp-2 break-words w-full"
+                className="font-medium text-foreground/90 text-center break-words w-full"
                 style={{
                   fontSize: "var(--label-size)",
                   lineHeight: "var(--label-leading)",
                   letterSpacing: "-0.01em",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
                 }}
               >
                 {item.label}
