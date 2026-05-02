@@ -121,7 +121,7 @@ const IconGrid = () => {
       <style>{`
         .icon-grid-responsive {
           display: grid;
-          gap: 12px;
+          gap: 10px;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           --icon-size: 28px;
           --label-size: 0.7rem;
@@ -156,7 +156,8 @@ const IconGrid = () => {
             className="group min-h-[72px]"
           >
             <div
-              className={`bento-card relative w-full aspect-square flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
+              className={`bento-card relative w-full flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-2xl ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
+              style={{ aspectRatio: "1 / 1.1" }}
             >
               {locked && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center z-10">
