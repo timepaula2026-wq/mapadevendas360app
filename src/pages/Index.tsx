@@ -64,15 +64,11 @@ const Index = () => {
       )}
 
       {/* Banner — wide (16:6) ou quadrado (1:1) */}
-      <div className="hero-radial px-4 pt-4 mb-4 flex justify-center">
+      <div className="hero-radial px-4 pt-3 mb-3 flex justify-center">
         {settings.banner_shape === "square" ? (
           <div
-            className="rounded-2xl overflow-hidden p-2 bg-card/40"
-            style={{
-              width: "100%",
-              maxWidth: settings.banner_square_size,
-              aspectRatio: "1 / 1",
-            }}
+            className="rounded-2xl overflow-hidden p-3 bg-card/40 w-full"
+            style={{ aspectRatio: "1 / 1" }}
           >
             <div className="w-full h-full rounded-xl overflow-hidden">
               <BannerCarousel square />
@@ -89,7 +85,7 @@ const Index = () => {
       </div>
 
       {/* Icon Grid — 4 cols x 3 rows */}
-      <div className="px-4 py-4">
+      <div className="px-4 pt-2 pb-4">
         <IconGrid />
       </div>
 
