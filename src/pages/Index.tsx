@@ -42,7 +42,7 @@ const Index = () => {
 
       {/* Top bar */}
       {settings.show_header && (
-        <header className="header-glass sticky top-0 z-40 flex items-center justify-between px-5 pt-8 pb-3">
+        <header className="header-glass sticky top-0 z-40 flex items-center justify-between px-5 pt-6 pb-2">
           <button onClick={() => setSidebarOpen(true)} className="text-white/80 hover:text-white">
             <Menu className="w-6 h-6" />
           </button>
@@ -53,7 +53,7 @@ const Index = () => {
             {settings.header_logo_url && (
               <img src={settings.header_logo_url} alt="Logo" className="w-7 h-7 object-contain" />
             )}
-            <h1 className="text-lg font-light tracking-wide text-foreground">{settings.header_title}</h1>
+            <h1 className="text-base font-light tracking-wide text-foreground">{settings.header_title}</h1>
           </div>
           <div className="flex items-center gap-1">
             <button onClick={() => setSearchOpen(true)} className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white">
@@ -64,7 +64,7 @@ const Index = () => {
       )}
 
       {/* Banner — wide (16:6) ou quadrado (1:1) */}
-      <div className="hero-radial px-4 pt-3 mb-3 flex justify-center">
+      <div className="hero-radial px-4 pt-2 mb-2 flex justify-center">
         {settings.banner_shape === "square" ? (
           <div
             className="rounded-2xl overflow-hidden p-3 bg-card/40 w-full"
