@@ -291,6 +291,43 @@ const AdminAppLayout = () => {
           </p>
         </div>
 
+        {/* Presets rápidos */}
+        <div className="space-y-1.5">
+          <Label className="text-[11px]">Presets rápidos</Label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => update({
+                grid_cols_mobile: 4, grid_cols_tablet: 4, grid_cols_desktop: 4,
+                icon_size_mobile: 28, icon_size_tablet: 36, icon_size_desktop: 44,
+              })}
+              className="flex-1 min-w-[120px] py-2 px-3 rounded-lg text-xs font-medium border border-border bg-card hover:bg-secondary text-foreground transition-colors"
+            >
+              4×3 em todos
+            </button>
+            <button
+              onClick={() => update({
+                grid_cols_mobile: 4, grid_cols_tablet: 6, grid_cols_desktop: 8,
+                icon_size_mobile: 28, icon_size_tablet: 40, icon_size_desktop: 48,
+              })}
+              className="flex-1 min-w-[120px] py-2 px-3 rounded-lg text-xs font-medium border border-border bg-card hover:bg-secondary text-foreground transition-colors"
+            >
+              Compacto (4/6/8)
+            </button>
+            <button
+              onClick={() => update({
+                grid_cols_mobile: 2, grid_cols_tablet: 3, grid_cols_desktop: 5,
+                icon_size_mobile: 36, icon_size_tablet: 48, icon_size_desktop: 56,
+              })}
+              className="flex-1 min-w-[120px] py-2 px-3 rounded-lg text-xs font-medium border border-border bg-card hover:bg-secondary text-foreground transition-colors"
+            >
+              Padrão (2/3/5)
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Os presets ajustam colunas e tamanho dos ícones automaticamente. Lembre de salvar.
+          </p>
+        </div>
+
         {([
           { device: "Mobile (celular)", colsKey: "grid_cols_mobile", sizeKey: "icon_size_mobile", colsMax: 4 },
           { device: "Tablet", colsKey: "grid_cols_tablet", sizeKey: "icon_size_tablet", colsMax: 6 },
