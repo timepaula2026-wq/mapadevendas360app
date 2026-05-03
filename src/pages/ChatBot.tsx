@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import SimuladosPanel, { Scenario, ScenarioKey } from "@/components/SimuladosPanel";
+import ScenarioVideo from "@/components/ScenarioVideo";
 
 type Msg = { role: "user" | "assistant"; content: string; imageUrl?: string };
 
