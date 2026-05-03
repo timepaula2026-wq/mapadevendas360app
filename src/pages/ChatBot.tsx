@@ -22,12 +22,14 @@ async function streamChat({
   onDone,
   onError,
   scenario,
+  roteiro,
 }: {
   messages: Msg[];
   onDelta: (t: string) => void;
   onDone: () => void;
   onError: (msg: string) => void;
   scenario?: ScenarioKey;
+  roteiro?: string;
 }) {
   const resp = await fetch(CHAT_URL, {
     method: "POST",
@@ -38,6 +40,7 @@ async function streamChat({
     body: JSON.stringify({
       messages: messages.map(({ role, content }) => ({ role, content })),
       scenario,
+      roteiro,
     }),
   });
 
@@ -154,6 +157,7 @@ const ChatBot = () => {
   const [activeCategory, setActiveCategory] = useState(0);
   const [mode, setMode] = useState<ChatMode>(askOnly ? "chat" : "simulados");
   const [scenario, setScenario] = useState<Scenario | null>(null);
+  const [roteiro, setRoteiro] = useState<{ name: string; text: string } | null>(null);
   const [voiceOn, setVoiceOn] = useState(true);
   const [listening, setListening] = useState(false);
   const [rate, setRate] = useState(1.02);
@@ -236,11 +240,15 @@ const ChatBot = () => {
     setListening(false);
   };
 
-  const startScenario = (s: Scenario) => {
+  const startScenario = (s: Scenario, r?: { name: string; text: string }) => {
     window.speechSynthesis?.cancel();
     setScenario(s);
+    setRoteiro(r ?? null);
     setMode("chat");
-    const opener: Msg = { role: "assistant", content: `🎬 **${s.title}** — Cliente IA iniciando...\n\n_${s.opener}_` };
+    const opener: Msg = {
+      role: "assistant",
+      content: `🎬 **${s.title}** — Cliente IA iniciando...${r ? `\n\n📄 _Roteiro: ${r.name}_` : ""}\n\n_${s.opener}_`,
+    };
     setMessages([opener]);
     setTimeout(() => speak(s.opener, 0), 200);
   };
@@ -248,6 +256,7 @@ const ChatBot = () => {
   const exitScenario = () => {
     window.speechSynthesis?.cancel();
     setScenario(null);
+    setRoteiro(null);
     setMessages([]);
   };
 
@@ -279,6 +288,7 @@ const ChatBot = () => {
         }
       },
       scenario: scenario?.key,
+      roteiro: roteiro?.text,
       onError: (msg) => {
         setMessages((prev) => [...prev, { role: "assistant", content: `❌ ${msg}` }]);
         setLoading(false);
