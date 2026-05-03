@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare, Mic, MicOff, Volume2, VolumeX, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare, Mic, MicOff, Volume2, VolumeX, X, Sparkles, Settings2, Square, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import SimuladosPanel, { Scenario, ScenarioKey } from "@/components/SimuladosPanel";
@@ -152,6 +154,10 @@ const ChatBot = () => {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [voiceOn, setVoiceOn] = useState(true);
   const [listening, setListening] = useState(false);
+  const [rate, setRate] = useState(1.02);
+  const [volume, setVolume] = useState(1);
+  const [speaking, setSpeaking] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -169,20 +175,30 @@ const ChatBot = () => {
     };
   }, []);
 
-  const speak = (text: string) => {
+  const speak = (text: string, index?: number) => {
     if (!voiceOn || typeof window === "undefined" || !window.speechSynthesis) return;
     try {
       window.speechSynthesis.cancel();
       const clean = text.replace(/[#*_`>]/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1").slice(0, 600);
       const u = new SpeechSynthesisUtterance(clean);
       u.lang = "pt-BR";
-      u.rate = 1.02;
+      u.rate = rate;
       u.pitch = 1;
+      u.volume = volume;
       const voices = window.speechSynthesis.getVoices();
       const pt = voices.find((v) => v.lang?.startsWith("pt"));
       if (pt) u.voice = pt;
+      u.onstart = () => { setSpeaking(true); if (typeof index === "number") setSpeakingIndex(index); };
+      u.onend = () => { setSpeaking(false); setSpeakingIndex(null); };
+      u.onerror = () => { setSpeaking(false); setSpeakingIndex(null); };
       window.speechSynthesis.speak(u);
     } catch {}
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    setSpeakingIndex(null);
   };
 
   const startListening = () => {
@@ -224,7 +240,7 @@ const ChatBot = () => {
     setMode("chat");
     const opener: Msg = { role: "assistant", content: `🎬 **${s.title}** — Cliente IA iniciando...\n\n_${s.opener}_` };
     setMessages([opener]);
-    setTimeout(() => speak(s.opener), 200);
+    setTimeout(() => speak(s.opener, 0), 200);
   };
 
   const exitScenario = () => {
@@ -255,7 +271,10 @@ const ChatBot = () => {
       onDelta: upsert,
       onDone: () => {
         setLoading(false);
-        if (scenario && assistantSoFar) speak(assistantSoFar);
+        if (scenario && assistantSoFar) {
+          // last message index after upsert
+          setMessages((prev) => { speak(assistantSoFar, prev.length - 1); return prev; });
+        }
       },
       scenario: scenario?.key,
       onError: (msg) => {
