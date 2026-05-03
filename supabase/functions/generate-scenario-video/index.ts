@@ -19,14 +19,22 @@ const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
-    const { scenario, roteiro } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+  const { scenario, roteiro } = await req.json().catch(() => ({}));
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const title = SCENARIO_TITLES[scenario] ?? "Vendas de consórcio Ademicon";
 
-    const title = SCENARIO_TITLES[scenario] ?? "Vendas de consórcio Ademicon";
+  const stream = new ReadableStream({
+    async start(controller) {
+      const enc = new TextEncoder();
+      const send = (obj: any) =>
+        controller.enqueue(enc.encode(JSON.stringify(obj) + "\n"));
 
-    const systemPrompt = `Você é um diretor criativo de vídeos curtos de treinamento de vendas para a Ademicon (consórcios).
+      try {
+        if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+        send({ type: "progress", stage: "script", message: "Escrevendo roteiro..." });
+
+        const systemPrompt = `Você é um diretor criativo de vídeos curtos de treinamento de vendas para a Ademicon (consórcios).
 Produza um mini-vídeo (3 cenas) em formato roteiro/storyboard sobre o cenário "${title}".
 Cada cena deve ter:
 - title: rótulo curto (2-4 palavras)
@@ -35,7 +43,7 @@ Cada cena deve ter:
 Inclua um hook no início e um call-to-action final dentro das narrations.
 ${roteiro ? `\nUse este roteiro do consultor como base:\n"""${String(roteiro).slice(0, 4000)}"""` : ""}`;
 
-    const scriptResp = await fetch(AI_URL, {
+        const scriptResp = await fetch(AI_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -79,65 +87,96 @@ ${roteiro ? `\nUse este roteiro do consultor como base:\n"""${String(roteiro).sl
       }),
     });
 
-    if (!scriptResp.ok) {
+        if (!scriptResp.ok) {
       const t = await scriptResp.text();
       console.error("script err", scriptResp.status, t);
-      return new Response(JSON.stringify({ error: scriptResp.status === 429 ? "Limite de uso temporário. Tente em alguns minutos." : scriptResp.status === 402 ? "Créditos esgotados na IA. Adicione créditos na Lovable." : "Erro ao gerar roteiro" }), {
-        status: scriptResp.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const scriptData = await scriptResp.json();
-    const args = scriptData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    const parsed = typeof args === "string" ? JSON.parse(args) : args;
-    const scenes = (parsed?.scenes ?? []).slice(0, 3);
-
-    // Generate image for each scene in parallel
-    const imgResults = await Promise.all(
-      scenes.map(async (s: any) => {
-        try {
-          const r = await fetch(AI_URL, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash-image",
-              messages: [
-                { role: "user", content: `Cinematic photo, 16:9, professional Brazilian sales office. ${s.visual}` },
-              ],
-              modalities: ["image", "text"],
-            }),
+          send({
+            type: "error",
+            error:
+              scriptResp.status === 429
+                ? "Limite de uso temporário. Tente em alguns minutos."
+                : scriptResp.status === 402
+                ? "Créditos esgotados na IA. Adicione créditos na Lovable."
+                : "Erro ao gerar roteiro",
           });
-          const d = await r.json();
-          const url = d.choices?.[0]?.message?.images?.[0]?.image_url?.url ?? null;
-          return url;
-        } catch (e) {
-          console.error("img err", e);
-          return null;
+          controller.close();
+          return;
         }
-      })
-    );
 
-    const final = {
-      title: parsed?.title ?? title,
-      scenes: scenes.map((s: any, i: number) => ({
-        title: s.title,
-        narration: s.narration,
-        imageUrl: imgResults[i],
-      })),
-    };
+        const scriptData = await scriptResp.json();
+        const args = scriptData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        const parsed = typeof args === "string" ? JSON.parse(args) : args;
+        const scenes = (parsed?.scenes ?? []).slice(0, 3);
 
-    return new Response(JSON.stringify(final), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("gen-scenario-video err", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+        send({
+          type: "script",
+          title: parsed?.title ?? title,
+          scenes: scenes.map((s: any) => ({ title: s.title, narration: s.narration })),
+        });
+
+        // Generate images sequentially so progress updates as each finishes
+        const finalScenes: any[] = scenes.map((s: any) => ({
+          title: s.title,
+          narration: s.narration,
+          imageUrl: null,
+        }));
+
+        for (let i = 0; i < scenes.length; i++) {
+          send({
+            type: "progress",
+            stage: "image",
+            index: i,
+            total: scenes.length,
+            message: `Gerando imagem ${i + 1} de ${scenes.length}...`,
+          });
+          try {
+            const r = await fetch(AI_URL, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash-image",
+                messages: [
+                  {
+                    role: "user",
+                    content: `Cinematic photo, 16:9, professional Brazilian sales office. ${scenes[i].visual}`,
+                  },
+                ],
+                modalities: ["image", "text"],
+              }),
+            });
+            const d = await r.json();
+            const url = d.choices?.[0]?.message?.images?.[0]?.image_url?.url ?? null;
+            finalScenes[i].imageUrl = url;
+            send({ type: "image", index: i, imageUrl: url });
+          } catch (e) {
+            console.error("img err", e);
+            send({ type: "image", index: i, imageUrl: null });
+          }
+        }
+
+        send({
+          type: "done",
+          video: { title: parsed?.title ?? title, scenes: finalScenes },
+        });
+        controller.close();
+      } catch (e) {
+        console.error("gen-scenario-video err", e);
+        try {
+          controller.enqueue(
+            new TextEncoder().encode(
+              JSON.stringify({ type: "error", error: e instanceof Error ? e.message : "Erro" }) + "\n",
+            ),
+          );
+        } catch {}
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "application/x-ndjson" },
+  });
 });
