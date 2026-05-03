@@ -381,6 +381,56 @@ const ChatBot = () => {
         )}
         {scenario && (
           <button
+            onClick={stopSpeaking}
+            disabled={!speaking}
+            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground disabled:opacity-40"
+            title="Parar fala"
+          >
+            <Square className="w-4 h-4" />
+          </button>
+        )}
+        {scenario && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
+                title="Ajustes de voz"
+              >
+                <Settings2 className="w-4 h-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 space-y-4" align="end">
+              <div>
+                <div className="flex justify-between text-xs mb-1.5">
+                  <span className="text-muted-foreground">Velocidade</span>
+                  <span className="font-medium">{rate.toFixed(2)}x</span>
+                </div>
+                <Slider
+                  value={[rate]}
+                  min={0.5}
+                  max={2}
+                  step={0.05}
+                  onValueChange={(v) => setRate(v[0])}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1.5">
+                  <span className="text-muted-foreground">Volume</span>
+                  <span className="font-medium">{Math.round(volume * 100)}%</span>
+                </div>
+                <Slider
+                  value={[volume]}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onValueChange={(v) => setVolume(v[0])}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+        {scenario && (
+          <button
             onClick={exitScenario}
             className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
             title="Encerrar simulado"
