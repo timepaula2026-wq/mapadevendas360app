@@ -164,14 +164,23 @@ const IconGrid = () => {
             className="group"
           >
             <div
-              className={`bento-card relative w-full h-full flex flex-col items-center justify-center p-2 rounded-2xl overflow-hidden ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
+              className={`bento-card relative w-full h-full flex flex-col items-center justify-center rounded-2xl overflow-hidden ${locked ? "opacity-60" : "group-hover:-translate-y-0.5 group-active:scale-[0.97]"}`}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                padding: "8px 6px",
+                height: "100%",
+              }}
             >
               {locked && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center z-10">
                   <Lock className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <div className="flex items-center justify-center" style={{ marginBottom: 4 }}>
+              <div className="flex items-center justify-center shrink-0" style={{ height: "var(--icon-size)" }}>
                 <item.icon
                   className="text-primary shrink-0 transition-transform duration-200 group-hover:scale-110"
                   strokeWidth={1.5}
@@ -179,7 +188,7 @@ const IconGrid = () => {
                 />
               </div>
               <span
-                className="font-medium text-foreground/90 text-center break-words w-full"
+                className="font-medium text-foreground/90 text-center break-words w-full shrink-0"
                 style={{
                   fontSize: "var(--label-size)",
                   lineHeight: "var(--label-leading)",
@@ -188,6 +197,7 @@ const IconGrid = () => {
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
+                  minHeight: "calc(var(--label-size) * var(--label-leading) * 2)",
                 }}
               >
                 {item.label}
