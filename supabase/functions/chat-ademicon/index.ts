@@ -125,13 +125,18 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, scenario } = await req.json();
+    const { messages, scenario, roteiro } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const appContext = await loadAppContext();
     const scenarioPrompt = scenario && SCENARIO_PROMPTS[scenario] ? "\n\n" + SCENARIO_PROMPTS[scenario] : "";
-    const systemPrompt = BASE_PROMPT + (appContext ? "\n\n" + appContext : "") + scenarioPrompt;
+    const roteiroPrompt =
+      scenario && roteiro && typeof roteiro === "string" && roteiro.trim()
+        ? `\n\n### ROTEIRO BASE (fornecido pelo consultor)\nUse este roteiro/material como base do cenário simulado. Extraia objeções, perguntas, dores e termos do cliente DIRETAMENTE deste texto. Mantenha-se fiel ao tom e conteúdo. Se o roteiro contradisser instruções padrão do cenário, o roteiro tem prioridade.\n---\n${roteiro.slice(0, 12000)}\n---`
+        : "";
+    const systemPrompt =
+      BASE_PROMPT + (appContext ? "\n\n" + appContext : "") + scenarioPrompt + roteiroPrompt;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
