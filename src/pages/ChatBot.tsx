@@ -542,7 +542,7 @@ const ChatBot = () => {
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-2 mb-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             {msg.role === "assistant" && (
-              <Avatar className="w-7 h-7 mt-1 shrink-0">
+              <Avatar className={`w-7 h-7 mt-1 shrink-0 ${speakingIndex === i ? "ring-2 ring-primary animate-pulse" : ""}`}>
                 <AvatarFallback className="gradient-gold text-primary-foreground text-xs">
                   <Bot className="w-3.5 h-3.5" />
                 </AvatarFallback>
@@ -553,7 +553,7 @@ const ChatBot = () => {
                 msg.role === "user"
                   ? "bg-primary text-primary-foreground rounded-br-md"
                   : "bg-secondary text-secondary-foreground rounded-bl-md"
-              }`}
+              } ${speakingIndex === i ? "ring-1 ring-primary/50" : ""}`}
             >
               {msg.imageUrl && (
                 <div className="mb-2">
@@ -583,6 +583,31 @@ const ChatBot = () => {
               )}
               {msg.imageUrl && msg.content && (
                 <p className="mt-1 text-xs text-muted-foreground">{msg.content}</p>
+              )}
+              {scenario && msg.role === "assistant" && !msg.imageUrl && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  {speakingIndex === i ? (
+                    <button
+                      onClick={stopSpeaking}
+                      className="inline-flex items-center gap-1 text-[10px] text-primary"
+                    >
+                      <span className="flex gap-0.5 items-end h-3">
+                        <span className="w-0.5 bg-primary animate-[pulse_0.8s_ease-in-out_infinite] h-2" />
+                        <span className="w-0.5 bg-primary animate-[pulse_0.6s_ease-in-out_infinite] h-3" />
+                        <span className="w-0.5 bg-primary animate-[pulse_1s_ease-in-out_infinite] h-1.5" />
+                      </span>
+                      Tocando — parar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => speak(msg.content, i)}
+                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
+                      title="Reproduzir voz"
+                    >
+                      <Play className="w-3 h-3" /> Ouvir
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             {msg.role === "user" && (
