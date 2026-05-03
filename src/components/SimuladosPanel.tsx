@@ -1,4 +1,4 @@
-import { Mic, PhoneCall, CalendarCheck, Users, HandshakeIcon, ShieldAlert } from "lucide-react";
+import { Mic, PhoneCall, CalendarCheck, Users, Handshake, ShieldAlert } from "lucide-react";
 import simProspeccao from "@/assets/sim-prospeccao.jpg";
 import simAgendamento from "@/assets/sim-agendamento.jpg";
 import simReuniao from "@/assets/sim-reuniao.jpg";
@@ -46,7 +46,7 @@ export const SCENARIOS: Scenario[] = [
     title: "Fechamento",
     subtitle: "Quebre as últimas resistências",
     image: simFechamento,
-    icon: HandshakeIcon,
+    icon: Handshake,
     opener: "Eu gostei, mas deixa eu pensar com calma. Preciso conversar com minha esposa antes de assinar.",
   },
   {

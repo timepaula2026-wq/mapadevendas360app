@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import SimuladosPanel, { SCENARIOS, Scenario, ScenarioKey } from "@/components/SimuladosPanel";
+import SimuladosPanel, { Scenario, ScenarioKey } from "@/components/SimuladosPanel";
 
 type Msg = { role: "user" | "assistant"; content: string; imageUrl?: string };
 
