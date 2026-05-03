@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import SimuladosPanel, { Scenario, ScenarioKey } from "@/components/SimuladosPanel";
+import ScenarioVideo from "@/components/ScenarioVideo";
 
 type Msg = { role: "user" | "assistant"; content: string; imageUrl?: string };
 
@@ -486,6 +487,9 @@ const ChatBot = () => {
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
+        {scenario && (
+          <ScenarioVideo scenarioKey={scenario.key} roteiro={roteiro?.text} />
+        )}
         {messages.length === 0 && mode === "simulados" && !scenario && (
           <SimuladosPanel onStart={startScenario} />
         )}
