@@ -1,4 +1,7 @@
-import { Mic, PhoneCall, CalendarCheck, Users, Handshake, ShieldAlert } from "lucide-react";
+import { Mic, PhoneCall, CalendarCheck, Users, Handshake, ShieldAlert, FileText, X, Loader2, Upload } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { extractPdfText } from "@/lib/pdfText";
 import simProspeccao from "@/assets/sim-prospeccao.jpg";
 import simAgendamento from "@/assets/sim-agendamento.jpg";
 import simReuniao from "@/assets/sim-reuniao.jpg";
@@ -60,10 +63,40 @@ export const SCENARIOS: Scenario[] = [
 ];
 
 interface Props {
-  onStart: (s: Scenario) => void;
+  onStart: (s: Scenario, roteiro?: { name: string; text: string }) => void;
 }
 
 const SimuladosPanel = ({ onStart }: Props) => {
+  const [roteiro, setRoteiro] = useState<{ name: string; text: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFile = async (file: File) => {
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Envie um arquivo PDF");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("PDF muito grande (máx 10MB)");
+      return;
+    }
+    setLoading(true);
+    try {
+      const text = await extractPdfText(file);
+      if (!text) {
+        toast.error("Não foi possível extrair texto do PDF");
+        return;
+      }
+      setRoteiro({ name: file.name, text });
+      toast.success("Roteiro carregado — será usado nos cenários");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao ler PDF");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="px-1 py-3">
       <div className="text-center mb-4">
@@ -76,13 +109,58 @@ const SimuladosPanel = ({ onStart }: Props) => {
         </p>
       </div>
 
+      {/* Roteiro / PDF */}
+      <div className="mb-4 rounded-xl border border-dashed border-border bg-card/50 p-3">
+        {roteiro ? (
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">{roteiro.name}</p>
+              <p className="text-[10px] text-muted-foreground">
+                Roteiro ativo · {roteiro.text.length.toLocaleString()} caracteres
+              </p>
+            </div>
+            <button
+              onClick={() => setRoteiro(null)}
+              className="p-1 rounded-full text-muted-foreground hover:text-foreground"
+              title="Remover"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4" />
+            )}
+            <span className="flex-1">
+              {loading ? "Lendo PDF..." : "Carregar PDF/roteiro (será base dos cenários)"}
+            </span>
+            <input
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              disabled={loading}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFile(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {SCENARIOS.map((s) => {
           const Icon = s.icon;
+          const supports = s.key === "prospeccao" || s.key === "objecoes";
           return (
             <button
               key={s.key}
-              onClick={() => onStart(s)}
+              onClick={() => onStart(s, supports ? roteiro ?? undefined : undefined)}
               className="group relative overflow-hidden rounded-2xl border border-border bg-card text-left hover:border-primary transition-all active:scale-[0.98]"
             >
               <div className="relative aspect-[16/9] overflow-hidden">
@@ -102,9 +180,16 @@ const SimuladosPanel = ({ onStart }: Props) => {
               <div className="p-3">
                 <h3 className="text-sm font-bold text-foreground">{s.title}</h3>
                 <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{s.subtitle}</p>
-                <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-medium text-primary">
-                  ▶ Iniciar simulado
-                </span>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                    ▶ Iniciar simulado
+                  </span>
+                  {supports && roteiro && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-primary/80">
+                      <FileText className="w-3 h-3" /> roteiro
+                    </span>
+                  )}
+                </div>
               </div>
             </button>
           );
