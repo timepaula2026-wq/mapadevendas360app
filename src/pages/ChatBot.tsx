@@ -487,6 +487,9 @@ const ChatBot = () => {
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
+        {scenario && (
+          <ScenarioVideo scenarioKey={scenario.key} roteiro={roteiro?.text} />
+        )}
         {messages.length === 0 && mode === "simulados" && !scenario && (
           <SimuladosPanel onStart={startScenario} />
         )}
