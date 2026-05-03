@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare, Mic, MicOff, Volume2, VolumeX, X, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import SimuladosPanel, { SCENARIOS, Scenario, ScenarioKey } from "@/components/SimuladosPanel";
 
 type Msg = { role: "user" | "assistant"; content: string; imageUrl?: string };
 
@@ -18,11 +19,13 @@ async function streamChat({
   onDelta,
   onDone,
   onError,
+  scenario,
 }: {
   messages: Msg[];
   onDelta: (t: string) => void;
   onDone: () => void;
   onError: (msg: string) => void;
+  scenario?: ScenarioKey;
 }) {
   const resp = await fetch(CHAT_URL, {
     method: "POST",
@@ -30,7 +33,10 @@ async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages: messages.map(({ role, content }) => ({ role, content })) }),
+    body: JSON.stringify({
+      messages: messages.map(({ role, content }) => ({ role, content })),
+      scenario,
+    }),
   });
 
   if (!resp.ok) {
@@ -134,7 +140,7 @@ const IMAGE_SUGGESTIONS = [
   "Post de oportunidade de investimento via consórcio",
 ];
 
-type ChatMode = "chat" | "image";
+type ChatMode = "chat" | "image" | "simulados";
 
 const ChatBot = () => {
   const navigate = useNavigate();
@@ -143,16 +149,132 @@ const ChatBot = () => {
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
   const [mode, setMode] = useState<ChatMode>("chat");
+  const [scenario, setScenario] = useState<Scenario | null>(null);
+  const [voiceOn, setVoiceOn] = useState(true);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Stop TTS when leaving page
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      recognitionRef.current?.stop?.();
+    };
+  }, []);
+
+  const speak = (text: string) => {
+    if (!voiceOn || typeof window === "undefined" || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/[#*_`>]/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1").slice(0, 600);
+      const u = new SpeechSynthesisUtterance(clean);
+      u.lang = "pt-BR";
+      u.rate = 1.02;
+      u.pitch = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const pt = voices.find((v) => v.lang?.startsWith("pt"));
+      if (pt) u.voice = pt;
+      window.speechSynthesis.speak(u);
+    } catch {}
+  };
+
+  const startListening = () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      toast.error("Reconhecimento de voz não suportado neste navegador");
+      return;
+    }
+    try {
+      const r = new SR();
+      r.lang = "pt-BR";
+      r.interimResults = false;
+      r.continuous = false;
+      r.onstart = () => setListening(true);
+      r.onerror = () => setListening(false);
+      r.onend = () => setListening(false);
+      r.onresult = (e: any) => {
+        const text = Array.from(e.results).map((res: any) => res[0].transcript).join(" ").trim();
+        if (text) {
+          setInput(text);
+          setTimeout(() => sendText(text), 50);
+        }
+      };
+      recognitionRef.current = r;
+      r.start();
+    } catch {
+      setListening(false);
+    }
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop?.();
+    setListening(false);
+  };
+
+  const startScenario = (s: Scenario) => {
+    window.speechSynthesis?.cancel();
+    setScenario(s);
+    setMode("chat");
+    const opener: Msg = { role: "assistant", content: `🎬 **${s.title}** — Cliente IA iniciando...\n\n_${s.opener}_` };
+    setMessages([opener]);
+    setTimeout(() => speak(s.opener), 200);
+  };
+
+  const exitScenario = () => {
+    window.speechSynthesis?.cancel();
+    setScenario(null);
+    setMessages([]);
+  };
+
+  const sendText = async (text: string) => {
+    if (!text.trim() || loading) return;
+    setInput("");
+    const userMsg: Msg = { role: "user", content: text };
+    setMessages((prev) => [...prev, userMsg]);
+    setLoading(true);
+    let assistantSoFar = "";
+    const upsert = (chunk: string) => {
+      assistantSoFar += chunk;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && !last.imageUrl) {
+          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+        }
+        return [...prev, { role: "assistant", content: assistantSoFar }];
+      });
+    };
+    await streamChat({
+      messages: [...messages, userMsg],
+      onDelta: upsert,
+      onDone: () => {
+        setLoading(false);
+        if (scenario && assistantSoFar) speak(assistantSoFar);
+      },
+      scenario: scenario?.key,
+      onError: (msg) => {
+        setMessages((prev) => [...prev, { role: "assistant", content: `❌ ${msg}` }]);
+        setLoading(false);
+      },
+    });
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
     setInput("");
+
+    // In scenario mode, always use chat (no image generation)
+    if (scenario) {
+      setInput(text);
+      return sendText(text);
+    }
 
     // Auto-detect image requests even in chat mode
     const imageKeywords = /\b(gere|gerar|crie|criar|faça|fazer|imagem|criativo|post|banner|story|arte)\b/i;
@@ -219,13 +341,36 @@ const ChatBot = () => {
             <Bot className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-foreground">Assistente Ademicon</h1>
+            <h1 className="text-sm font-bold text-foreground">
+              {scenario ? `🎬 ${scenario.title}` : "Vendedor IA"}
+            </h1>
             <p className="text-[10px] text-muted-foreground">
-              {mode === "chat" ? "Tire suas dúvidas" : "Gere criativos de vendas"}
+              {scenario ? "Simulado em andamento — fale ou digite" :
+                mode === "chat" ? "Tire dúvidas sobre Ademicon e o app" :
+                mode === "image" ? "Gere criativos de vendas" : "Treine vendas em cenários reais"}
             </p>
           </div>
         </div>
+        {scenario && (
+          <button
+            onClick={() => setVoiceOn((v) => !v)}
+            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
+            title={voiceOn ? "Silenciar voz" : "Ativar voz"}
+          >
+            {voiceOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
+        )}
+        {scenario && (
+          <button
+            onClick={exitScenario}
+            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
+            title="Encerrar simulado"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
         {/* Mode toggle */}
+        {!scenario && (
         <div className="flex gap-1 bg-secondary rounded-full p-0.5">
           <button
             onClick={() => setMode("chat")}
@@ -245,11 +390,25 @@ const ChatBot = () => {
           >
             <ImageIcon className="w-4 h-4" />
           </button>
+          <button
+            onClick={() => setMode("simulados")}
+            className={`p-1.5 rounded-full transition-colors ${
+              mode === "simulados" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+            title="Simulados"
+          >
+            <Sparkles className="w-4 h-4" />
+          </button>
         </div>
+        )}
       </header>
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
+        {messages.length === 0 && mode === "simulados" && !scenario && (
+          <SimuladosPanel onStart={startScenario} />
+        )}
+
         {messages.length === 0 && mode === "chat" && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-20">
             <div className="w-16 h-16 rounded-full gradient-gold flex items-center justify-center shadow-glow">
