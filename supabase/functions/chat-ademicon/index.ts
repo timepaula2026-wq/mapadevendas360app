@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Você é o assistente virtual do app Mapa de Vendas da Ademicon, a maior administradora independente de consórcios do Brasil.
+const BASE_PROMPT = `Você é o **Vendedor IA** do app Mapa de Vendas da Ademicon, a maior administradora independente de consórcios do Brasil.
 
 Seu papel é ajudar consultores e clientes com dúvidas sobre:
 
@@ -41,15 +42,96 @@ Seu papel é ajudar consultores e clientes com dúvidas sobre:
 - Nunca invente dados financeiros ou taxas específicas — oriente o cliente a consultar seu consultor ou o site oficial
 - Sempre incentive o uso das ferramentas disponíveis no app`;
 
+const SCENARIO_PROMPTS: Record<string, string> = {
+  prospeccao: `### MODO SIMULADO: PROSPECÇÃO (Cold Call / Primeiro Contato)
+Você vai simular um **CLIENTE** sendo prospectado pela primeira vez por telefone.
+- Comece curto, levemente desconfiado ("Alô? Quem fala?").
+- Reaja de forma realista ao que o consultor disser. Se ele se apresentar bem, abra espaço; se for genérico, resista.
+- Solte 1 ou 2 objeções típicas de prospecção: "não tenho tempo", "já tenho consórcio", "como conseguiu meu número?".
+- Após 4–6 trocas, encerre a simulação com um bloco **📊 Feedback do Vendedor IA** avaliando: abertura, rapport, descoberta de necessidade, próximo passo. Dê 1 dica prática.`,
+  agendamento: `### MODO SIMULADO: AGENDAMENTO DE REUNIÃO
+Você simula um **CLIENTE** que já demonstrou interesse mas ainda resiste a marcar reunião.
+- Levante objeções clássicas de agenda: "manda por WhatsApp", "não sei se vou ter tempo", "qual o objetivo?".
+- Exija que o consultor proponha 2 opções de horário e venda o valor da reunião.
+- Após 4–6 trocas, finalize com **📊 Feedback** avaliando: clareza do propósito, oferta de horários, confirmação e gancho.`,
+  reuniao: `### MODO SIMULADO: REUNIÃO DE APRESENTAÇÃO
+Você simula um **CLIENTE** numa reunião presencial/virtual considerando consórcio Ademicon (ex: imóvel R$ 300 mil).
+- Faça perguntas reais: prazo, parcela, lance, contemplação, taxa de adm vs juros de financiamento.
+- Cobre exemplos numéricos concretos do consultor.
+- Após 5–7 trocas, finalize com **📊 Feedback** avaliando: descoberta, proposta de valor, uso de números, condução para o fechamento.`,
+  fechamento: `### MODO SIMULADO: FECHAMENTO DE VENDA
+Você simula um **CLIENTE** quase decidido, mas que ainda hesita na hora de assinar.
+- Use travas reais: "preciso pensar", "vou conversar com minha esposa", "e se eu não for contemplado?", "e se eu perder o emprego?".
+- Dê pistas de compra se o consultor aplicar bem técnicas de fechamento (alternativa, urgência real, garantia).
+- Após 4–6 trocas, finalize com **📊 Feedback** avaliando: leitura do momento, técnica de fechamento usada, ancoragem, próximo passo concreto.`,
+  objecoes: `### MODO SIMULADO: TREINO DE OBJEÇÕES
+Você simula um **CLIENTE** que dispara objeções fortes de consórcio, uma a cada turno:
+1) "Consórcio é furada, posso não ser contemplado nunca."
+2) "É mais caro que financiamento."
+3) "Já tenho consórcio em outra administradora."
+4) "Não confio em administradora, prefiro banco."
+5) "Não tenho dinheiro pra mais uma parcela agora."
+- Avalie cada resposta e responda como cliente real.
+- Após 5 objeções, finalize com **📊 Feedback** detalhado por objeção (técnica usada, o que melhorar) e nota geral.`,
+};
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+let cachedContext: { text: string; ts: number } | null = null;
+const CONTEXT_TTL_MS = 5 * 60 * 1000;
+
+async function loadAppContext(): Promise<string> {
+  if (cachedContext && Date.now() - cachedContext.ts < CONTEXT_TTL_MS) {
+    return cachedContext.text;
+  }
+  try {
+    const supa = createClient(supabaseUrl, serviceKey);
+    const [icons, contents, tabs] = await Promise.all([
+      supa.from("icon_grid_order").select("id, custom_label, route").eq("visible", true).order("sort_order"),
+      supa.from("section_contents").select("section_id, title, description, type, url").limit(200),
+      supa.from("section_tabs").select("section_id, title").order("sort_order"),
+    ]);
+    const lines: string[] = ["**Conteúdos atuais do app Mapa de Vendas:**"];
+    if (icons.data?.length) {
+      lines.push("Seções da home: " + icons.data.map((i: any) => i.custom_label || i.id).join(", "));
+    }
+    if (tabs.data?.length) {
+      const byS: Record<string, string[]> = {};
+      tabs.data.forEach((t: any) => { (byS[t.section_id] ||= []).push(t.title); });
+      Object.entries(byS).forEach(([s, ts]) => lines.push(`Abas em ${s}: ${ts.join(", ")}`));
+    }
+    if (contents.data?.length) {
+      const byS: Record<string, string[]> = {};
+      contents.data.forEach((c: any) => {
+        (byS[c.section_id] ||= []).push(`${c.title}${c.description ? " — " + c.description.slice(0, 80) : ""}`);
+      });
+      Object.entries(byS).slice(0, 20).forEach(([s, items]) =>
+        lines.push(`Materiais em ${s}: ${items.slice(0, 10).join(" | ")}`)
+      );
+    }
+    const text = lines.join("\n");
+    cachedContext = { text, ts: Date.now() };
+    return text;
+  } catch (e) {
+    console.error("loadAppContext failed:", e);
+    return "";
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, scenario } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const appContext = await loadAppContext();
+    const scenarioPrompt = scenario && SCENARIO_PROMPTS[scenario] ? "\n\n" + SCENARIO_PROMPTS[scenario] : "";
+    const systemPrompt = BASE_PROMPT + (appContext ? "\n\n" + appContext : "") + scenarioPrompt;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -62,7 +144,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: systemPrompt },
             ...messages,
           ],
           stream: true,
