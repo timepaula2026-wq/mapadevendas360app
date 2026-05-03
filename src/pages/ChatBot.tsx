@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare, Mic, MicOff, Volume2, VolumeX, X, Sparkles, Settings2, Square, Play } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -146,11 +146,13 @@ type ChatMode = "chat" | "image" | "simulados";
 
 const ChatBot = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const askOnly = searchParams.get("mode") === "ask";
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
-  const [mode, setMode] = useState<ChatMode>("chat");
+  const [mode, setMode] = useState<ChatMode>(askOnly ? "chat" : "simulados");
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [voiceOn, setVoiceOn] = useState(true);
   const [listening, setListening] = useState(false);
@@ -361,11 +363,11 @@ const ChatBot = () => {
           </div>
           <div>
             <h1 className="text-sm font-bold text-foreground">
-              {scenario ? `🎬 ${scenario.title}` : "Vendedor IA"}
+              {scenario ? `🎬 ${scenario.title}` : askOnly ? "Pergunte IA" : "Vendedor IA"}
             </h1>
             <p className="text-[10px] text-muted-foreground">
               {scenario ? "Simulado em andamento — fale ou digite" :
-                mode === "chat" ? "Tire dúvidas sobre Ademicon e o app" :
+                mode === "chat" ? (askOnly ? "Tire dúvidas sobre Ademicon e o app" : "Tire dúvidas sobre Ademicon e o app") :
                 mode === "image" ? "Gere criativos de vendas" : "Treine vendas em cenários reais"}
             </p>
           </div>
@@ -439,7 +441,7 @@ const ChatBot = () => {
           </button>
         )}
         {/* Mode toggle */}
-        {!scenario && (
+        {!scenario && !askOnly && (
         <div className="flex gap-1 bg-secondary rounded-full p-0.5">
           <button
             onClick={() => setMode("chat")}
