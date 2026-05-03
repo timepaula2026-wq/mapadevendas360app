@@ -548,15 +548,31 @@ const ChatBot = () => {
       </ScrollArea>
 
       {/* Input */}
+      {(mode !== "simulados" || scenario) && (
       <div className="p-3 border-t border-border bg-card/80 backdrop-blur-lg">
         <form
           onSubmit={(e) => { e.preventDefault(); send(); }}
           className="flex gap-2"
         >
+          <Button
+            type="button"
+            size="icon"
+            variant={listening ? "destructive" : "secondary"}
+            className="rounded-full shrink-0"
+            onClick={() => (listening ? stopListening() : startListening())}
+            disabled={loading}
+            title={listening ? "Parar" : "Falar"}
+          >
+            {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </Button>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={mode === "image" ? "Descreva o criativo que deseja..." : "Digite sua pergunta..."}
+            placeholder={
+              scenario ? "Responda como vendedor (texto ou 🎤)..." :
+              mode === "image" ? "Descreva o criativo que deseja..." :
+              "Digite sua pergunta..."
+            }
             className="flex-1 bg-secondary border-border rounded-full text-sm"
             disabled={loading}
           />
@@ -566,10 +582,11 @@ const ChatBot = () => {
             className="rounded-full shrink-0"
             disabled={loading || !input.trim()}
           >
-            {mode === "image" ? <ImageIcon className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+            {mode === "image" && !scenario ? <ImageIcon className="w-4 h-4" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
       </div>
+      )}
     </div>
   );
 };
