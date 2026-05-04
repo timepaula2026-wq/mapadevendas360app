@@ -196,10 +196,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, youtubeId]);
 
-  // Para tipos que NÃO exigem assistir (imagem/link/outros), conclui ao abrir.
+  // Para tipos que NÃO exigem assistir (imagem/link/texto/outros), conclui ao abrir.
   useEffect(() => {
     if (!open) return;
-    if (!(url || youtubeId)) return;
+    const hasContent = !!(url || youtubeId) || type === "text";
+    if (!hasContent) return;
     if (!requiresWatch) fireCompleted();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, youtubeId, type]);
