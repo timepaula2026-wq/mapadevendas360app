@@ -111,7 +111,7 @@ const AdminSections = () => {
   const [editContentTitle, setEditContentTitle] = useState("");
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
-  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
+  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video" | "text">("link");
   const [editContentAllowDownload, setEditContentAllowDownload] = useState(false);
   const [editContentOpenMode, setEditContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -122,7 +122,7 @@ const AdminSections = () => {
   const [showSubForm, setShowSubForm] = useState<string | null>(null); // parentId (for new sub-content)
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
-  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
+  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video" | "text">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [contentAllowDownload, setContentAllowDownload] = useState(false);
   const [contentOpenMode, setContentOpenMode] = useState<"iframe" | "newtab">("iframe");
@@ -341,6 +341,34 @@ const AdminSections = () => {
         return;
       }
       await handleFileUpload(file, sectionId, tabId, contentType, parentId);
+      return;
+    }
+
+    if (contentType === "text") {
+      if (!contentDesc.trim()) {
+        toast.error("Escreva o texto do conteúdo");
+        return;
+      }
+      const nextOrder = contentsByTab[tabId]?.length ?? 0;
+      const { error } = await supabase.from("section_contents").insert({
+        section_id: sectionId,
+        tab_id: tabId,
+        parent_id: parentId ?? null,
+        user_id: user.id,
+        title: contentTitle.trim(),
+        description: contentDesc.trim(),
+        type: "text",
+        url: null,
+        sort_order: nextOrder,
+        allow_download: false,
+        open_mode: "iframe",
+      });
+      if (error) toast.error("Erro ao adicionar");
+      else {
+        toast.success("Texto adicionado!");
+        resetContentForm();
+        fetchTabContents(tabId);
+      }
       return;
     }
 
