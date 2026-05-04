@@ -315,7 +315,13 @@ const SectionContentList = ({
     );
   }
 
-  if (contents.length === 0 && tabs.length === 0) return null;
+  if (contents.length === 0 && tabs.length === 0) {
+    return (
+      <div className="py-10 text-center text-xs text-muted-foreground">
+        Nenhum conteúdo disponível nesta seção ainda.
+      </div>
+    );
+  }
 
   const renderParentWithChildren = (c: SectionContent, sequence: string[]) => {
     const kids = childrenByParent[c.id] || [];
