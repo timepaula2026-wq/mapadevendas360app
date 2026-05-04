@@ -667,11 +667,20 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
                 onEnded={() => fireCompleted()}
+              onLoadedMetadata={(e) => {
+                const v = e.currentTarget;
+                const saved = savedAtOpenRef.current;
+                if (!seekAppliedRef.current && saved?.t && saved.t > 3 && v.duration > 0 && saved.t < v.duration - 3) {
+                  seekAppliedRef.current = true;
+                  try { v.currentTime = saved.t; } catch { /* noop */ }
+                }
+              }}
                 onTimeUpdate={(e) => {
                   const v = e.currentTarget;
                   if (v.duration > 0) {
                     const pct = (v.currentTime / v.duration) * 100;
                     updateProgress(pct);
+                  saveThrottled({ t: v.currentTime, d: v.duration });
                     if (pct >= 95) fireCompleted();
                   }
                 }}
