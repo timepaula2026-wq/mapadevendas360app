@@ -125,9 +125,53 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     completedRef.current = true;
     setCompletedFlag(true);
     setProgress(100);
+    // Conteúdo concluído: limpa progresso salvo para que uma próxima
+    // abertura comece do zero (e não tente "retomar" do final).
+    clearSaved();
     onCompleted?.();
   };
   const requiresWatch = type === "youtube" || type === "video" || type === "pdf";
+
+  // ===== Persistência de progresso (retomar de onde parou) =====
+  const progressKey =
+    (url || youtubeId)
+      ? `cvm:progress:${type}:${youtubeId || url}`
+      : null;
+  type SavedProgress = { t?: number; d?: number; p?: number; ts?: number };
+  const readSaved = (): SavedProgress | null => {
+    if (!progressKey) return null;
+    try {
+      const raw = localStorage.getItem(progressKey);
+      return raw ? (JSON.parse(raw) as SavedProgress) : null;
+    } catch {
+      return null;
+    }
+  };
+  const writeSaved = (data: SavedProgress) => {
+    if (!progressKey) return;
+    try {
+      localStorage.setItem(progressKey, JSON.stringify({ ...data, ts: Date.now() }));
+    } catch {
+      /* noop */
+    }
+  };
+  const clearSaved = () => {
+    if (!progressKey) return;
+    try {
+      localStorage.removeItem(progressKey);
+    } catch {
+      /* noop */
+    }
+  };
+  const lastWriteRef = useRef(0);
+  const saveThrottled = (data: SavedProgress) => {
+    const now = Date.now();
+    if (now - lastWriteRef.current < 3000) return;
+    lastWriteRef.current = now;
+    writeSaved(data);
+  };
+  const savedAtOpenRef = useRef<SavedProgress | null>(null);
+  const seekAppliedRef = useRef(false);
 
   // Reset de progresso a cada abertura
   useEffect(() => {
@@ -135,7 +179,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       completedRef.current = false;
       setCompletedFlag(false);
       setProgress(0);
+      seekAppliedRef.current = false;
+      lastWriteRef.current = 0;
+      const saved = readSaved();
+      savedAtOpenRef.current = saved;
+      if (saved?.t && saved.d && saved.d > 0) {
+        const pct = Math.round((saved.t / saved.d) * 100);
+        setProgress(Math.min(99, Math.max(0, pct)));
+      } else if (typeof saved?.p === "number") {
+        setProgress(Math.min(99, Math.max(0, Math.round(saved.p))));
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, type]);
 
   const PDF_MIN_ZOOM = 1;
@@ -224,6 +279,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           const dur = typeof info?.duration === "number" ? info.duration : null;
           if (ct != null && dur && dur > 0) {
             updateProgress((ct / dur) * 100);
+            // Retoma de onde parou (uma vez por abertura)
+            if (!seekAppliedRef.current) {
+              seekAppliedRef.current = true;
+              const saved = savedAtOpenRef.current;
+              if (saved?.t && saved.t > 5 && (!saved.d || saved.t < saved.d - 5)) {
+                try {
+                  videoIframeRef.current?.contentWindow?.postMessage(
+                    JSON.stringify({ event: "command", func: "seekTo", args: [saved.t, true] }),
+                    "*"
+                  );
+                } catch {/* noop */}
+              }
+            }
+            // Salva posição (throttled)
+            saveThrottled({ t: ct, d: dur });
           }
           return;
         }
@@ -234,6 +304,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           if (data?.event === "playProgress" || data?.event === "timeupdate") {
             const pct = typeof data?.data?.percent === "number" ? data.data.percent * 100 : null;
             if (pct != null) updateProgress(pct);
+            const ct = typeof data?.data?.seconds === "number" ? data.data.seconds : null;
+            const dur = typeof data?.data?.duration === "number" ? data.data.duration : null;
+            if (ct != null && dur && dur > 0) {
+              if (!seekAppliedRef.current) {
+                seekAppliedRef.current = true;
+                const saved = savedAtOpenRef.current;
+                if (saved?.t && saved.t > 5 && (!saved.d || saved.t < saved.d - 5)) {
+                  try {
+                    videoIframeRef.current?.contentWindow?.postMessage(
+                      JSON.stringify({ method: "setCurrentTime", value: saved.t }),
+                      "*"
+                    );
+                  } catch {/* noop */}
+                }
+              }
+              saveThrottled({ t: ct, d: dur });
+            }
           }
           return;
         }
@@ -257,6 +344,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }
     const ratio = (el.scrollTop + el.clientHeight) / el.scrollHeight;
     updateProgress(ratio * 100);
+    saveThrottled({ p: ratio * 100 });
     if (ratio >= 0.95) fireCompleted();
   };
   // Quando o PDF carrega e cabe inteiro sem scroll, considera concluído.
@@ -266,6 +354,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     if (!el) return;
     const t = window.setTimeout(() => {
       if (el.scrollHeight <= el.clientHeight + 4) fireCompleted();
+      // Retoma scroll do PDF salvo
+      const saved = savedAtOpenRef.current;
+      if (!seekAppliedRef.current && typeof saved?.p === "number" && saved.p > 1 && saved.p < 95) {
+        seekAppliedRef.current = true;
+        const target = (saved.p / 100) * el.scrollHeight - el.clientHeight / 2;
+        el.scrollTop = Math.max(0, target);
+      }
     }, 400);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -572,11 +667,20 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
                 onEnded={() => fireCompleted()}
+              onLoadedMetadata={(e) => {
+                const v = e.currentTarget;
+                const saved = savedAtOpenRef.current;
+                if (!seekAppliedRef.current && saved?.t && saved.t > 3 && v.duration > 0 && saved.t < v.duration - 3) {
+                  seekAppliedRef.current = true;
+                  try { v.currentTime = saved.t; } catch { /* noop */ }
+                }
+              }}
                 onTimeUpdate={(e) => {
                   const v = e.currentTarget;
                   if (v.duration > 0) {
                     const pct = (v.currentTime / v.duration) * 100;
                     updateProgress(pct);
+                  saveThrottled({ t: v.currentTime, d: v.duration });
                     if (pct >= 95) fireCompleted();
                   }
                 }}
