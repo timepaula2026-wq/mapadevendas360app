@@ -1019,7 +1019,7 @@ const AdminSections = () => {
                           </button>
                           <div className="flex flex-col -my-0.5 shrink-0">
                             <button
-                              onClick={() => handleReorderContent(tab.id, idx, -1)}
+                              onClick={() => handleReorderParent(tab.id, idx, -1)}
                               disabled={idx === 0}
                               className="text-muted-foreground hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Mover para cima"
@@ -1028,7 +1028,7 @@ const AdminSections = () => {
                               <ArrowUp className="w-3 h-3" />
                             </button>
                             <button
-                              onClick={() => handleReorderContent(tab.id, idx, 1)}
+                              onClick={() => handleReorderParent(tab.id, idx, 1)}
                               disabled={idx === parents.length - 1}
                               className="text-muted-foreground hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Mover para baixo"
