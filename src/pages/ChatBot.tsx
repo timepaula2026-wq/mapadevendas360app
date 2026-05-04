@@ -151,13 +151,15 @@ type ChatMode = "chat" | "image" | "simulados";
 const ChatBot = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  // Sempre modo "Pergunte IA" — aba "Vendedor IA" foi removida
-  const askOnly = true;
+  // Página unificada "IA do Consórcio" com abas internas: Pergunte IA / Vendedor IA
+  const askOnly = false;
+  const initialTab = (searchParams.get("mode") === "ask" ? "ask" : "sell") as "ask" | "sell";
+  const [iaTab, setIaTab] = useState<"ask" | "sell">(initialTab);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
-  const [mode, setMode] = useState<ChatMode>(askOnly ? "chat" : "simulados");
+  const [mode, setMode] = useState<ChatMode>(initialTab === "ask" ? "chat" : "simulados");
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [roteiro, setRoteiro] = useState<{ name: string; text: string } | null>(null);
   const [voiceOn, setVoiceOn] = useState(true);
@@ -375,12 +377,12 @@ const ChatBot = () => {
           </div>
           <div>
             <h1 className="text-sm font-bold text-foreground">
-              {scenario ? `🎬 ${scenario.title}` : askOnly ? "Pergunte IA" : "Vendedor IA"}
+              {scenario ? `🎬 ${scenario.title}` : "IA do Consórcio"}
             </h1>
             <p className="text-[10px] text-muted-foreground">
               {scenario ? "Simulado em andamento — fale ou digite" :
-                mode === "chat" ? (askOnly ? "Tire dúvidas sobre Ademicon e o app" : "Tire dúvidas sobre Ademicon e o app") :
-                mode === "image" ? "Gere criativos de vendas" : "Treine vendas em cenários reais"}
+                iaTab === "ask" ? "Pergunte IA — tire dúvidas sobre Ademicon e o app" :
+                "Vendedor IA — treine vendas em cenários reais"}
             </p>
           </div>
         </div>
@@ -453,7 +455,7 @@ const ChatBot = () => {
           </button>
         )}
         {/* Mode toggle */}
-        {!scenario && !askOnly && (
+        {!scenario && iaTab === "sell" && (
         <div className="flex gap-1 bg-secondary rounded-full p-0.5">
           <button
             onClick={() => setMode("chat")}
@@ -485,6 +487,32 @@ const ChatBot = () => {
         </div>
         )}
       </header>
+
+      {/* Abas: Pergunte IA / Vendedor IA */}
+      {!scenario && (
+        <div className="flex border-b border-border bg-card/60 backdrop-blur-sm shrink-0">
+          <button
+            onClick={() => { setIaTab("ask"); setMode("chat"); setMessages([]); }}
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
+              iaTab === "ask"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            💬 Pergunte IA
+          </button>
+          <button
+            onClick={() => { setIaTab("sell"); setMode("simulados"); setMessages([]); }}
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
+              iaTab === "sell"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🎯 Vendedor IA
+          </button>
+        </div>
+      )}
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
