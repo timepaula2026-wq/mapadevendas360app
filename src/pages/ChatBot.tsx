@@ -159,7 +159,7 @@ const ChatBot = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
-  const [mode, setMode] = useState<ChatMode>(askOnly ? "chat" : "simulados");
+  const [mode, setMode] = useState<ChatMode>(initialTab === "ask" ? "chat" : "simulados");
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [roteiro, setRoteiro] = useState<{ name: string; text: string } | null>(null);
   const [voiceOn, setVoiceOn] = useState(true);
