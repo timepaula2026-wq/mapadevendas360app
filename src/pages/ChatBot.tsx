@@ -455,7 +455,7 @@ const ChatBot = () => {
           </button>
         )}
         {/* Mode toggle */}
-        {!scenario && !askOnly && (
+        {!scenario && iaTab === "sell" && (
         <div className="flex gap-1 bg-secondary rounded-full p-0.5">
           <button
             onClick={() => setMode("chat")}
