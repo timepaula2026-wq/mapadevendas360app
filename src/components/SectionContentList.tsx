@@ -99,6 +99,8 @@ const ContentRow = ({
             ? "bg-blue-500/10"
             : c.type === "image"
             ? "bg-emerald-500/10 overflow-hidden"
+            : c.type === "text"
+            ? "bg-amber-500/10"
             : "bg-muted"
         }`}
       >
@@ -114,6 +116,8 @@ const ContentRow = ({
           ) : (
             <ImageIcon className="w-5 h-5 text-emerald-500" />
           )
+        ) : c.type === "text" ? (
+          <FileText className="w-5 h-5 text-amber-500" />
         ) : (
           <ExternalLink className="w-5 h-5 text-muted-foreground" />
         )}
