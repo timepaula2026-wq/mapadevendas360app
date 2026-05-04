@@ -109,9 +109,6 @@ const ContentRow = ({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{c.title}</p>
-        {c.description && (
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">{c.description}</p>
-        )}
       </div>
       {isDone ? (
         <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
