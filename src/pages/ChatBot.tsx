@@ -488,6 +488,32 @@ const ChatBot = () => {
         )}
       </header>
 
+      {/* Abas: Pergunte IA / Vendedor IA */}
+      {!scenario && (
+        <div className="flex border-b border-border bg-card/60 backdrop-blur-sm shrink-0">
+          <button
+            onClick={() => { setIaTab("ask"); setMode("chat"); setMessages([]); }}
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
+              iaTab === "ask"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            💬 Pergunte IA
+          </button>
+          <button
+            onClick={() => { setIaTab("sell"); setMode("simulados"); setMessages([]); }}
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
+              iaTab === "sell"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🎯 Vendedor IA
+          </button>
+        </div>
+      )}
+
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3">
         {scenario && (
