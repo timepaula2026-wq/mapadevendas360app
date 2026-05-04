@@ -1069,11 +1069,12 @@ const AdminSections = () => {
                                 placeholder="Título"
                                 className="h-7 text-xs"
                               />
-                              <Input
+                              <textarea
                                 value={contentDesc}
                                 onChange={(e) => setContentDesc(e.target.value)}
-                                placeholder="Descrição (opcional)"
-                                className="h-7 text-xs"
+                                placeholder="Texto (aparece abaixo do conteúdo)"
+                                rows={3}
+                                className="w-full text-xs bg-background border border-input rounded-md px-2 py-1.5 resize-y"
                               />
                               {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                                 <input
@@ -1188,11 +1189,12 @@ const AdminSections = () => {
                             placeholder="Título"
                             className="h-7 text-xs"
                           />
-                          <Input
+                          <textarea
                             value={contentDesc}
                             onChange={(e) => setContentDesc(e.target.value)}
-                            placeholder="Descrição (opcional)"
-                            className="h-7 text-xs"
+                            placeholder="Texto (aparece abaixo do conteúdo)"
+                            rows={3}
+                            className="w-full text-xs bg-background border border-input rounded-md px-2 py-1.5 resize-y"
                           />
                            {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                             <input
