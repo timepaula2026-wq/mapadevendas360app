@@ -18,6 +18,7 @@ const DEFAULT_SECTIONS: Section[] = DEFAULT_GRID_SECTIONS.map((s) => ({ id: s.id
 const TrilhaIniciante = () => {
   const navigate = useNavigate();
   const { roles: userRoles } = useUserRoles();
+  const isAdmin = userRoles.includes("admin");
   const { user } = useAuth();
   const [sections, setSections] = useState<Section[]>(DEFAULT_SECTIONS);
   const [activeSection, setActiveSection] = useState<string>("trilha");
@@ -135,6 +136,7 @@ const TrilhaIniciante = () => {
 
   // Bloqueio sequencial entre seções (chips do topo)
   const isSectionLocked = (id: string) => {
+    if (isAdmin) return false;
     const idx = sections.findIndex((s) => s.id === id);
     if (idx <= 0) return false;
     for (let i = 0; i < idx; i++) {
