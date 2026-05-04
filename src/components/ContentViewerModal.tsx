@@ -774,6 +774,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 <ZoomIn className="w-5 h-5" />
               </button>
             </div>
+          ) : type === "text" ? (
+            <div className="w-full h-full overflow-y-auto bg-background px-6 py-8">
+              <div className="max-w-3xl mx-auto text-base text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                {description || "Sem texto cadastrado."}
+              </div>
+            </div>
           ) : url ? (
             (() => {
               // Domains that block iframe embedding via X-Frame-Options / CSP
