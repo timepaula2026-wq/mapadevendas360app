@@ -511,7 +511,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-4xl w-[100vw] sm:w-[95vw] h-[100dvh] sm:h-[90vh] max-h-[100dvh] sm:max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden rounded-none sm:rounded-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-card shrink-0">
           <button
             onClick={onClose}
             className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-secondary/60 mr-3 shrink-0"
