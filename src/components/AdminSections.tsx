@@ -1090,7 +1090,7 @@ const AdminSections = () => {
                                     { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                     { type: "link" as const, icon: File, label: "Link" },
                                   ]
-                                ).map(({ type, icon: Icon, label }) => (
+                                 ).map(({ type, icon: Icon, label }) => (
                                   <button
                                     key={type}
                                     onClick={() => setContentType(type)}
