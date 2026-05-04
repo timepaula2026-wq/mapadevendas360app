@@ -179,15 +179,17 @@ const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
         <>
           <button
             onClick={(e) => { e.stopPropagation(); setCurrent((prev) => (prev - 1 + slides.length) % slides.length); }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white"
+            aria-label="Slide anterior"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur flex items-center justify-center text-white shadow-lg transition-all hover:scale-110 active:scale-95"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setCurrent((prev) => (prev + 1) % slides.length); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white"
+            aria-label="Próximo slide"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur flex items-center justify-center text-white shadow-lg transition-all hover:scale-110 active:scale-95"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7" />
           </button>
         </>
       )}
