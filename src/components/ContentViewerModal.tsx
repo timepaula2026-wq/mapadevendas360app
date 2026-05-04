@@ -196,10 +196,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, youtubeId]);
 
-  // Para tipos que NÃO exigem assistir (imagem/link/outros), conclui ao abrir.
+  // Para tipos que NÃO exigem assistir (imagem/link/texto/outros), conclui ao abrir.
   useEffect(() => {
     if (!open) return;
-    if (!(url || youtubeId)) return;
+    const hasContent = !!(url || youtubeId) || type === "text";
+    if (!hasContent) return;
     if (!requiresWatch) fireCompleted();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, youtubeId, type]);
@@ -773,6 +774,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               >
                 <ZoomIn className="w-5 h-5" />
               </button>
+            </div>
+          ) : type === "text" ? (
+            <div className="w-full h-full overflow-y-auto bg-background px-6 py-8">
+              <div className="max-w-3xl mx-auto text-base text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                {description || "Sem texto cadastrado."}
+              </div>
             </div>
           ) : url ? (
             (() => {

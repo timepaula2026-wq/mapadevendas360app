@@ -111,7 +111,7 @@ const AdminSections = () => {
   const [editContentTitle, setEditContentTitle] = useState("");
   const [editContentDesc, setEditContentDesc] = useState("");
   const [editContentUrl, setEditContentUrl] = useState("");
-  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("link");
+  const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video" | "text">("link");
   const [editContentAllowDownload, setEditContentAllowDownload] = useState(false);
   const [editContentOpenMode, setEditContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -122,7 +122,7 @@ const AdminSections = () => {
   const [showSubForm, setShowSubForm] = useState<string | null>(null); // parentId (for new sub-content)
   const [contentTitle, setContentTitle] = useState("");
   const [contentDesc, setContentDesc] = useState("");
-  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video">("youtube");
+  const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video" | "text">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [contentAllowDownload, setContentAllowDownload] = useState(false);
   const [contentOpenMode, setContentOpenMode] = useState<"iframe" | "newtab">("iframe");
@@ -344,6 +344,34 @@ const AdminSections = () => {
       return;
     }
 
+    if (contentType === "text") {
+      if (!contentDesc.trim()) {
+        toast.error("Escreva o texto do conteúdo");
+        return;
+      }
+      const nextOrder = contentsByTab[tabId]?.length ?? 0;
+      const { error } = await supabase.from("section_contents").insert({
+        section_id: sectionId,
+        tab_id: tabId,
+        parent_id: parentId ?? null,
+        user_id: user.id,
+        title: contentTitle.trim(),
+        description: contentDesc.trim(),
+        type: "text",
+        url: null,
+        sort_order: nextOrder,
+        allow_download: false,
+        open_mode: "iframe",
+      });
+      if (error) toast.error("Erro ao adicionar");
+      else {
+        toast.success("Texto adicionado!");
+        resetContentForm();
+        fetchTabContents(tabId);
+      }
+      return;
+    }
+
     if (!contentUrl.trim()) {
       toast.error(contentType === "youtube" ? "Informe a URL do vídeo" : "Informe a URL do link");
       return;
@@ -538,7 +566,7 @@ const AdminSections = () => {
     setEditContentTitle(c.title);
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
-    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
+    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video" | "text") || "link");
     setEditContentAllowDownload(!!(c as unknown as { allow_download?: boolean }).allow_download);
     setEditContentOpenMode(
       ((c as unknown as { open_mode?: string }).open_mode === "newtab" ? "newtab" : "iframe")
@@ -601,6 +629,14 @@ const AdminSections = () => {
         return;
       }
       // mantém URL atual
+    } else if (type === "text") {
+      if (!editContentDesc.trim()) {
+        toast.error("Escreva o texto do conteúdo");
+        return;
+      }
+      updates.url = null;
+      updates.youtube_id = null;
+      updates.description = editContentDesc.trim();
     } else {
       // Tipos baseados em URL (youtube/link)
       if (!editContentUrl.trim()) {
@@ -828,7 +864,7 @@ const AdminSections = () => {
                               />
                               <select
                                 value={editContentType}
-                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image" | "video")}
+                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image" | "video" | "text")}
                                 className="h-7 text-xs w-full bg-background border border-input rounded-md px-2"
                               >
                                 <option value="link">Link</option>
@@ -836,8 +872,13 @@ const AdminSections = () => {
                                 <option value="video">Vídeo MP4 (upload)</option>
                                 <option value="pdf">PDF</option>
                                 <option value="image">Imagem</option>
+                                <option value="text">Texto</option>
                               </select>
-                              {editContentType === "pdf" || editContentType === "image" || editContentType === "video" ? (
+                              {editContentType === "text" ? (
+                                <p className="text-[10px] text-muted-foreground">
+                                  Escreva o texto no campo "Texto" acima — ele será exibido no visualizador.
+                                </p>
+                              ) : editContentType === "pdf" || editContentType === "image" || editContentType === "video" ? (
                                 <div className="space-y-1">
                                   <input
                                     ref={editFileInputRef}
@@ -1048,8 +1089,9 @@ const AdminSections = () => {
                                     { type: "pdf" as const, icon: Upload, label: "PDF" },
                                     { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                     { type: "link" as const, icon: File, label: "Link" },
+                                  { type: "text" as const, icon: FileText, label: "Texto" },
                                   ]
-                                ).map(({ type, icon: Icon, label }) => (
+                                 ).map(({ type, icon: Icon, label }) => (
                                   <button
                                     key={type}
                                     onClick={() => setContentType(type)}
@@ -1072,11 +1114,11 @@ const AdminSections = () => {
                               <textarea
                                 value={contentDesc}
                                 onChange={(e) => setContentDesc(e.target.value)}
-                                placeholder="Texto (aparece abaixo do conteúdo)"
+                                placeholder={contentType === "text" ? "Escreva o texto que será exibido" : "Texto (aparece abaixo do conteúdo)"}
                                 rows={3}
                                 className="w-full text-xs bg-background border border-input rounded-md px-2 py-1.5 resize-y"
                               />
-                              {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
+                              {contentType === "text" ? null : contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                                 <input
                                   key={contentType}
                                   ref={fileInputRef}
@@ -1168,6 +1210,7 @@ const AdminSections = () => {
                                  { type: "pdf" as const, icon: Upload, label: "PDF" },
                                  { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                  { type: "link" as const, icon: File, label: "Link" },
+                                  { type: "text" as const, icon: FileText, label: "Texto" },
                                ]
                              ).map(({ type, icon: Icon, label }) => (
                               <button
@@ -1192,11 +1235,11 @@ const AdminSections = () => {
                           <textarea
                             value={contentDesc}
                             onChange={(e) => setContentDesc(e.target.value)}
-                            placeholder="Texto (aparece abaixo do conteúdo)"
+                            placeholder={contentType === "text" ? "Escreva o texto que será exibido" : "Texto (aparece abaixo do conteúdo)"}
                             rows={3}
                             className="w-full text-xs bg-background border border-input rounded-md px-2 py-1.5 resize-y"
                           />
-                           {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
+                           {contentType === "text" ? null : contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                             <input
                               key={contentType}
                               ref={fileInputRef}
