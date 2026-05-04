@@ -15,6 +15,8 @@ interface ContentViewerModalProps {
   youtubeId: string | null;
   /** Quando true, exibe o botão de baixar (apenas para PDF). */
   allowDownload?: boolean;
+  /** Texto descritivo exibido abaixo do conteúdo dentro do visualizador. */
+  description?: string | null;
   /** Disparado uma vez ao abrir um conteúdo válido (usado para marcar progresso). */
   onOpened?: () => void;
   /**
