@@ -151,7 +151,8 @@ type ChatMode = "chat" | "image" | "simulados";
 const ChatBot = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const askOnly = searchParams.get("mode") === "ask";
+  // Sempre modo "Pergunte IA" — aba "Vendedor IA" foi removida
+  const askOnly = true;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
