@@ -816,6 +816,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             </div>
           )}
         </div>
+        {description && description.trim() && (
+          <div className="shrink-0 max-h-[30%] overflow-y-auto px-4 py-3 border-t border-border bg-card text-sm text-foreground/90 whitespace-pre-wrap">
+            {description}
+          </div>
+        )}
       </DialogContent>
       {zoomImage && (
         <ImageZoomModal
