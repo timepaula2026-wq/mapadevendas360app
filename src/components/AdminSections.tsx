@@ -819,11 +819,12 @@ const AdminSections = () => {
                                 className="h-7 text-xs"
                                 autoFocus
                               />
-                              <Input
+                              <textarea
                                 value={editContentDesc}
                                 onChange={(e) => setEditContentDesc(e.target.value)}
-                                placeholder="Descrição (opcional)"
-                                className="h-7 text-xs"
+                                placeholder="Texto (aparece abaixo do conteúdo)"
+                                rows={3}
+                                className="w-full text-xs bg-background border border-input rounded-md px-2 py-1.5 resize-y"
                               />
                               <select
                                 value={editContentType}
