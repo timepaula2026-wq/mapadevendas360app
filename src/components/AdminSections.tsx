@@ -1091,7 +1091,7 @@ const AdminSections = () => {
                                   items={childrenOf(c.id).map((s) => s.id)}
                                   strategy={verticalListSortingStrategy}
                                 >
-                              {childrenOf(c.id).map((sub) => (
+                              {childrenOf(c.id).map((sub, subIdx, subArr) => (
                                 <Sortable key={sub.id} id={sub.id}>
                                 {(sh) => (
                                 <div className="flex items-center gap-2 px-2 py-1 bg-secondary/40 rounded">
@@ -1104,6 +1104,26 @@ const AdminSections = () => {
                                   >
                                     <GripVertical className="w-3 h-3" />
                                   </button>
+                                  <div className="flex flex-col -my-0.5 shrink-0">
+                                    <button
+                                      onClick={() => handleReorderChild(tab.id, c.id, subIdx, -1)}
+                                      disabled={subIdx === 0}
+                                      className="text-muted-foreground hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Mover para cima"
+                                      aria-label="Mover para cima"
+                                    >
+                                      <ArrowUp className="w-2.5 h-2.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleReorderChild(tab.id, c.id, subIdx, 1)}
+                                      disabled={subIdx === subArr.length - 1}
+                                      className="text-muted-foreground hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Mover para baixo"
+                                      aria-label="Mover para baixo"
+                                    >
+                                      <ArrowDown className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
                                   {sub.type === "youtube" ? (
                                     <Youtube className="w-3 h-3 text-red-500 shrink-0" />
                                   ) : sub.type === "pdf" ? (
