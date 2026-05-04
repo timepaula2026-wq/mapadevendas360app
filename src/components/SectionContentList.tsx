@@ -32,6 +32,15 @@ interface SectionContentListProps {
 
 type RowState = "done" | "current" | "locked" | "free";
 
+const ContentText = ({ text }: { text?: string | null }) => {
+  if (!text || !text.trim()) return null;
+  return (
+    <div className="px-4 py-3 mt-1 bg-card/60 border border-border rounded-xl text-sm text-foreground/90 whitespace-pre-wrap">
+      {text}
+    </div>
+  );
+};
+
 const ContentRow = ({
   c,
   onOpen,
@@ -310,7 +319,12 @@ const SectionContentList = ({
     const parentIdx = sequence.indexOf(c.id);
     const parentState = stateForSequence(sequence, parentIdx);
     if (kids.length === 0) {
-      return <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} />;
+      return (
+        <div key={c.id} className="space-y-1">
+          <ContentRow c={c} onOpen={handleOpenContent} state={parentState} />
+          <ContentText text={c.description} />
+        </div>
+      );
     }
     return (
       <div key={c.id} className="space-y-2">
@@ -331,12 +345,18 @@ const SectionContentList = ({
             )}
           </button>
         </div>
+        <ContentText text={c.description} />
         {isOpen && (
           <div className="ml-6 pl-3 border-l-2 border-primary/20 space-y-2">
             {kids.map((k) => {
               const kIdx = sequence.indexOf(k.id);
               const kState = stateForSequence(sequence, kIdx);
-              return <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} />;
+              return (
+                <div key={k.id} className="space-y-1">
+                  <ContentRow c={k} onOpen={handleOpenContent} state={kState} />
+                  <ContentText text={k.description} />
+                </div>
+              );
             })}
           </div>
         )}
