@@ -279,6 +279,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           const dur = typeof info?.duration === "number" ? info.duration : null;
           if (ct != null && dur && dur > 0) {
             updateProgress((ct / dur) * 100);
+            // Retoma de onde parou (uma vez por abertura)
+            if (!seekAppliedRef.current) {
+              seekAppliedRef.current = true;
+              const saved = savedAtOpenRef.current;
+              if (saved?.t && saved.t > 5 && (!saved.d || saved.t < saved.d - 5)) {
+                try {
+                  videoIframeRef.current?.contentWindow?.postMessage(
+                    JSON.stringify({ event: "command", func: "seekTo", args: [saved.t, true] }),
+                    "*"
+                  );
+                } catch {/* noop */}
+              }
+            }
+            // Salva posição (throttled)
+            saveThrottled({ t: ct, d: dur });
           }
           return;
         }
@@ -289,6 +304,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           if (data?.event === "playProgress" || data?.event === "timeupdate") {
             const pct = typeof data?.data?.percent === "number" ? data.data.percent * 100 : null;
             if (pct != null) updateProgress(pct);
+            const ct = typeof data?.data?.seconds === "number" ? data.data.seconds : null;
+            const dur = typeof data?.data?.duration === "number" ? data.data.duration : null;
+            if (ct != null && dur && dur > 0) {
+              if (!seekAppliedRef.current) {
+                seekAppliedRef.current = true;
+                const saved = savedAtOpenRef.current;
+                if (saved?.t && saved.t > 5 && (!saved.d || saved.t < saved.d - 5)) {
+                  try {
+                    videoIframeRef.current?.contentWindow?.postMessage(
+                      JSON.stringify({ method: "setCurrentTime", value: saved.t }),
+                      "*"
+                    );
+                  } catch {/* noop */}
+                }
+              }
+              saveThrottled({ t: ct, d: dur });
+            }
           }
           return;
         }
