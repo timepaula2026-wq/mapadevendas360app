@@ -136,8 +136,12 @@ const SectionContentList = ({
   sectionId,
   consultantName = "Consultor(a)",
   sectionLabel,
-  trilhaMode = false,
+  trilhaMode: trilhaModeProp = false,
 }: SectionContentListProps) => {
+  const { roles: _roles } = useUserRoles();
+  const isAdmin = _roles.includes("admin");
+  // Admins ignoram bloqueios sequenciais e podem visualizar tudo livremente.
+  const trilhaMode = isAdmin ? false : trilhaModeProp;
   const { contents, tabs, loading } = useSectionContents(sectionId);
   const [viewer, setViewer] = useState<{
     id: string;
