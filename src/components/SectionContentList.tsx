@@ -55,6 +55,7 @@ const ContentRow = ({
     youtubeId: string | null;
     allowDownload: boolean;
     openMode: "iframe" | "newtab";
+    description: string | null;
   }) => void;
   state?: RowState;
 }) => {
@@ -73,6 +74,7 @@ const ContentRow = ({
           youtubeId: c.youtube_id,
           allowDownload: !!c.allow_download,
           openMode: (c.open_mode === "newtab" ? "newtab" : "iframe"),
+          description: c.description,
         });
       }}
       disabled={isLocked}
@@ -157,6 +159,7 @@ const SectionContentList = ({
     url: string | null;
     youtubeId: string | null;
     allowDownload: boolean;
+    description: string | null;
   } | null>(null);
   const [openTab, setOpenTab] = useState<string | null>(null);
   const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
@@ -178,6 +181,7 @@ const SectionContentList = ({
     youtubeId: string | null;
     allowDownload: boolean;
     openMode: "iframe" | "newtab";
+    description: string | null;
   }) => {
     // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
     // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.
@@ -320,10 +324,7 @@ const SectionContentList = ({
     const parentState = stateForSequence(sequence, parentIdx);
     if (kids.length === 0) {
       return (
-        <div key={c.id} className="space-y-1">
-          <ContentRow c={c} onOpen={handleOpenContent} state={parentState} />
-          <ContentText text={c.description} />
-        </div>
+        <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} />
       );
     }
     return (
@@ -345,17 +346,13 @@ const SectionContentList = ({
             )}
           </button>
         </div>
-        <ContentText text={c.description} />
         {isOpen && (
           <div className="ml-6 pl-3 border-l-2 border-primary/20 space-y-2">
             {kids.map((k) => {
               const kIdx = sequence.indexOf(k.id);
               const kState = stateForSequence(sequence, kIdx);
               return (
-                <div key={k.id} className="space-y-1">
-                  <ContentRow c={k} onOpen={handleOpenContent} state={kState} />
-                  <ContentText text={k.description} />
-                </div>
+                <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} />
               );
             })}
           </div>
