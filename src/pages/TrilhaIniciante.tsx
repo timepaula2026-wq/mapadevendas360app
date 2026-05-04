@@ -11,9 +11,9 @@ import { useSectionsCounts } from "@/hooks/useSectionsCounts";
 import CertificateModal from "@/components/CertificateModal";
 import { useAuth } from "@/hooks/useAuth";
 
-type Section = { id: string; label: string };
+type Section = { id: string; label: string; route?: string | null };
 
-const DEFAULT_SECTIONS: Section[] = DEFAULT_GRID_SECTIONS.map((s) => ({ id: s.id, label: s.label }));
+const DEFAULT_SECTIONS: Section[] = DEFAULT_GRID_SECTIONS.map((s) => ({ id: s.id, label: s.label, route: s.route }));
 
 const TrilhaIniciante = () => {
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ const TrilhaIniciante = () => {
     const fetchOrder = async () => {
       const { data } = await supabase
         .from("icon_grid_order")
-        .select("id, sort_order, visible, custom_label, is_custom, allowed_roles")
+        .select("id, sort_order, visible, custom_label, is_custom, allowed_roles, route")
         .order("sort_order", { ascending: true });
 
       if (!data || data.length === 0) return;
@@ -73,7 +73,7 @@ const TrilhaIniciante = () => {
       const isAdmin = userRoles.includes("admin");
       const visible = (data as Array<{
         id: string; visible: boolean; custom_label?: string | null;
-        is_custom?: boolean | null; allowed_roles?: string[] | null;
+        is_custom?: boolean | null; allowed_roles?: string[] | null; route?: string | null;
       }>)
         .filter((d) => d.visible && (baseLabels[d.id] || d.is_custom))
         .filter((d) => {
@@ -84,6 +84,7 @@ const TrilhaIniciante = () => {
         .map((d) => ({
           id: d.id,
           label: d.custom_label || baseLabels[d.id] || d.id,
+          route: d.route ?? null,
         }));
 
       if (visible.length > 0) {
@@ -219,6 +220,12 @@ const TrilhaIniciante = () => {
                   key={s.id}
                   onClick={() => {
                     if (locked) return;
+                    // Se a seção tem rota própria diferente de /trilha,
+                    // navega para ela em vez de tentar carregar conteúdos.
+                    if (s.route && !s.route.startsWith("/trilha")) {
+                      navigate(s.route);
+                      return;
+                    }
                     setActiveSection(s.id);
                   }}
                   disabled={locked}
