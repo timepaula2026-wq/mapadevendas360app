@@ -963,6 +963,26 @@ const AdminSections = () => {
                           >
                             <GripVertical className="w-3.5 h-3.5" />
                           </button>
+                          <div className="flex flex-col -my-0.5 shrink-0">
+                            <button
+                              onClick={() => handleReorderContent(tab.id, idx, -1)}
+                              disabled={idx === 0}
+                              className="text-muted-foreground hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Mover para cima"
+                              aria-label="Mover para cima"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleReorderContent(tab.id, idx, 1)}
+                              disabled={idx === parents.length - 1}
+                              className="text-muted-foreground hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Mover para baixo"
+                              aria-label="Mover para baixo"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
                           {c.type === "youtube" ? (
                             <Youtube className="w-3 h-3 text-red-500 shrink-0" />
                           ) : c.type === "pdf" ? (
