@@ -151,8 +151,10 @@ type ChatMode = "chat" | "image" | "simulados";
 const ChatBot = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  // Sempre modo "Pergunte IA" — aba "Vendedor IA" foi removida
-  const askOnly = true;
+  // Página unificada "IA do Consórcio" com abas internas: Pergunte IA / Vendedor IA
+  const askOnly = false;
+  const initialTab = (searchParams.get("mode") === "ask" ? "ask" : "sell") as "ask" | "sell";
+  const [iaTab, setIaTab] = useState<"ask" | "sell">(initialTab);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -375,12 +377,12 @@ const ChatBot = () => {
           </div>
           <div>
             <h1 className="text-sm font-bold text-foreground">
-              {scenario ? `🎬 ${scenario.title}` : askOnly ? "Pergunte IA" : "Vendedor IA"}
+              {scenario ? `🎬 ${scenario.title}` : "IA do Consórcio"}
             </h1>
             <p className="text-[10px] text-muted-foreground">
               {scenario ? "Simulado em andamento — fale ou digite" :
-                mode === "chat" ? (askOnly ? "Tire dúvidas sobre Ademicon e o app" : "Tire dúvidas sobre Ademicon e o app") :
-                mode === "image" ? "Gere criativos de vendas" : "Treine vendas em cenários reais"}
+                iaTab === "ask" ? "Pergunte IA — tire dúvidas sobre Ademicon e o app" :
+                "Vendedor IA — treine vendas em cenários reais"}
             </p>
           </div>
         </div>
