@@ -15,6 +15,8 @@ interface ContentViewerModalProps {
   youtubeId: string | null;
   /** Quando true, exibe o botão de baixar (apenas para PDF). */
   allowDownload?: boolean;
+  /** Texto descritivo exibido abaixo do conteúdo dentro do visualizador. */
+  description?: string | null;
   /** Disparado uma vez ao abrir um conteúdo válido (usado para marcar progresso). */
   onOpened?: () => void;
   /**
@@ -84,7 +86,7 @@ const getVideoEmbed = (
   return { embedUrl: null, isVideo: false, provider: "unknown" };
 };
 
-const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, onOpened, onCompleted }: ContentViewerModalProps) => {
+const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, description, onOpened, onCompleted }: ContentViewerModalProps) => {
   const { isAdmin } = useIsAdmin();
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
@@ -814,6 +816,11 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             </div>
           )}
         </div>
+        {description && description.trim() && (
+          <div className="shrink-0 max-h-[30%] overflow-y-auto px-4 py-3 border-t border-border bg-card text-sm text-foreground/90 whitespace-pre-wrap">
+            {description}
+          </div>
+        )}
       </DialogContent>
       {zoomImage && (
         <ImageZoomModal
