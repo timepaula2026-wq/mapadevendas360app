@@ -509,9 +509,9 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl w-[95vw] h-[85vh] p-0 gap-0 flex flex-col overflow-hidden">
+      <DialogContent className="max-w-4xl w-[100vw] sm:w-[95vw] h-[100dvh] sm:h-[90vh] max-h-[100dvh] sm:max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden rounded-none sm:rounded-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-card shrink-0">
           <button
             onClick={onClose}
             className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-secondary/60 mr-3 shrink-0"
@@ -647,7 +647,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
         {/* Content */}
         <div
-          className="flex-1 min-h-0 bg-muted select-none"
+          className="flex-1 min-h-0 bg-muted select-none overflow-hidden"
           onContextMenu={(e) => e.preventDefault()}
         >
           {!url && !youtubeId ? (
@@ -937,8 +937,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           )}
         </div>
         {description && description.trim() && (
-          <div className="shrink-0 max-h-[30%] overflow-y-auto px-4 py-3 border-t border-border bg-card text-sm text-foreground/90 whitespace-pre-wrap">
-            {description}
+          <div className="shrink-0 max-h-[35%] sm:max-h-[30%] overflow-y-auto border-t border-border bg-card">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-[15px] leading-relaxed text-foreground/90 whitespace-pre-wrap max-w-3xl mx-auto">
+              {description}
+            </div>
           </div>
         )}
       </DialogContent>
