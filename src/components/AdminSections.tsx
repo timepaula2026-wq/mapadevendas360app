@@ -864,7 +864,7 @@ const AdminSections = () => {
                               />
                               <select
                                 value={editContentType}
-                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image" | "video")}
+                                onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image" | "video" | "text")}
                                 className="h-7 text-xs w-full bg-background border border-input rounded-md px-2"
                               >
                                 <option value="link">Link</option>
@@ -872,8 +872,13 @@ const AdminSections = () => {
                                 <option value="video">Vídeo MP4 (upload)</option>
                                 <option value="pdf">PDF</option>
                                 <option value="image">Imagem</option>
+                                <option value="text">Texto</option>
                               </select>
-                              {editContentType === "pdf" || editContentType === "image" || editContentType === "video" ? (
+                              {editContentType === "text" ? (
+                                <p className="text-[10px] text-muted-foreground">
+                                  Escreva o texto no campo "Texto" acima — ele será exibido no visualizador.
+                                </p>
+                              ) : editContentType === "pdf" || editContentType === "image" || editContentType === "video" ? (
                                 <div className="space-y-1">
                                   <input
                                     ref={editFileInputRef}
