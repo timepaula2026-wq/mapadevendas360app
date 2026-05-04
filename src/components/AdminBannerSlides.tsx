@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Image, Youtube, ExternalLink, ArrowRight, Loader2, Upload } from "lucide-react";
+import { Plus, Trash2, Image, Youtube, ExternalLink, ArrowRight, Loader2, Upload, Film } from "lucide-react";
 import { toast } from "sonner";
 
 interface BannerSlide {
@@ -43,12 +43,15 @@ const AdminBannerSlides = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   // Form state
-  const [type, setType] = useState<"image" | "video">("image");
+  const [type, setType] = useState<"image" | "video" | "mp4">("image");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<globalThis.File | null>(null);
+  const [videoFile, setVideoFile] = useState<globalThis.File | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [linkType, setLinkType] = useState<"none" | "internal" | "external">("none");
   const [linkUrl, setLinkUrl] = useState("");
@@ -75,6 +78,7 @@ const AdminBannerSlides = () => {
   const handleSave = async () => {
     setSaving(true);
     let finalImageUrl: string | null = null;
+    let finalVideoUrl: string | null = null;
 
     // Upload image file if present
     if (type === "image" && imageFile) {
@@ -95,15 +99,34 @@ const AdminBannerSlides = () => {
       setUploading(false);
     }
 
+    // Upload mp4 video file if present
+    if (type === "mp4" && videoFile) {
+      setUploading(true);
+      const ext = videoFile.name.split(".").pop() || "mp4";
+      const filePath = `video-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("banner-images")
+        .upload(filePath, videoFile, { contentType: videoFile.type || "video/mp4" });
+      if (uploadError) {
+        toast.error("Erro ao fazer upload: " + uploadError.message);
+        setSaving(false);
+        setUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("banner-images").getPublicUrl(filePath);
+      finalVideoUrl = urlData.publicUrl;
+      setUploading(false);
+    }
+
     const ytId = type === "video" ? extractYoutubeId(youtubeUrl) : null;
 
     const { error } = await supabase.from("banner_slides").insert({
       title: title.trim() || null,
       description: description.trim() || null,
-      type,
+      type: type === "mp4" ? "mp4" : type,
       image_url: finalImageUrl,
       youtube_id: ytId,
-      video_url: type === "video" ? youtubeUrl.trim() : null,
+      video_url: type === "video" ? youtubeUrl.trim() : type === "mp4" ? finalVideoUrl : null,
       link_type: linkType,
       link_url: linkType !== "none" ? linkUrl.trim() : null,
       sort_order: slides.length,
@@ -137,10 +160,13 @@ const AdminBannerSlides = () => {
     setDescription("");
     setImageFile(null);
     setImagePreview(null);
+    setVideoFile(null);
+    setVideoPreview(null);
     setYoutubeUrl("");
     setLinkType("none");
     setLinkUrl("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (videoFileInputRef.current) videoFileInputRef.current.value = "";
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,6 +174,19 @@ const AdminBannerSlides = () => {
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Limite 50MB para evitar uploads gigantes
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error("O vídeo deve ter no máximo 50MB");
+        return;
+      }
+      setVideoFile(file);
+      setVideoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -166,10 +205,10 @@ const AdminBannerSlides = () => {
           <h3 className="font-semibold text-sm text-foreground">Novo Slide do Carrossel</h3>
 
           {/* Type */}
-          <div className="flex gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setType("image")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
                 type === "image" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
               }`}
             >
@@ -177,11 +216,19 @@ const AdminBannerSlides = () => {
             </button>
             <button
               onClick={() => setType("video")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
                 type === "video" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
               }`}
             >
-              <Youtube className="w-4 h-4" /> Vídeo
+              <Youtube className="w-4 h-4" /> YouTube
+            </button>
+            <button
+              onClick={() => setType("mp4")}
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                type === "mp4" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+              }`}
+            >
+              <Film className="w-4 h-4" /> MP4
             </button>
           </div>
 
@@ -218,8 +265,31 @@ const AdminBannerSlides = () => {
                 onChange={handleFileChange}
               />
             </div>
-          ) : (
+          ) : type === "video" ? (
             <Input value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="URL do YouTube" className="h-9 text-sm" />
+          ) : (
+            <div className="space-y-2">
+              <div
+                onClick={() => videoFileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary/50 transition-colors"
+              >
+                {videoPreview ? (
+                  <video src={videoPreview} className="w-full h-24 object-cover rounded-lg" muted />
+                ) : (
+                  <>
+                    <Film className="w-6 h-6 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Clique para selecionar um vídeo MP4 (máx 50MB)</p>
+                  </>
+                )}
+              </div>
+              <input
+                ref={videoFileInputRef}
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                className="hidden"
+                onChange={handleVideoFileChange}
+              />
+            </div>
           )}
 
           {/* Link type */}
@@ -262,7 +332,7 @@ const AdminBannerSlides = () => {
           )}
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving || uploading || (type === "image" && !imageFile) || (type === "video" && !youtubeUrl.trim())} className="flex-1">
+            <Button onClick={handleSave} disabled={saving || uploading || (type === "image" && !imageFile) || (type === "video" && !youtubeUrl.trim()) || (type === "mp4" && !videoFile)} className="flex-1">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar"}
             </Button>
             <Button variant="outline" onClick={resetForm}>Cancelar</Button>
@@ -280,6 +350,8 @@ const AdminBannerSlides = () => {
                 <img src={slide.image_url} alt="" className="w-full h-full object-cover" />
               ) : slide.youtube_id ? (
                 <img src={`https://img.youtube.com/vi/${slide.youtube_id}/default.jpg`} alt="" className="w-full h-full object-cover" />
+              ) : slide.type === "mp4" && slide.video_url ? (
+                <video src={slide.video_url} className="w-full h-full object-cover" muted />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <Image className="w-4 h-4 text-muted-foreground" />
@@ -288,10 +360,12 @@ const AdminBannerSlides = () => {
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{slide.title || (slide.type === "video" ? "Vídeo" : "Imagem")}</p>
+              <p className="text-sm font-medium text-foreground truncate">{slide.title || (slide.type === "video" ? "YouTube" : slide.type === "mp4" ? "Vídeo MP4" : "Imagem")}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 {slide.type === "video" ? (
                   <Youtube className="w-3 h-3 text-destructive" />
+                ) : slide.type === "mp4" ? (
+                  <Film className="w-3 h-3 text-primary" />
                 ) : (
                   <Image className="w-3 h-3 text-primary" />
                 )}

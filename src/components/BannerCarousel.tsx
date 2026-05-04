@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Play, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, ZoomIn, Volume2, VolumeX } from "lucide-react";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import VideoZoomModal from "@/components/VideoZoomModal";
 
@@ -28,6 +28,7 @@ const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [zoomImage, setZoomImage] = useState<{ src: string; title?: string | null; description?: string | null } | null>(null);
   const [videoMeta, setVideoMeta] = useState<{ title?: string | null; description?: string | null } | null>(null);
+  const [muted, setMuted] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,19 +43,28 @@ const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
     fetchSlides();
   }, []);
 
-  // Auto-advance only when not playing video
+  const currentSlide = slides[current];
+  const isMp4Current = currentSlide?.type === "mp4" && !!currentSlide?.video_url;
+
+  // Auto-advance only when not playing video and current isn't an mp4
   useEffect(() => {
-    if (slides.length <= 1 || playingVideo) return;
+    if (slides.length <= 1 || playingVideo || isMp4Current) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [slides.length, playingVideo]);
+  }, [slides.length, playingVideo, isMp4Current]);
 
   const handleClick = useCallback((slide: BannerSlide) => {
     if (slide.type === "video" && slide.youtube_id) {
       setPlayingVideo(slide.youtube_id);
       setVideoMeta({ title: slide.title, description: slide.description });
+      return;
+    }
+    if (slide.type === "mp4") {
+      // mp4 plays inline; click follows configured link if any
+      if (slide.link_type === "internal" && slide.link_url) navigate(slide.link_url);
+      else if (slide.link_type === "external" && slide.link_url) window.open(slide.link_url, "_blank");
       return;
     }
     if (slide.link_type === "internal" && slide.link_url) {
@@ -120,6 +130,27 @@ const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
                   <Play className="w-6 h-6 text-foreground fill-current ml-0.5" />
                 </div>
               </div>
+            </div>
+          ) : slide.type === "mp4" && slide.video_url ? (
+            <div className="w-full h-full relative">
+              <video
+                src={slide.video_url}
+                className="w-full h-full object-contain"
+                autoPlay={i === current}
+                loop
+                muted={muted}
+                playsInline
+                preload="metadata"
+              />
+              {i === current && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
+                  aria-label={muted ? "Ativar som" : "Silenciar"}
+                  className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70"
+                >
+                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </button>
+              )}
             </div>
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/80 to-amber-700/80" />
