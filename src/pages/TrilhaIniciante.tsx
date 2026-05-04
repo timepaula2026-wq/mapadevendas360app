@@ -202,9 +202,9 @@ const TrilhaIniciante = () => {
           <AgendaOnlineBlock />
         </div>
 
-        {/* Seletor de seção (chips horizontais) */}
-        <div className="-mx-5 px-5 mb-4 overflow-x-auto scrollbar-none">
-          <div className="flex gap-2 pb-1">
+        {/* Seletor de seção (chips - quebram em várias linhas para mostrar todas) */}
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2 pb-1">
             {sections.map((s) => {
               const locked = isSectionLocked(s.id);
               const done = isSectionDone(s.id);
