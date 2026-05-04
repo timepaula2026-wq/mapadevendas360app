@@ -125,9 +125,53 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     completedRef.current = true;
     setCompletedFlag(true);
     setProgress(100);
+    // Conteúdo concluído: limpa progresso salvo para que uma próxima
+    // abertura comece do zero (e não tente "retomar" do final).
+    clearSaved();
     onCompleted?.();
   };
   const requiresWatch = type === "youtube" || type === "video" || type === "pdf";
+
+  // ===== Persistência de progresso (retomar de onde parou) =====
+  const progressKey =
+    (url || youtubeId)
+      ? `cvm:progress:${type}:${youtubeId || url}`
+      : null;
+  type SavedProgress = { t?: number; d?: number; p?: number; ts?: number };
+  const readSaved = (): SavedProgress | null => {
+    if (!progressKey) return null;
+    try {
+      const raw = localStorage.getItem(progressKey);
+      return raw ? (JSON.parse(raw) as SavedProgress) : null;
+    } catch {
+      return null;
+    }
+  };
+  const writeSaved = (data: SavedProgress) => {
+    if (!progressKey) return;
+    try {
+      localStorage.setItem(progressKey, JSON.stringify({ ...data, ts: Date.now() }));
+    } catch {
+      /* noop */
+    }
+  };
+  const clearSaved = () => {
+    if (!progressKey) return;
+    try {
+      localStorage.removeItem(progressKey);
+    } catch {
+      /* noop */
+    }
+  };
+  const lastWriteRef = useRef(0);
+  const saveThrottled = (data: SavedProgress) => {
+    const now = Date.now();
+    if (now - lastWriteRef.current < 3000) return;
+    lastWriteRef.current = now;
+    writeSaved(data);
+  };
+  const savedAtOpenRef = useRef<SavedProgress | null>(null);
+  const seekAppliedRef = useRef(false);
 
   // Reset de progresso a cada abertura
   useEffect(() => {
@@ -135,7 +179,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       completedRef.current = false;
       setCompletedFlag(false);
       setProgress(0);
+      seekAppliedRef.current = false;
+      lastWriteRef.current = 0;
+      const saved = readSaved();
+      savedAtOpenRef.current = saved;
+      if (saved?.t && saved.d && saved.d > 0) {
+        const pct = Math.round((saved.t / saved.d) * 100);
+        setProgress(Math.min(99, Math.max(0, pct)));
+      } else if (typeof saved?.p === "number") {
+        setProgress(Math.min(99, Math.max(0, Math.round(saved.p))));
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, url, type]);
 
   const PDF_MIN_ZOOM = 1;
