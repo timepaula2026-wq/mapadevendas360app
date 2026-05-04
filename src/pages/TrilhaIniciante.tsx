@@ -198,11 +198,13 @@ const TrilhaIniciante = () => {
       </div>
 
       <div className="px-5 mt-6">
-        {/* Agenda Online no topo */}
-        <div className="mb-4">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>
-          <AgendaOnlineBlock />
-        </div>
+        {/* Agenda Online — só aparece quando a seção "agenda" estiver ativa */}
+        {activeSection === "agenda" && (
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>
+            <AgendaOnlineBlock />
+          </div>
+        )}
 
         {/* Seletor de seção (chips - quebram em várias linhas para mostrar todas) */}
         <div className="mb-4">
