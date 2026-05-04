@@ -566,7 +566,7 @@ const AdminSections = () => {
     setEditContentTitle(c.title);
     setEditContentDesc(c.description || "");
     setEditContentUrl(c.url || "");
-    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video") || "link");
+    setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video" | "text") || "link");
     setEditContentAllowDownload(!!(c as unknown as { allow_download?: boolean }).allow_download);
     setEditContentOpenMode(
       ((c as unknown as { open_mode?: string }).open_mode === "newtab" ? "newtab" : "iframe")
@@ -629,6 +629,14 @@ const AdminSections = () => {
         return;
       }
       // mantém URL atual
+    } else if (type === "text") {
+      if (!editContentDesc.trim()) {
+        toast.error("Escreva o texto do conteúdo");
+        return;
+      }
+      updates.url = null;
+      updates.youtube_id = null;
+      updates.description = editContentDesc.trim();
     } else {
       // Tipos baseados em URL (youtube/link)
       if (!editContentUrl.trim()) {
