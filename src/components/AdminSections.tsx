@@ -1235,11 +1235,11 @@ const AdminSections = () => {
                           <textarea
                             value={contentDesc}
                             onChange={(e) => setContentDesc(e.target.value)}
-                            placeholder="Texto (aparece abaixo do conteúdo)"
+                            placeholder={contentType === "text" ? "Escreva o texto que será exibido" : "Texto (aparece abaixo do conteúdo)"}
                             rows={3}
                             className="w-full text-xs bg-background border border-input rounded-md px-2 py-1.5 resize-y"
                           />
-                           {contentType === "pdf" || contentType === "image" || contentType === "video" ? (
+                           {contentType === "text" ? null : contentType === "pdf" || contentType === "image" || contentType === "video" ? (
                             <input
                               key={contentType}
                               ref={fileInputRef}
