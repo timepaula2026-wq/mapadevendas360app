@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Play, ZoomIn, Volume2, VolumeX } from "lucide-react";
@@ -29,6 +29,8 @@ const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
   const [zoomImage, setZoomImage] = useState<{ src: string; title?: string | null; description?: string | null } | null>(null);
   const [videoMeta, setVideoMeta] = useState<{ title?: string | null; description?: string | null } | null>(null);
   const [muted, setMuted] = useState(true);
+  const [needsManualPlay, setNeedsManualPlay] = useState<string | null>(null);
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +56,39 @@ const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
     }, 5000);
     return () => clearInterval(interval);
   }, [slides.length, playingVideo, isMp4Current]);
+
+  useEffect(() => {
+    Object.entries(videoRefs.current).forEach(([slideId, video]) => {
+      if (!video) return;
+      if (slideId !== currentSlide?.id) {
+        video.pause();
+        video.currentTime = 0;
+      }
+    });
+
+    if (!isMp4Current || !currentSlide?.id) {
+      setNeedsManualPlay(null);
+      return;
+    }
+
+    const video = videoRefs.current[currentSlide.id];
+    if (!video) return;
+
+    video.muted = muted;
+    video.playsInline = true;
+    video.play()
+      .then(() => setNeedsManualPlay(null))
+      .catch(() => setNeedsManualPlay(currentSlide.id));
+  }, [current, currentSlide?.id, isMp4Current, muted]);
+
+  const playCurrentMp4 = useCallback((slideId: string) => {
+    const video = videoRefs.current[slideId];
+    if (!video) return;
+    video.muted = muted;
+    video.play()
+      .then(() => setNeedsManualPlay(null))
+      .catch(() => setNeedsManualPlay(slideId));
+  }, [muted]);
 
   const handleClick = useCallback((slide: BannerSlide) => {
     if (slide.type === "video" && slide.youtube_id) {
@@ -134,14 +169,26 @@ const BannerCarousel = ({ square = false }: BannerCarouselProps) => {
           ) : slide.type === "mp4" && slide.video_url ? (
             <div className="w-full h-full relative">
               <video
+                ref={(node) => { videoRefs.current[slide.id] = node; }}
                 src={slide.video_url}
                 className="w-full h-full object-contain"
                 autoPlay={i === current}
                 loop
                 muted={muted}
                 playsInline
-                preload="metadata"
+                preload="auto"
               />
+              {needsManualPlay === slide.id && i === current && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); playCurrentMp4(slide.id); }}
+                  aria-label="Reproduzir vídeo"
+                  className="absolute inset-0 z-10 flex items-center justify-center bg-black/30"
+                >
+                  <span className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                    <Play className="w-7 h-7 text-foreground fill-current ml-1" />
+                  </span>
+                </button>
+              )}
               {i === current && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
