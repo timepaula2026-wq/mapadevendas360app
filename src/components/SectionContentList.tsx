@@ -18,6 +18,7 @@ import { useSectionContents, type SectionContent } from "@/hooks/useSectionConte
 import ContentViewerModal from "@/components/ContentViewerModal";
 import CertificateModal from "@/components/CertificateModal";
 import { useTrilhaProgress } from "@/hooks/useTrilhaProgress";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface SectionContentListProps {
   sectionId: string;
