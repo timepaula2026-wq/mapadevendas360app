@@ -344,6 +344,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }
     const ratio = (el.scrollTop + el.clientHeight) / el.scrollHeight;
     updateProgress(ratio * 100);
+    saveThrottled({ p: ratio * 100 });
     if (ratio >= 0.95) fireCompleted();
   };
   // Quando o PDF carrega e cabe inteiro sem scroll, considera concluído.
@@ -353,6 +354,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     if (!el) return;
     const t = window.setTimeout(() => {
       if (el.scrollHeight <= el.clientHeight + 4) fireCompleted();
+      // Retoma scroll do PDF salvo
+      const saved = savedAtOpenRef.current;
+      if (!seekAppliedRef.current && typeof saved?.p === "number" && saved.p > 1 && saved.p < 95) {
+        seekAppliedRef.current = true;
+        const target = (saved.p / 100) * el.scrollHeight - el.clientHeight / 2;
+        el.scrollTop = Math.max(0, target);
+      }
     }, 400);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
