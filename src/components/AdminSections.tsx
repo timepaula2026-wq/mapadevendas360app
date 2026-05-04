@@ -1089,6 +1089,7 @@ const AdminSections = () => {
                                     { type: "pdf" as const, icon: Upload, label: "PDF" },
                                     { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                     { type: "link" as const, icon: File, label: "Link" },
+                                  { type: "text" as const, icon: FileText, label: "Texto" },
                                   ]
                                  ).map(({ type, icon: Icon, label }) => (
                                   <button
@@ -1209,6 +1210,7 @@ const AdminSections = () => {
                                  { type: "pdf" as const, icon: Upload, label: "PDF" },
                                  { type: "image" as const, icon: ImageIcon, label: "Imagem" },
                                  { type: "link" as const, icon: File, label: "Link" },
+                                  { type: "text" as const, icon: FileText, label: "Texto" },
                                ]
                              ).map(({ type, icon: Icon, label }) => (
                               <button
