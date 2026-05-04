@@ -519,6 +519,7 @@ const SectionContentList = ({
           url={viewer.url}
           youtubeId={viewer.youtubeId}
           allowDownload={viewer.allowDownload}
+          description={viewer.description}
           onCompleted={
             trilhaMode ? () => markCompleted(viewer.id, sectionId) : undefined
           }
