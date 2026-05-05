@@ -90,20 +90,24 @@ const getVideoEmbed = (
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, description, onOpened, onCompleted }: ContentViewerModalProps) => {
   const { isAdmin } = useIsAdmin();
   // Resolve private training-files URLs into short-lived signed URLs.
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(url);
+  // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
+  // value, to avoid an infinite re-sign loop.
+  const originalUrl = url;
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(originalUrl);
   useEffect(() => {
     let active = true;
-    if (!open || !url) {
-      setResolvedUrl(url);
+    if (!open || !originalUrl) {
+      setResolvedUrl(originalUrl);
       return;
     }
-    resolveTrainingUrl(url).then((u) => {
+    setResolvedUrl(originalUrl);
+    resolveTrainingUrl(originalUrl).then((u) => {
       if (active) setResolvedUrl(u);
     });
     return () => {
       active = false;
     };
-  }, [open, url]);
+  }, [open, originalUrl]);
   // Use the resolved URL throughout the rest of the component.
   url = resolvedUrl;
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
