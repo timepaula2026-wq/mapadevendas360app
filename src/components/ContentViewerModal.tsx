@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
+import { resolveTrainingUrl } from "@/lib/storageUrl";
 
 interface ContentViewerModalProps {
   open: boolean;
@@ -88,6 +89,23 @@ const getVideoEmbed = (
 
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, description, onOpened, onCompleted }: ContentViewerModalProps) => {
   const { isAdmin } = useIsAdmin();
+  // Resolve private training-files URLs into short-lived signed URLs.
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(url);
+  useEffect(() => {
+    let active = true;
+    if (!open || !url) {
+      setResolvedUrl(url);
+      return;
+    }
+    resolveTrainingUrl(url).then((u) => {
+      if (active) setResolvedUrl(u);
+    });
+    return () => {
+      active = false;
+    };
+  }, [open, url]);
+  // Use the resolved URL throughout the rest of the component.
+  url = resolvedUrl;
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
   // "video"   = arquivo MP4/WebM hospedado direto (player nativo).
   const isLinkVideo = type === "youtube";
