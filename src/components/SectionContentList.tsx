@@ -177,6 +177,26 @@ const SectionContentList = ({
   const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
   const { completed, markCompleted, issueCertificate, hasCertificate } = useTrilhaProgress();
 
+  useEffect(() => {
+    setOpenTab(null);
+    setOpenParents({});
+  }, [sectionId]);
+
+  useEffect(() => {
+    if (loading || openTab || tabs.length === 0) return;
+
+    const firstAvailable = tabs.find((_, tabIdx) => {
+      if (!trilhaMode || tabIdx === 0) return true;
+      for (let i = 0; i < tabIdx; i++) {
+        const prevIds = contents.filter((c) => c.tab_id === tabs[i].id).map((c) => c.id);
+        if (prevIds.length > 0 && !prevIds.every((id) => completed.has(id))) return false;
+      }
+      return true;
+    });
+
+    if (firstAvailable) setOpenTab(firstAvailable.id);
+  }, [loading, openTab, tabs, contents, completed, trilhaMode]);
+
   // Sinaliza globalmente quando o visualizador está aberto, para que outros
   // componentes (ex.: certificado global da Trilha) possam aguardar.
   useEffect(() => {

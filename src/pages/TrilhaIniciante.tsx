@@ -17,7 +17,7 @@ const DEFAULT_SECTIONS: Section[] = DEFAULT_GRID_SECTIONS.map((s) => ({ id: s.id
 
 const TrilhaIniciante = () => {
   const navigate = useNavigate();
-  const { roles: userRoles } = useUserRoles();
+  const { roles: userRoles, loading: rolesLoading } = useUserRoles();
   const isAdmin = userRoles.includes("admin");
   const { user } = useAuth();
   const [sections, setSections] = useState<Section[]>(DEFAULT_SECTIONS);
@@ -62,6 +62,8 @@ const TrilhaIniciante = () => {
   }, [user?.id]);
 
   useEffect(() => {
+    if (rolesLoading) return;
+
     const fetchOrder = async () => {
       const { data } = await supabase
         .from("icon_grid_order")
@@ -77,6 +79,7 @@ const TrilhaIniciante = () => {
       }>)
         .filter((d) => d.visible && (baseLabels[d.id] || d.is_custom))
         .filter((d) => {
+          if (d.id === "trilha") return true;
           const allowed = d.allowed_roles || [];
           if (allowed.length === 0 || isAdmin) return true;
           return userRoles.some((r) => allowed.includes(r));
@@ -87,10 +90,15 @@ const TrilhaIniciante = () => {
           route: d.route ?? null,
         }));
 
+      if (!visible.find((s) => s.id === "trilha")) {
+        visible.unshift({ id: "trilha", label: baseLabels.trilha || "Trilha do Iniciante", route: "/trilha" });
+      }
+
       if (visible.length > 0) {
         setSections(visible);
         // Mantém "trilha" como ativo se estiver visível; senão usa o primeiro disponível.
         setActiveSection((curr) => {
+          if (curr === "trilha" && visible.find((s) => s.id === "trilha")) return "trilha";
           if (visible.find((s) => s.id === curr)) return curr;
           if (visible.find((s) => s.id === "trilha")) return "trilha";
           return visible[0].id;
@@ -99,7 +107,7 @@ const TrilhaIniciante = () => {
     };
     fetchOrder();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userRoles.join(",")]);
+  }, [rolesLoading, userRoles.join(",")]);
 
   // Conta concluídos por seção (a partir do Set global de progresso e dos
   // contents.section_id já buscados via useSectionsCounts? — para isso
