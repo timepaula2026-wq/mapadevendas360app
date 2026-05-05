@@ -185,7 +185,7 @@ const SectionContentList = ({
     );
   }, [viewer]);
 
-  const handleOpenContent = (v: {
+  const handleOpenContent = async (v: {
     id: string;
     title: string;
     type: string;
@@ -198,10 +198,11 @@ const SectionContentList = ({
     // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
     // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.
     if (v.openMode === "newtab" && v.url) {
-      const win = window.open(v.url, "_blank", "noopener,noreferrer");
+      const target = (await resolveTrainingUrl(v.url)) || v.url;
+      const win = window.open(target, "_blank", "noopener,noreferrer");
       if (!win) {
         // Pop-up bloqueado: navega na própria janela como fallback
-        window.location.href = v.url;
+        window.location.href = target;
       }
       // Marca progresso da Trilha mesmo abrindo em nova aba
       if (trilhaMode) markCompleted(v.id, sectionId);
