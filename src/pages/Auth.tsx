@@ -75,27 +75,11 @@ const Auth = () => {
     return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
   };
 
-  const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
-
   const validateConsultor = async (cpfToCheck: string): Promise<{ allowed: boolean; message: string; nome?: string | null } | null> => {
     const cleanCpf = cpfToCheck.replace(/\D/g, "");
     if (cleanCpf.length !== 11) {
       return { allowed: false, message: "CPF inválido. Informe os 11 dígitos." };
     }
-    const cacheKey = `consultor_validation_cpf_${cleanCpf}`;
-
-    // Check local cache
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL_MS) {
-          console.log("Usando validação em cache para CPF.");
-          return data as { allowed: boolean; message: string; nome?: string | null };
-        }
-        localStorage.removeItem(cacheKey);
-      }
-    } catch { /* ignore parse errors */ }
 
     try {
       const { data, error } = await supabase.functions.invoke("validate-consultor", {
@@ -106,11 +90,6 @@ const Auth = () => {
         toast({ title: "Erro de validação", description: "Não foi possível validar seu cadastro. Tente novamente.", variant: "destructive" });
         return null;
       }
-
-      // Cache the result
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
-      } catch { /* ignore storage errors */ }
 
       return data as { allowed: boolean; message: string; nome?: string | null };
     } catch (err) {
