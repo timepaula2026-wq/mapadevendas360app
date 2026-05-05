@@ -43,6 +43,12 @@ const ContentText = ({ text }: { text?: string | null }) => {
   );
 };
 
+const ThumbImage = ({ url }: { url: string }) => {
+  const signed = useSignedUrl(url);
+  if (!signed) return <ImageIcon className="w-5 h-5 text-emerald-500" />;
+  return <img src={signed} alt="" className="w-full h-full object-cover" />;
+};
+
 const ContentRow = ({
   c,
   onOpen,
