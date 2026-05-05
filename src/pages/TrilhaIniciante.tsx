@@ -79,6 +79,7 @@ const TrilhaIniciante = () => {
       }>)
         .filter((d) => d.visible && (baseLabels[d.id] || d.is_custom))
         .filter((d) => {
+          if (d.id === "trilha") return true;
           const allowed = d.allowed_roles || [];
           if (allowed.length === 0 || isAdmin) return true;
           return userRoles.some((r) => allowed.includes(r));
@@ -88,6 +89,10 @@ const TrilhaIniciante = () => {
           label: d.custom_label || baseLabels[d.id] || d.id,
           route: d.route ?? null,
         }));
+
+      if (!visible.find((s) => s.id === "trilha")) {
+        visible.unshift({ id: "trilha", label: baseLabels.trilha || "Trilha do Iniciante", route: "/trilha" });
+      }
 
       if (visible.length > 0) {
         setSections(visible);
