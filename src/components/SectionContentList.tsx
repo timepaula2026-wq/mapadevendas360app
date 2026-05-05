@@ -19,6 +19,8 @@ import ContentViewerModal from "@/components/ContentViewerModal";
 import CertificateModal from "@/components/CertificateModal";
 import { useTrilhaProgress } from "@/hooks/useTrilhaProgress";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { useSignedUrl } from "@/hooks/useSignedUrl";
+import { resolveTrainingUrl } from "@/lib/storageUrl";
 
 interface SectionContentListProps {
   sectionId: string;
@@ -112,7 +114,7 @@ const ContentRow = ({
           <FileText className="w-5 h-5 text-blue-500" />
         ) : c.type === "image" ? (
           c.url ? (
-            <img src={c.url} alt="" className="w-full h-full object-cover" />
+            <ThumbImage url={c.url} />
           ) : (
             <ImageIcon className="w-5 h-5 text-emerald-500" />
           )
