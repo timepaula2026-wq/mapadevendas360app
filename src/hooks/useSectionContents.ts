@@ -14,6 +14,7 @@ export interface SectionContent {
   parent_id: string | null;
   allow_download?: boolean | null;
   open_mode?: "iframe" | "newtab" | null;
+  allow_user_upload?: boolean | null;
 }
 
 export interface SectionTab {
