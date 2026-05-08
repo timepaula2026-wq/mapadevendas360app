@@ -81,6 +81,7 @@ interface SectionContent {
   sort_order: number | null;
   allow_download?: boolean | null;
   open_mode?: "iframe" | "newtab" | null;
+  allow_user_upload?: boolean | null;
 }
 
 interface SectionTab {
@@ -113,6 +114,7 @@ const AdminSections = () => {
   const [editContentUrl, setEditContentUrl] = useState("");
   const [editContentType, setEditContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video" | "text">("link");
   const [editContentAllowDownload, setEditContentAllowDownload] = useState(false);
+  const [editContentAllowUserUpload, setEditContentAllowUserUpload] = useState(false);
   const [editContentOpenMode, setEditContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editUploading, setEditUploading] = useState(false);
@@ -125,6 +127,7 @@ const AdminSections = () => {
   const [contentType, setContentType] = useState<"youtube" | "pdf" | "link" | "image" | "video" | "text">("youtube");
   const [contentUrl, setContentUrl] = useState("");
   const [contentAllowDownload, setContentAllowDownload] = useState(false);
+  const [contentAllowUserUpload, setContentAllowUserUpload] = useState(false);
   const [contentOpenMode, setContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -250,6 +253,7 @@ const AdminSections = () => {
     setContentUrl("");
     setContentType("youtube");
     setContentAllowDownload(false);
+    setContentAllowUserUpload(false);
     setContentOpenMode("iframe");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -306,6 +310,7 @@ const AdminSections = () => {
       url: urlData.publicUrl,
       sort_order: nextOrder,
       allow_download: resolvedType === "pdf" ? contentAllowDownload : false,
+      allow_user_upload: contentAllowUserUpload,
       open_mode: "iframe",
     });
 
@@ -361,6 +366,7 @@ const AdminSections = () => {
         url: null,
         sort_order: nextOrder,
         allow_download: false,
+        allow_user_upload: contentAllowUserUpload,
         open_mode: "iframe",
       });
       if (error) toast.error("Erro ao adicionar");
@@ -390,6 +396,7 @@ const AdminSections = () => {
       youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
       sort_order: nextOrder,
       allow_download: false,
+      allow_user_upload: contentAllowUserUpload,
       open_mode: contentType === "link" || contentType === "youtube" ? contentOpenMode : "iframe",
     });
 
@@ -622,6 +629,7 @@ const AdminSections = () => {
     setEditContentUrl(c.url || "");
     setEditContentType((c.type as "youtube" | "pdf" | "link" | "image" | "video" | "text") || "link");
     setEditContentAllowDownload(!!(c as unknown as { allow_download?: boolean }).allow_download);
+    setEditContentAllowUserUpload(!!(c as unknown as { allow_user_upload?: boolean }).allow_user_upload);
     setEditContentOpenMode(
       ((c as unknown as { open_mode?: string }).open_mode === "newtab" ? "newtab" : "iframe")
     );
@@ -638,6 +646,7 @@ const AdminSections = () => {
       description: editContentDesc.trim() || null,
       type,
       allow_download: type === "pdf" ? editContentAllowDownload : false,
+      allow_user_upload: editContentAllowUserUpload,
       open_mode: type === "link" || type === "youtube" ? editContentOpenMode : "iframe",
     };
     // Se trocou para PDF/Imagem e selecionou arquivo, faz upload
@@ -971,6 +980,15 @@ const AdminSections = () => {
                                   Permitir download deste PDF
                                 </label>
                               )}
+                              <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={editContentAllowUserUpload}
+                                  onChange={(e) => setEditContentAllowUserUpload(e.target.checked)}
+                                  className="h-3 w-3 accent-primary"
+                                />
+                                Permitir que o consultor envie um arquivo neste conteúdo
+                              </label>
                               {(editContentType === "link" || editContentType === "youtube") && (
                                 <div className="space-y-1">
                                   <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
@@ -1245,6 +1263,15 @@ const AdminSections = () => {
                                   Permitir download
                                 </label>
                               )}
+                              <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={contentAllowUserUpload}
+                                  onChange={(e) => setContentAllowUserUpload(e.target.checked)}
+                                  className="h-3 w-3 accent-primary"
+                                />
+                                Permitir que o consultor envie um arquivo
+                              </label>
                               {(contentType === "link" || contentType === "youtube") && (
                                 <div className="space-y-1">
                                   <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
@@ -1370,6 +1397,15 @@ const AdminSections = () => {
                               Permitir que usuários baixem este PDF
                             </label>
                           )}
+                          <label className="flex items-center gap-2 text-[11px] text-foreground cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={contentAllowUserUpload}
+                              onChange={(e) => setContentAllowUserUpload(e.target.checked)}
+                              className="h-3.5 w-3.5 accent-primary"
+                            />
+                            Permitir que o consultor envie um arquivo neste conteúdo
+                          </label>
                           {(contentType === "link" || contentType === "youtube") && (
                             <div className="space-y-1">
                               <label className="text-[11px] text-muted-foreground">Modo de abertura</label>

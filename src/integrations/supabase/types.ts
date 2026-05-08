@@ -682,6 +682,7 @@ export type Database = {
       section_contents: {
         Row: {
           allow_download: boolean
+          allow_user_upload: boolean
           created_at: string
           description: string | null
           id: string
@@ -698,6 +699,7 @@ export type Database = {
         }
         Insert: {
           allow_download?: boolean
+          allow_user_upload?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -714,6 +716,7 @@ export type Database = {
         }
         Update: {
           allow_download?: boolean
+          allow_user_upload?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -861,6 +864,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_content_uploads: {
+        Row: {
+          content_id: string
+          created_at: string
+          file_name: string | null
+          file_url: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          file_name?: string | null
+          file_url: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_content_uploads_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "section_contents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

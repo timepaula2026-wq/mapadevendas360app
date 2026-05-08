@@ -62,6 +62,7 @@ const ContentRow = ({
     url: string | null;
     youtubeId: string | null;
     allowDownload: boolean;
+    allowUserUpload: boolean;
     openMode: "iframe" | "newtab";
     description: string | null;
   }) => void;
@@ -81,6 +82,7 @@ const ContentRow = ({
           url: c.url,
           youtubeId: c.youtube_id,
           allowDownload: !!c.allow_download,
+          allowUserUpload: !!c.allow_user_upload,
           openMode: (c.open_mode === "newtab" ? "newtab" : "iframe"),
           description: c.description,
         });
@@ -171,6 +173,7 @@ const SectionContentList = ({
     url: string | null;
     youtubeId: string | null;
     allowDownload: boolean;
+    allowUserUpload: boolean;
     description: string | null;
   } | null>(null);
   const [openTab, setOpenTab] = useState<string | null>(null);
@@ -212,6 +215,7 @@ const SectionContentList = ({
     url: string | null;
     youtubeId: string | null;
     allowDownload: boolean;
+    allowUserUpload: boolean;
     openMode: "iframe" | "newtab";
     description: string | null;
   }) => {
@@ -558,6 +562,8 @@ const SectionContentList = ({
           url={viewer.url}
           youtubeId={viewer.youtubeId}
           allowDownload={viewer.allowDownload}
+          allowUserUpload={viewer.allowUserUpload}
+          contentId={viewer.id}
           description={viewer.description}
           onCompleted={
             trilhaMode ? () => markCompleted(viewer.id, sectionId) : undefined
