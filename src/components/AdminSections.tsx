@@ -980,6 +980,15 @@ const AdminSections = () => {
                                   Permitir download deste PDF
                                 </label>
                               )}
+                              <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={editContentAllowUserUpload}
+                                  onChange={(e) => setEditContentAllowUserUpload(e.target.checked)}
+                                  className="h-3 w-3 accent-primary"
+                                />
+                                Permitir que o consultor envie um arquivo neste conteúdo
+                              </label>
                               {(editContentType === "link" || editContentType === "youtube") && (
                                 <div className="space-y-1">
                                   <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
