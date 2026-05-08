@@ -6,6 +6,7 @@ import ImageZoomModal from "@/components/ImageZoomModal";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
 import { resolveTrainingUrl } from "@/lib/storageUrl";
+import UserContentUpload from "@/components/UserContentUpload";
 
 interface ContentViewerModalProps {
   open: boolean;
@@ -16,6 +17,10 @@ interface ContentViewerModalProps {
   youtubeId: string | null;
   /** Quando true, exibe o botão de baixar (apenas para PDF). */
   allowDownload?: boolean;
+  /** Quando true, exibe área para o consultor enviar seu próprio arquivo. */
+  allowUserUpload?: boolean;
+  /** Id do conteúdo (necessário se allowUserUpload). */
+  contentId?: string;
   /** Texto descritivo exibido abaixo do conteúdo dentro do visualizador. */
   description?: string | null;
   /** Disparado uma vez ao abrir um conteúdo válido (usado para marcar progresso). */
@@ -87,7 +92,7 @@ const getVideoEmbed = (
   return { embedUrl: null, isVideo: false, provider: "unknown" };
 };
 
-const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, description, onOpened, onCompleted }: ContentViewerModalProps) => {
+const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, allowUserUpload = false, contentId, description, onOpened, onCompleted }: ContentViewerModalProps) => {
   const { isAdmin } = useIsAdmin();
   // Resolve private training-files URLs into short-lived signed URLs.
   // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
