@@ -1263,6 +1263,15 @@ const AdminSections = () => {
                                   Permitir download
                                 </label>
                               )}
+                              <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={contentAllowUserUpload}
+                                  onChange={(e) => setContentAllowUserUpload(e.target.checked)}
+                                  className="h-3 w-3 accent-primary"
+                                />
+                                Permitir que o consultor envie um arquivo
+                              </label>
                               {(contentType === "link" || contentType === "youtube") && (
                                 <div className="space-y-1">
                                   <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
@@ -1388,6 +1397,15 @@ const AdminSections = () => {
                               Permitir que usuários baixem este PDF
                             </label>
                           )}
+                          <label className="flex items-center gap-2 text-[11px] text-foreground cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={contentAllowUserUpload}
+                              onChange={(e) => setContentAllowUserUpload(e.target.checked)}
+                              className="h-3.5 w-3.5 accent-primary"
+                            />
+                            Permitir que o consultor envie um arquivo neste conteúdo
+                          </label>
                           {(contentType === "link" || contentType === "youtube") && (
                             <div className="space-y-1">
                               <label className="text-[11px] text-muted-foreground">Modo de abertura</label>
