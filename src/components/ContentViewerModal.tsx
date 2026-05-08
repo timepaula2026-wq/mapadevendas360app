@@ -970,6 +970,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             </div>
           </div>
         )}
+        {allowUserUpload && contentId && (
+          <div className="shrink-0 max-h-[40%] overflow-y-auto border-t border-border bg-background">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 max-w-3xl mx-auto">
+              <UserContentUpload contentId={contentId} />
+            </div>
+          </div>
+        )}
       </DialogContent>
       {zoomImage && (
         <ImageZoomModal
