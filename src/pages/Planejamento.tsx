@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ArrowLeft, Printer, Calendar, CalendarDays, Phone, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Printer, Calendar, CalendarDays, Phone, ClipboardCheck, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import PlanejamentoStatus from "@/components/PlanejamentoStatus";
 
 const DAYS = ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
 const HOURS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
@@ -46,12 +47,18 @@ const Planejamento = () => {
 
       <div className="px-4 mt-5 print:px-0 print:mt-0">
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full mb-4 print:hidden">
+          <TabsList className="grid grid-cols-5 w-full mb-4 print:hidden">
+            <TabsTrigger value="status" className="text-[11px] gap-1"><TrendingUp className="w-3.5 h-3.5" />Status</TabsTrigger>
             <TabsTrigger value="mensal" className="text-[11px] gap-1"><Calendar className="w-3.5 h-3.5" />Mensal</TabsTrigger>
             <TabsTrigger value="semanal" className="text-[11px] gap-1"><CalendarDays className="w-3.5 h-3.5" />Semanal</TabsTrigger>
             <TabsTrigger value="prospec" className="text-[11px] gap-1"><Phone className="w-3.5 h-3.5" />Prospecção</TabsTrigger>
             <TabsTrigger value="ficha" className="text-[11px] gap-1"><ClipboardCheck className="w-3.5 h-3.5" />Ficha</TabsTrigger>
           </TabsList>
+
+          {/* === STATUS & METAS === */}
+          <TabsContent value="status">
+            <PlanejamentoStatus />
+          </TabsContent>
 
           {/* === MENSAL === */}
           <TabsContent value="mensal" className="print:block">
