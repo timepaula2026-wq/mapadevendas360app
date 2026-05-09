@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Youtube,
   FileText,
@@ -179,14 +179,19 @@ const SectionContentList = ({
   const [openTab, setOpenTab] = useState<string | null>(null);
   const [openParents, setOpenParents] = useState<Record<string, boolean>>({});
   const { completed, markCompleted, issueCertificate, hasCertificate } = useTrilhaProgress();
+  // Garante que o auto-abrir da primeira aba aconteça apenas uma vez por seção,
+  // para que o usuário consiga recolher a aba sem que ela reabra sozinha.
+  const didAutoOpenRef = useRef<string | null>(null);
 
   useEffect(() => {
     setOpenTab(null);
     setOpenParents({});
+    didAutoOpenRef.current = null;
   }, [sectionId]);
 
   useEffect(() => {
-    if (loading || openTab || tabs.length === 0) return;
+    if (loading || tabs.length === 0) return;
+    if (didAutoOpenRef.current === sectionId) return;
 
     const firstAvailable = tabs.find((_, tabIdx) => {
       if (!trilhaMode || tabIdx === 0) return true;
@@ -197,8 +202,11 @@ const SectionContentList = ({
       return true;
     });
 
-    if (firstAvailable) setOpenTab(firstAvailable.id);
-  }, [loading, openTab, tabs, contents, completed, trilhaMode]);
+    if (firstAvailable) {
+      setOpenTab(firstAvailable.id);
+      didAutoOpenRef.current = sectionId;
+    }
+  }, [loading, tabs, contents, completed, trilhaMode, sectionId]);
 
   // Sinaliza globalmente quando o visualizador está aberto, para que outros
   // componentes (ex.: certificado global da Trilha) possam aguardar.
