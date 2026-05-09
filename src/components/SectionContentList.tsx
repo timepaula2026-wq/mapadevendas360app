@@ -525,7 +525,7 @@ const SectionContentList = ({
                               return next;
                             })
                           }
-                          disabled={parentsWithKids.every((p) => !openParents[p.id])}
+                          disabled={false}
                           className="text-[11px] flex items-center gap-1 px-2 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/60 disabled:opacity-40 disabled:hover:bg-transparent"
                           title="Recolher todos os sub-conteúdos"
                         >
