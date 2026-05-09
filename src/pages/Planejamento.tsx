@@ -3,6 +3,7 @@ import { ArrowLeft, Printer, Calendar, CalendarDays, Phone, ClipboardCheck, Tren
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanejamentoStatus from "@/components/PlanejamentoStatus";
+import PlanejamentoAutoSave from "@/components/PlanejamentoAutoSave";
 
 const DAYS = ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
 const HOURS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
@@ -62,7 +63,7 @@ const Planejamento = () => {
 
           {/* === MENSAL === */}
           <TabsContent value="mensal" className="print:block">
-            <FormCard title="PLANEJAMENTO MENSAL">
+            <PlanejamentoAutoSave formKey="mensal"><FormCard title="PLANEJAMENTO MENSAL">
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <Field label="NOME" />
                 <Field label="MÊS" />
@@ -93,12 +94,12 @@ const Planejamento = () => {
                 <BlockField label="QUAL É O SEU OBJETIVO?" />
                 <BlockField label="FECHAMENTO MÊS" />
               </div>
-            </FormCard>
+            </FormCard></PlanejamentoAutoSave>
           </TabsContent>
 
           {/* === SEMANAL === */}
           <TabsContent value="semanal" className="print:block">
-            <FormCard title="PLANEJAMENTO SEMANAL">
+            <PlanejamentoAutoSave formKey="semanal"><FormCard title="PLANEJAMENTO SEMANAL">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                 <Field label="NOME" />
                 <Field label="PROSPECÇÃO" />
@@ -161,12 +162,12 @@ const Planejamento = () => {
                 <BlockField label="FATO | CAUSA" />
                 <BlockField label="AÇÃO" />
               </div>
-            </FormCard>
+            </FormCard></PlanejamentoAutoSave>
           </TabsContent>
 
           {/* === PROSPECÇÃO === */}
           <TabsContent value="prospec" className="print:block">
-            <FormCard title="CONTROLE PROSPECÇÃO">
+            <PlanejamentoAutoSave formKey="prospec"><FormCard title="CONTROLE PROSPECÇÃO">
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <Field label="DIA" />
               </div>
@@ -242,12 +243,12 @@ const Planejamento = () => {
                 <BlockField label="RESUMO DO DIA" />
                 <BlockField label="O QUE EU POSSO FAZER A MAIS OU DIFERENTE?" />
               </div>
-            </FormCard>
+            </FormCard></PlanejamentoAutoSave>
           </TabsContent>
 
           {/* === FICHA === */}
           <TabsContent value="ficha" className="print:block">
-            <FormCard title="Ficha de Avaliação — Primeira Semana de Trabalho">
+            <PlanejamentoAutoSave formKey="ficha"><FormCard title="Ficha de Avaliação — Primeira Semana de Trabalho">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <Field label="Nome" />
                 <Field label="Unidade" />
@@ -261,7 +262,7 @@ const Planejamento = () => {
                 <Field label="Qual é a sua meta salarial para os próximos 3 meses? (R$)" />
                 <BlockField label="Há algo que gostaria de sugerir ou compartilhar com a liderança?" />
               </div>
-            </FormCard>
+            </FormCard></PlanejamentoAutoSave>
           </TabsContent>
         </Tabs>
       </div>
