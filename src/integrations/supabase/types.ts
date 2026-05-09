@@ -473,6 +473,63 @@ export type Database = {
         }
         Relationships: []
       }
+      planejamento_entries: {
+        Row: {
+          created_at: string
+          id: string
+          meta_atendimentos: number
+          meta_faturamento: number
+          meta_prospec: number
+          meta_vendas_lar: number
+          meta_vendas_motors: number
+          observacoes: string | null
+          realizado_atendimentos: number
+          realizado_faturamento: number
+          realizado_prospec: number
+          realizado_vendas_lar: number
+          realizado_vendas_motors: number
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meta_atendimentos?: number
+          meta_faturamento?: number
+          meta_prospec?: number
+          meta_vendas_lar?: number
+          meta_vendas_motors?: number
+          observacoes?: string | null
+          realizado_atendimentos?: number
+          realizado_faturamento?: number
+          realizado_prospec?: number
+          realizado_vendas_lar?: number
+          realizado_vendas_motors?: number
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meta_atendimentos?: number
+          meta_faturamento?: number
+          meta_prospec?: number
+          meta_vendas_lar?: number
+          meta_vendas_motors?: number
+          observacoes?: string | null
+          realizado_atendimentos?: number
+          realizado_faturamento?: number
+          realizado_prospec?: number
+          realizado_vendas_lar?: number
+          realizado_vendas_motors?: number
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           active: boolean | null
