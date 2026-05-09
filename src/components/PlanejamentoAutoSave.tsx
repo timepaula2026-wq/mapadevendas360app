@@ -52,9 +52,10 @@ const PlanejamentoAutoSave = ({
           .eq("user_id", user.id)
           .eq("form_key", formKey)
           .maybeSingle();
-        if (active && data?.data) {
-          localStorage.setItem(storageKey, JSON.stringify(data.data));
-          applyData(data.data);
+        const row = data as { data?: unknown } | null;
+        if (active && row?.data) {
+          localStorage.setItem(storageKey, JSON.stringify(row.data));
+          applyData(row.data);
         }
       }
       if (active) setStatus("saved");
