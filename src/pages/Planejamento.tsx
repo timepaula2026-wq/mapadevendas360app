@@ -22,7 +22,7 @@ const cellCls =
 
 const Planejamento = () => {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("mensal");
+  const [tab, setTab] = useState("status");
 
   return (
     <div className="min-h-screen bg-background pb-24 print:bg-white print:pb-0">
