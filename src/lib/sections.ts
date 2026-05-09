@@ -15,7 +15,7 @@ export const DEFAULT_GRID_SECTIONS = [
   { id: "paula", label: "Fale com a Paula", iconName: "MessageCircleHeart", route: "/fale-com-paula" },
   { id: "comissao", label: "Comissão", iconName: "DollarSign", route: "/vendas?calc=1" },
   { id: "lideres", label: "Escola de Líderes", iconName: "School", route: "/lideres" },
-  { id: "planejamento", label: "Planejamento", iconName: "ClipboardList", route: "/planejamento" },
+  { id: "planejamento", label: "Planejamento", iconName: "Clipboard", route: "/planejamento" },
 ] as const;
 
 export const DEFAULT_SECTION_LABELS = Object.fromEntries(
