@@ -5,21 +5,133 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 
-const tabelas: Record<string, number[]> = {
-  linear_23: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544, 0.3],
-  linear_20: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544],
-  imoveis_1024: [0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.209],
-  imoveis_50: [0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1113],
+type PlanoInfo = {
+  label: string;
+  segmento: string;
+  parcelas: number[]; // percentuais por mês
 };
 
-const planoLabels: Record<string, string> = {
-  linear_23: "Linear/Reduzido - 2.3%",
-  linear_20: "Linear/Reduzido - 2.0%",
-  imoveis_1024: "Plano 100% (G. 1024) - 2.3%",
-  imoveis_50: "Plano 50% (Imóveis) - 2.0%",
+// Tabela 2025 — % de comissão por mês sobre o valor da carta
+const planos: Record<string, PlanoInfo> = {
+  // VEÍCULOS
+  vei_lin_20: {
+    segmento: "Veículos",
+    label: "Linear e Reduzido (Grupos até 1621) — 2%",
+    parcelas: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544],
+  },
+  vei_lin_23: {
+    segmento: "Veículos",
+    label: "Linear e Reduzido (Grupos acima 1622) — 2,3%",
+    parcelas: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544, 0.3],
+  },
+  // SERVIÇOS
+  serv_lin_23: {
+    segmento: "Serviços",
+    label: "Linear e Reduzido — 2,3%",
+    parcelas: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544, 0.3],
+  },
+  // IMÓVEIS — Grupos 530 a 790
+  imo530_50: {
+    segmento: "Imóveis (Grupos 530 a 790)",
+    label: "Plano 50% — 2%",
+    parcelas: [0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1113],
+  },
+  imo530_70: {
+    segmento: "Imóveis (Grupos 530 a 790)",
+    label: "Plano 70% — 2%",
+    parcelas: [0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1538, 0.1544],
+  },
+  imo530_100: {
+    segmento: "Imóveis (Grupos 530 a 790)",
+    label: "Plano 100% — 2%",
+    parcelas: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+  },
+  imo530_100_tx_vista: {
+    segmento: "Imóveis (Grupos 530 a 790)",
+    label: "Plano 100% c/ 1% Tx. Adm. à vista — 2%",
+    parcelas: [1.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+  },
+  // IMÓVEIS — Grupo 800 em diante
+  imo800_100_1024: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 100% (1024) — 2,3%",
+    parcelas: [0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.2091, 0.209],
+  },
+  imo800_85_1025: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 85% (1025) — 2,3%",
+    parcelas: [0.1917, 0.1917, 0.1917, 0.1917, 0.1917, 0.1917, 0.1917, 0.1917, 0.1917, 0.1917, 0.1917, 0.1913],
+  },
+  imo800_70_1026: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 70% (1026) — 2,3%",
+    parcelas: [0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1769, 0.1772],
+  },
+  imo800_50_1027: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 50% (1027) — 2,3%",
+    parcelas: [0.1288, 0.1288, 0.1288, 0.1288, 0.1288, 0.1288, 0.1288, 0.1288, 0.1288, 0.1288, 0.2374, 0.2374, 0.2372, 0.3],
+  },
+  imo800_100_tx_vista_1037: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 100% c/ 1% Tx. Adm. à vista (1037) — 2,3%",
+    parcelas: [1.13, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13],
+  },
+  imo800_85_tx_vista_1038: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 85% c/ 1% Tx. Adm. à vista (1038) — 2,3%",
+    parcelas: [1.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.118],
+  },
+  imo800_70_tx_vista_1039: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 70% c/ 1% Tx. Adm. à vista (1039) — 2,3%",
+    parcelas: [1.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+  },
+  imo800_100_tx4x_1040: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 100% c/ 1% Tx. Adm. parcelada 4x (1040) — 2,3%",
+    parcelas: [0.38, 0.38, 0.38, 0.38, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13],
+  },
+  imo800_85_tx4x_1041: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 85% c/ 1% Tx. Adm. parcelada 4x (1041) — 2,3%",
+    parcelas: [0.3682, 0.3682, 0.3682, 0.3682, 0.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.1182, 0.118],
+  },
+  imo800_70_tx4x_1042: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 70% c/ 1% Tx. Adm. parcelada 4x (1042) — 2,3%",
+    parcelas: [0.35, 0.35, 0.35, 0.35, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+  },
+  imo800_70_tx4x_1047: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 70% c/ 1% Tx. Adm. parcelada 4x (1047) — 2,3%",
+    parcelas: [0.3429, 0.3429, 0.3429, 0.3429, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0923],
+  },
+  imo800_100_tx4x_1043: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 100% c/ 2% Tx. Adm. parcelada 4x (1043) — 2,3%",
+    parcelas: [0.53, 0.53, 0.53, 0.53, 0.03, 0.03, 0.03, 0.03, 0.03, 0.03],
+  },
+  imo800_85_tx4x_1044: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 85% c/ 2% Tx. Adm. parcelada 4x (1044) — 2,3%",
+    parcelas: [0.5273, 0.5273, 0.5273, 0.5273, 0.0273, 0.0273, 0.0273, 0.0273, 0.0273, 0.0273, 0.027],
+  },
+  imo800_70_tx4x_1045: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 70% c/ 2% Tx. Adm. parcelada 4x (1045) — 2,3%",
+    parcelas: [0.5231, 0.5231, 0.5231, 0.5231, 0.0231, 0.0231, 0.0231, 0.0231, 0.0231, 0.0231, 0.0231, 0.0231, 0.0228],
+  },
+  imo800_50_tx4x_1046: {
+    segmento: "Imóveis (Grupo 800 em diante)",
+    label: "Plano 50% c/ 2% Tx. Adm. parcelada 4x (1046) — 2,3%",
+    parcelas: [1.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0929, 0.0923],
+  },
 };
+
+const segmentos = Array.from(new Set(Object.values(planos).map((p) => p.segmento)));
 
 function formatarEntrada(value: string): string {
   const v = value.replace(/\D/g, "");
@@ -43,13 +155,13 @@ interface Parcela {
 
 const CalculadoraComissao = () => {
   const [valorInput, setValorInput] = useState("");
-  const [plano, setPlano] = useState("linear_23");
+  const [plano, setPlano] = useState<string>("vei_lin_23");
   const [resultado, setResultado] = useState<{ parcelas: Parcela[]; totalBruto: number; totalLiq: number; imposto: number } | null>(null);
 
   const calcular = () => {
     const valorCarta = limparValor(valorInput);
     if (isNaN(valorCarta) || valorCarta <= 0) return;
-    const parcPerc = tabelas[plano];
+    const parcPerc = planos[plano].parcelas;
     let totalBruto = 0;
     const parcelas: Parcela[] = parcPerc.map((p, i) => {
       const bruto = valorCarta * (p / 100);
@@ -64,7 +176,7 @@ const CalculadoraComissao = () => {
   const gerarTexto = () => {
     if (!resultado) return "";
     let texto = `📊 Calculadora de Comissão\n`;
-    texto += `Plano: ${planoLabels[plano]}\nValor da Carta: R$ ${valorInput}\n\n`;
+    texto += `Plano: ${planos[plano].label}\nValor da Carta: R$ ${valorInput}\n\n`;
     texto += `Comissão Bruta: R$ ${fmt(resultado.totalBruto)}\n`;
     texto += `Impostos (2%): - R$ ${fmt(resultado.imposto)}\n`;
     texto += `Líquido: R$ ${fmt(resultado.totalLiq)}\n\n`;
@@ -94,7 +206,7 @@ const CalculadoraComissao = () => {
       .dest{color:#d9534f;font-weight:bold}
     </style></head><body>
       <h2>Calculadora de Comissão</h2>
-      <p><b>Plano:</b> ${planoLabels[plano]}<br><b>Valor da Carta:</b> R$ ${valorInput}</p>
+      <p><b>Plano:</b> ${planos[plano].label}<br><b>Valor da Carta:</b> R$ ${valorInput}</p>
       <p><b>Comissão Bruta:</b> R$ ${fmt(resultado.totalBruto)}</p>
       <p class="dest">Impostos (2%): - R$ ${fmt(resultado.imposto)}</p>
       <p><b>Recebimento Líquido: R$ ${fmt(resultado.totalLiq)}</b></p>
@@ -124,9 +236,16 @@ const CalculadoraComissao = () => {
             <Label>Plano de Vendas (Tabela 2025)</Label>
             <Select value={plano} onValueChange={setPlano}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {Object.entries(planoLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
+              <SelectContent className="max-h-[60vh]">
+                {segmentos.map((seg) => (
+                  <SelectGroup key={seg}>
+                    <SelectLabel>{seg}</SelectLabel>
+                    {Object.entries(planos)
+                      .filter(([, p]) => p.segmento === seg)
+                      .map(([key, p]) => (
+                        <SelectItem key={key} value={key}>{p.label}</SelectItem>
+                      ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
