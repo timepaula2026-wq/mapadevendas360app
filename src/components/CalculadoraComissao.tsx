@@ -155,13 +155,13 @@ interface Parcela {
 
 const CalculadoraComissao = () => {
   const [valorInput, setValorInput] = useState("");
-  const [plano, setPlano] = useState("linear_23");
+  const [plano, setPlano] = useState<string>("vei_lin_23");
   const [resultado, setResultado] = useState<{ parcelas: Parcela[]; totalBruto: number; totalLiq: number; imposto: number } | null>(null);
 
   const calcular = () => {
     const valorCarta = limparValor(valorInput);
     if (isNaN(valorCarta) || valorCarta <= 0) return;
-    const parcPerc = tabelas[plano];
+    const parcPerc = planos[plano].parcelas;
     let totalBruto = 0;
     const parcelas: Parcela[] = parcPerc.map((p, i) => {
       const bruto = valorCarta * (p / 100);
@@ -176,7 +176,7 @@ const CalculadoraComissao = () => {
   const gerarTexto = () => {
     if (!resultado) return "";
     let texto = `📊 Calculadora de Comissão\n`;
-    texto += `Plano: ${planoLabels[plano]}\nValor da Carta: R$ ${valorInput}\n\n`;
+    texto += `Plano: ${planos[plano].label}\nValor da Carta: R$ ${valorInput}\n\n`;
     texto += `Comissão Bruta: R$ ${fmt(resultado.totalBruto)}\n`;
     texto += `Impostos (2%): - R$ ${fmt(resultado.imposto)}\n`;
     texto += `Líquido: R$ ${fmt(resultado.totalLiq)}\n\n`;
@@ -206,7 +206,7 @@ const CalculadoraComissao = () => {
       .dest{color:#d9534f;font-weight:bold}
     </style></head><body>
       <h2>Calculadora de Comissão</h2>
-      <p><b>Plano:</b> ${planoLabels[plano]}<br><b>Valor da Carta:</b> R$ ${valorInput}</p>
+      <p><b>Plano:</b> ${planos[plano].label}<br><b>Valor da Carta:</b> R$ ${valorInput}</p>
       <p><b>Comissão Bruta:</b> R$ ${fmt(resultado.totalBruto)}</p>
       <p class="dest">Impostos (2%): - R$ ${fmt(resultado.imposto)}</p>
       <p><b>Recebimento Líquido: R$ ${fmt(resultado.totalLiq)}</b></p>
@@ -236,9 +236,16 @@ const CalculadoraComissao = () => {
             <Label>Plano de Vendas (Tabela 2025)</Label>
             <Select value={plano} onValueChange={setPlano}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {Object.entries(planoLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
+              <SelectContent className="max-h-[60vh]">
+                {segmentos.map((seg) => (
+                  <SelectGroup key={seg}>
+                    <SelectLabel>{seg}</SelectLabel>
+                    {Object.entries(planos)
+                      .filter(([, p]) => p.segmento === seg)
+                      .map(([key, p]) => (
+                        <SelectItem key={key} value={key}>{p.label}</SelectItem>
+                      ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
