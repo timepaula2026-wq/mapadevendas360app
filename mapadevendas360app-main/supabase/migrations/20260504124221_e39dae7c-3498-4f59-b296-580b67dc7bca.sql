@@ -1,0 +1,2 @@
+ALTER TABLE public.banner_slides DROP CONSTRAINT IF EXISTS banner_slides_type_check;
+ALTER TABLE public.banner_slides ADD CONSTRAINT banner_slides_type_check CHECK (type = ANY (ARRAY['image'::text, 'video'::text, 'mp4'::text]));

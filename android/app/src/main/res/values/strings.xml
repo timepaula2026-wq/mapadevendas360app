@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mapa de Vendas</string>
+    <string name="title_activity_main">Mapa de Vendas</string>
+    <string name="package_name">br.com.app.gpu3094775.gpu05ac06cd3fbdc01af91f2f233804c71d</string>
+    <string name="custom_url_scheme">br.com.app.gpu3094775.gpu05ac06cd3fbdc01af91f2f233804c71d</string>
+</resources>

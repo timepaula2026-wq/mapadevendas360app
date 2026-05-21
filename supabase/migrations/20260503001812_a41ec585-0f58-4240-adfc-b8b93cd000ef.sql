@@ -1,0 +1,1 @@
+UPDATE public.icon_grid_order SET route = '/chatbot?mode=ask' WHERE id = 'plano';
