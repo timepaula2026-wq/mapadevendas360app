@@ -8,6 +8,8 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: br.com.mapadevendas.app3094775
+        provisioning_profile: MapaDeVendas_AppStore
+        certificate: MapaVendasDistribution
       node: 22
       xcode: latest
     scripts:
@@ -17,39 +19,13 @@ workflows:
         script: npm run build
       - name: Sync Capacitor
         script: npx cap sync ios
-      - name: Create export options
+      - name: Set code signing
+        script: xcode-project use-profiles
+      - name: Build IPA
         script: |
-          cat > /Users/builder/export_options.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>D9TPA6A7AH</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-          </dict>
-          </plist>
-          EOF
-      - name: Archive app
-        script: |
-          xcodebuild \
-            -project ios/App/App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive \
-            -allowProvisioningUpdates \
-            archive
-      - name: Export IPA
-        script: |
-          xcodebuild \
-            -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportOptionsPlist /Users/builder/export_options.plist \
-            -exportPath build/ios/ipa \
-            -allowProvisioningUpdates
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
