@@ -33,13 +33,23 @@ workflows:
           </dict>
           </plist>
           EOF
-      - name: Build IPA
+      - name: Archive app
         script: |
-          xcode-project build-ipa \
-            --project "ios/App/App.xcodeproj" \
-            --scheme "App" \
-            --archive-xcargs "CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=D9TPA6A7AH" \
-            --export-options-plist /Users/builder/export_options.plist
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM=D9TPA6A7AH \
+            archive
+      - name: Export IPA
+        script: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist /Users/builder/export_options.plist \
+            -exportPath build/ios/ipa
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
