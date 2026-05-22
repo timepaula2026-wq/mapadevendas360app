@@ -20,8 +20,9 @@ workflows:
         script: npx cap sync ios
       - name: Install pods
         script: |
-          cd ios/App
-          pod install
+          find . -name "Podfile" 2>/dev/null
+          ls -la ios/ || echo "No ios folder"
+          ls -la ios/App/ || echo "No ios/App folder"
       - name: Build IPA
         script: |
           xcode-project build-ipa \
