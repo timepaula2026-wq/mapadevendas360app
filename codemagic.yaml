@@ -1,34 +1,35 @@
 workflows:
   ios-workflow:
     name: iOS Workflow
-
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Codemagic
     environment:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: br.com.mapadevendas.app3094775
-
+      node: 22
+      xcode: latest
+      cocoapods: default
     scripts:
       - name: Install dependencies
-        script: |
-          npm install
-
+        script: npm install
       - name: Build web
-        script: |
-          npm run build
-
+        script: npm run build
       - name: Sync Capacitor
+        script: npx cap sync ios
+      - name: Install pods
         script: |
-          npx cap sync ios
-
+          cd ios/App
+          pod install
       - name: Build IPA
         script: |
           xcode-project build-ipa \
             --workspace "ios/App/App.xcworkspace" \
             --scheme "App"
-
     artifacts:
       - build/ios/ipa/*.ipa
-
     publishing:
       app_store_connect:
         auth: integration
+        submit_to_testflight: true
