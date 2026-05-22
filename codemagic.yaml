@@ -10,7 +10,6 @@ workflows:
         bundle_identifier: br.com.mapadevendas.app3094775
       node: 22
       xcode: latest
-      cocoapods: default
     scripts:
       - name: Install dependencies
         script: npm install
@@ -18,15 +17,10 @@ workflows:
         script: npm run build
       - name: Sync Capacitor
         script: npx cap sync ios
-      - name: Install pods
-        script: |
-          find . -name "Podfile" 2>/dev/null
-          ls -la ios/ || echo "No ios folder"
-          ls -la ios/App/ || echo "No ios/App folder"
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --workspace "ios/App/App.xcworkspace" \
+            --project "ios/App/App.xcodeproj" \
             --scheme "App"
     artifacts:
       - build/ios/ipa/*.ipa
