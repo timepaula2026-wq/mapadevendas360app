@@ -1,7 +1,0 @@
-project_id = "iqdvawizxjglkdjyvhdr"
-
-[functions.validate-consultor]
-verify_jwt = false
-
-[functions.chat-ademicon]
-verify_jwt = true

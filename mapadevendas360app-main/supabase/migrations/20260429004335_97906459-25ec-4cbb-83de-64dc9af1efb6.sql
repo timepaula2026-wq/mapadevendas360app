@@ -1,1 +1,0 @@
-ALTER TABLE public.section_contents ADD COLUMN IF NOT EXISTS allow_download boolean NOT NULL DEFAULT false;

@@ -1,6 +1,0 @@
--- Add new fields to profiles
-ALTER TABLE public.profiles 
-  ADD COLUMN IF NOT EXISTS phone TEXT,
-  ADD COLUMN IF NOT EXISTS unit TEXT,
-  ADD COLUMN IF NOT EXISTS unit_start_date DATE DEFAULT CURRENT_DATE,
-  ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMP WITH TIME ZONE DEFAULT now();

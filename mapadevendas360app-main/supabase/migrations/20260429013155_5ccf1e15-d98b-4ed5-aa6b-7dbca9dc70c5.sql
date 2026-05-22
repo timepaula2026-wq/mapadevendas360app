@@ -1,1 +1,0 @@
-ALTER TABLE public.icon_grid_order ADD COLUMN IF NOT EXISTS custom_label text;
