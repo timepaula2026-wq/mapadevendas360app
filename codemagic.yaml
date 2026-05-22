@@ -8,8 +8,6 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: br.com.mapadevendas.app3094775
-        provisioning_profile: MapaDeVendas_AppStore
-        certificate: MapaVendasDistribution
       node: 22
       xcode: latest
     scripts:
