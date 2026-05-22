@@ -5,6 +5,9 @@ workflows:
     integrations:
       app_store_connect: br.com.mapadevendas.app3094775
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: br.com.mapadevendas.app3094775
       node: 22
       xcode: latest
     scripts:
@@ -37,8 +40,6 @@ workflows:
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=D9TPA6A7AH \
             -allowProvisioningUpdates \
             archive
       - name: Export IPA
