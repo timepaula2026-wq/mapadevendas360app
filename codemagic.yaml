@@ -24,9 +24,7 @@ workflows:
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
             --scheme "App" \
-            --archive-xcargs "CODE_SIGN_STYLE=Automatic \
-              DEVELOPMENT_TEAM=$(cat ~/.privatekeys/team_id 2>/dev/null || echo '') \
-              CODE_SIGN_IDENTITY='Apple Distribution'"
+            --archive-xcargs "CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=D9TPA6A7AH"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
