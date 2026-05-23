@@ -476,74 +476,7 @@ const AdminPanel = () => {
 
           {/* ===== USERS TAB ===== */}
           <TabsContent value="users">
-            {usersLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground mb-3">
-                  Aprove ou revogue o acesso dos usuários cadastrados.
-                </p>
-                {users.map((u) => (
-                  <div key={u.id} className="bg-card border border-border rounded-xl p-3 flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {u.display_name || "Sem nome"}
-                      </p>
-                      {u.phone && (
-                        <p className="text-[10px] text-muted-foreground">📱 {u.phone}</p>
-                      )}
-                      {u.unit && (
-                        <p className="text-[10px] text-muted-foreground">📍 {u.unit}</p>
-                      )}
-                      {u.unit_start_date && (
-                        <p className="text-[10px] text-muted-foreground">
-                          📅 Início: {new Date(u.unit_start_date).toLocaleDateString("pt-BR")}
-                        </p>
-                      )}
-                      <p className="text-[10px] text-muted-foreground">
-                        Cadastro: {new Date(u.created_at).toLocaleDateString("pt-BR")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {u.approved ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 font-medium mr-1">
-                          Aprovado
-                        </span>
-                      ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 font-medium mr-1">
-                          Pendente
-                        </span>
-                      )}
-                      {!u.approved ? (
-                        <button
-                          onClick={() => handleApproveUser(u.user_id, true)}
-                          className="p-1.5 text-green-500 hover:bg-green-500/10 rounded"
-                          title="Aprovar"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleApproveUser(u.user_id, false)}
-                          className="p-1.5 text-destructive hover:bg-destructive/10 rounded"
-                          title="Revogar acesso"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {users.length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Users className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                    <p className="text-sm">Nenhum usuário cadastrado</p>
-                  </div>
-                )}
-              </div>
-            )}
+            <AdminUserApproval />
           </TabsContent>
 
 
