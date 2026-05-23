@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Map, Mail, Lock, User, Loader2, Phone, Building2, Calendar, IdCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
 
 const UNITS = [
   "Araucária",
@@ -222,12 +223,14 @@ const Auth = () => {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 gradient-gold rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
-            <Map className="w-7 h-7 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-foreground">
-            {isLogin ? "Mapa de Vendas" : "Criar conta"}
-          </h1>
+          <img
+            src={logoMapaVendas}
+            alt="Mapa de Vendas"
+            className="w-44 h-44 object-contain mx-auto mb-4 drop-shadow-2xl"
+          />
+          {!isLogin && (
+            <h1 className="text-2xl font-extrabold text-foreground">Criar conta</h1>
+          )}
           <p className="text-sm text-muted-foreground mt-1">
             {isLogin ? "Acesse aqui sua plataforma de vendas" : "Cadastre-se para começar"}
           </p>
