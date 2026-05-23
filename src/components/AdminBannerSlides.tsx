@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Image, Youtube, ExternalLink, ArrowRight, Loader2, Upload, Film } from "lucide-react";
+import { Plus, Trash2, Image, Youtube, ExternalLink, ArrowRight, Loader2, Upload, Film, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 
 interface BannerSlide {
@@ -151,6 +151,27 @@ const AdminBannerSlides = () => {
   const toggleActive = async (id: string, current: boolean) => {
     await supabase.from("banner_slides").update({ active: !current }).eq("id", id);
     fetchSlides();
+  };
+
+  const moveSlide = async (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= slides.length) return;
+    const a = slides[index];
+    const b = slides[target];
+    // Otimista
+    const next = [...slides];
+    next[index] = b;
+    next[target] = a;
+    setSlides(next.map((s, i) => ({ ...s, sort_order: i })));
+
+    const [r1, r2] = await Promise.all([
+      supabase.from("banner_slides").update({ sort_order: target }).eq("id", a.id),
+      supabase.from("banner_slides").update({ sort_order: index }).eq("id", b.id),
+    ]);
+    if (r1.error || r2.error) {
+      toast.error("Erro ao reordenar");
+      fetchSlides();
+    }
   };
 
   const resetForm = () => {
@@ -342,8 +363,28 @@ const AdminBannerSlides = () => {
 
       {/* Slides list */}
       <div className="space-y-2">
-        {slides.map((slide) => (
+        {slides.map((slide, index) => (
           <div key={slide.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${slide.active ? "bg-card border-border" : "bg-muted/50 border-border/50 opacity-60"}`}>
+            {/* Reorder */}
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <button
+                onClick={() => moveSlide(index, -1)}
+                disabled={index === 0}
+                aria-label="Mover para cima"
+                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                <ArrowUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => moveSlide(index, 1)}
+                disabled={index === slides.length - 1}
+                aria-label="Mover para baixo"
+                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                <ArrowDown className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             {/* Thumbnail */}
             <div className="w-16 h-10 rounded-lg overflow-hidden bg-secondary shrink-0">
               {slide.type === "image" && slide.image_url ? (
