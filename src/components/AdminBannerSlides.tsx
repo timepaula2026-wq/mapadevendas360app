@@ -164,8 +164,6 @@ const AdminBannerSlides = () => {
     next[target] = a;
     setSlides(next.map((s, i) => ({ ...s, sort_order: i })));
 
-    const { error } = await supabase.rpc("noop_dummy_never_exists" as never).then(() => ({ error: null as any }));
-    // Atualiza os dois registros
     const [r1, r2] = await Promise.all([
       supabase.from("banner_slides").update({ sort_order: target }).eq("id", a.id),
       supabase.from("banner_slides").update({ sort_order: index }).eq("id", b.id),
