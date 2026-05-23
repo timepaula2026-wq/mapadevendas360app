@@ -15,6 +15,7 @@ import AdminNotifications from "@/components/AdminNotifications";
 import AdminAppLayout from "@/components/AdminAppLayout";
 import AdminUserRoles from "@/components/AdminUserRoles";
 import AdminUserActivities from "@/components/AdminUserActivities";
+import AdminUserApproval from "@/components/AdminUserApproval";
 
 interface Training {
   id: string;
