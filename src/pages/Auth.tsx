@@ -219,19 +219,25 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-5"
+      style={{
+        background:
+          "radial-gradient(ellipse at center, #2a0608 0%, #120203 55%, #050102 100%)",
+      }}
+    >
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <img
             src={logoMapaVendas}
             alt="Mapa de Vendas"
-            className="w-44 h-44 object-contain mx-auto mb-4 drop-shadow-2xl"
+            className="w-72 h-72 sm:w-80 sm:h-80 object-contain mx-auto -mb-2 drop-shadow-2xl"
           />
           {!isLogin && (
-            <h1 className="text-2xl font-extrabold text-foreground">Criar conta</h1>
+            <h1 className="text-2xl font-extrabold text-white">Criar conta</h1>
           )}
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-white/60 mt-1">
             {isLogin ? "Acesse aqui sua plataforma de vendas" : "Cadastre-se para começar"}
           </p>
         </div>
