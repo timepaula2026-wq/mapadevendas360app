@@ -238,7 +238,7 @@ const Auth = () => {
           <img
             src={logoMapaVendas}
             alt="Mapa de Vendas"
-            className="w-72 h-72 sm:w-80 sm:h-80 object-contain mx-auto -mb-2 drop-shadow-2xl"
+            className="w-full max-w-[22rem] sm:max-w-[26rem] h-auto object-contain mx-auto mb-2 drop-shadow-2xl"
           />
           {!isLogin && (
             <h1 className="text-2xl font-extrabold text-white">Criar conta</h1>
