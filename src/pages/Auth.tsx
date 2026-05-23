@@ -370,7 +370,8 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setForgotMode(true)}
-                className="text-xs text-primary hover:underline"
+                className="text-xs font-semibold hover:underline"
+                style={{ color: "#e7242b" }}
               >
                 Esqueci minha senha
               </button>
@@ -391,7 +392,8 @@ const Auth = () => {
           {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-primary font-semibold hover:underline"
+            className="font-semibold hover:underline"
+            style={{ color: "#e7242b" }}
           >
             {isLogin ? "Cadastre-se" : "Entrar"}
           </button>
