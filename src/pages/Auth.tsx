@@ -174,7 +174,13 @@ const Auth = () => {
 
   if (forgotMode) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-5"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, #2a0608 0%, #120203 55%, #050102 100%)",
+        }}
+      >
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="w-14 h-14 gradient-gold rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
