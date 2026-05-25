@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'br.com.mapadevendas.app3094775',
+  appId: 'br.com.app.gpu3094775.gpu05ac06cd3fbdc01af91f2f233804c71d',
   appName: 'Mapa de Vendas',
   webDir: 'dist',
   ios: {
