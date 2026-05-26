@@ -353,6 +353,11 @@ const AdminUserApproval = () => {
                       🆔 {u.cpf}
                     </p>
                   )}
+                  {u.email && (
+                    <p className="text-[10px] text-muted-foreground break-all">
+                      ✉️ {u.email}
+                    </p>
+                  )}
                   {u.phone && (
                     <p className="text-[10px] text-muted-foreground">
                       📱 {u.phone}
