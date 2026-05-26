@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import SearchOverlay from "@/components/SearchOverlay";
 import { useAppSettings } from "@/hooks/useAppSettings";
+import OnboardingStepsBanner from "@/components/OnboardingStepsBanner";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -35,6 +36,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* Banner de onboarding (10s, uma vez por usuário) */}
+      <OnboardingStepsBanner />
+
       {/* Profile Sidebar */}
       <ProfileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {/* Search Overlay */}
