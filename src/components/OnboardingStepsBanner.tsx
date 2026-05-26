@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import onboardingImage from "@/assets/onboarding-steps-banner.png";
 
-const STORAGE_KEY = "onboarding_steps_banner_seen_v1";
+const STORAGE_KEY = "onboarding_steps_banner_seen_v2";
 const AUTO_DISMISS_MS = 10_000;
 
 const OnboardingStepsBanner = () => {
