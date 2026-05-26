@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
+import { validateEmail } from "@/lib/emailValidation";
 
 type Row = {
   email: string;
@@ -59,11 +60,24 @@ export default function AdminBulkImport() {
 
   const doImport = async () => {
     if (!rows.length) return;
+    // Validar e-mails antes de enviar
+    const invalid: { email: string; error: string }[] = [];
+    const valid: Row[] = [];
+    for (const r of rows) {
+      const v = validateEmail(r.email);
+      if (!v.valid) invalid.push({ email: r.email, error: v.error || "inválido" });
+      else valid.push({ ...r, email: v.email! });
+    }
+    if (invalid.length) {
+      setResults(invalid.map((i) => ({ email: i.email, status: "skip", message: i.error })));
+      toast.error(`${invalid.length} e-mail(s) inválido(s) — corrija o CSV e tente novamente`);
+      if (!valid.length) return;
+    }
     setLoading(true);
     try {
       // chunk by 50 to keep edge function within timeout
       const chunks: Row[][] = [];
-      for (let i = 0; i < rows.length; i += 50) chunks.push(rows.slice(i, i + 50));
+      for (let i = 0; i < valid.length; i += 50) chunks.push(valid.slice(i, i + 50));
       const all: any[] = [];
       for (const c of chunks) {
         const { data, error } = await supabase.functions.invoke("bulk-import-users", {
@@ -72,9 +86,12 @@ export default function AdminBulkImport() {
         if (error) throw error;
         all.push(...(data?.results || []));
       }
-      setResults(all);
+      setResults([
+        ...invalid.map((i) => ({ email: i.email, status: "skip", message: i.error })),
+        ...all,
+      ]);
       const ok = all.filter((r) => r.status === "created" || r.status === "updated").length;
-      toast.success(`Importação concluída: ${ok}/${rows.length}`);
+      toast.success(`Importação concluída: ${ok}/${valid.length}`);
     } catch (e: any) {
       toast.error(e?.message || "Erro ao importar");
     } finally {
