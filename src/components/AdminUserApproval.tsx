@@ -20,6 +20,7 @@ import {
   Eye,
   BookOpen,
   Activity,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -165,6 +166,22 @@ const AdminUserApproval = () => {
       toast.success(approve ? "Usuário aprovado!" : "Acesso revogado");
       fetchUsers();
     }
+  };
+
+  const handleDelete = async (u: UserProfile) => {
+    const ok = window.confirm(
+      `Excluir definitivamente o usuário "${u.display_name || u.email || u.user_id}"?\n\nEsta ação remove o cadastro, papéis e o acesso. Use para corrigir erro de cadastro (e-mail incorreto).`,
+    );
+    if (!ok) return;
+    const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+      body: { target_user_id: u.user_id },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || error?.message || "Erro ao excluir");
+      return;
+    }
+    toast.success("Usuário excluído");
+    fetchUsers();
   };
 
   const exportCSV = () => {
@@ -448,6 +465,13 @@ const AdminUserApproval = () => {
                       <XCircle className="w-4 h-4" />
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDelete(u)}
+                    className="p-1.5 text-destructive hover:bg-destructive/10 rounded"
+                    title="Excluir usuário (erro de cadastro)"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
