@@ -36,6 +36,15 @@ interface UserProfile {
   cpf: string | null;
 }
 
+const ROLE_LABELS_PT: Record<string, string> = {
+  iniciante: "Consultor Iniciante",
+  autorizado: "Consultor Autorizado",
+  supervisor: "Supervisor",
+  gestor: "Gestor de Unidade",
+  secretaria: "Administrativo",
+  admin: "Administrador",
+};
+
 type Filter = "pending" | "approved" | "all";
 
 const formatDate = (d?: string | null) =>
