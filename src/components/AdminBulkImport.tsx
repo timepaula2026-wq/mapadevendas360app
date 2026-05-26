@@ -81,7 +81,7 @@ export default function AdminBulkImport() {
       const all: any[] = [];
       for (const c of chunks) {
         const { data, error } = await supabase.functions.invoke("bulk-import-users", {
-          body: { rows: c, password: "1234456" },
+          body: { rows: c, password: "123456" },
         });
         if (error) throw error;
         all.push(...(data?.results || []));
@@ -106,7 +106,7 @@ export default function AdminBulkImport() {
         <h3 className="text-sm font-semibold text-foreground">Importar usuários (CSV)</h3>
       </div>
       <p className="text-xs text-muted-foreground">
-        Colunas aceitas: Nome, WhatsApp, E-mail, Unidade, Atividade, Matrícula/CPF. Senha provisória <b>1234456</b>.
+        Colunas aceitas: Nome, WhatsApp, E-mail, Unidade, Atividade, Matrícula/CPF. Senha provisória <b>123456</b>.
         No primeiro acesso, cada usuário definirá a própria senha dentro do app.
       </p>
       <input

@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const rows: Row[] = body.rows || [];
-    const defaultPassword: string = body.password || "1234456";
+    const defaultPassword: string = body.password || "123456";
 
     const results: Array<{ email: string; status: string; message?: string }> = [];
 
