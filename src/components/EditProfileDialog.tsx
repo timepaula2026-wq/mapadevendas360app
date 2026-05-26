@@ -21,7 +21,6 @@ const UNITS = [
   "Colombo",
   "Paranaguá",
   "Palácio do Café",
-  "Praça do Japão",
   "Pinheiros",
   "Poços de Caldas",
   "São João da Boa Vista",

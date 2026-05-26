@@ -47,7 +47,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7h to 20h
 
-const UNITS = ["Araucária", "Araçatuba", "Almirante Tamandaré", "Colombo", "Paranaguá", "Palácio do café", "Praça do Japão", "Pinheiros", "Poços de Caldas", "São João da Boa Vista", "Digital"];
 
 const Agenda = () => {
   const navigate = useNavigate();
