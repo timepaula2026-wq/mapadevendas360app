@@ -47,6 +47,7 @@ const ROLE_LABELS_PT: Record<string, string> = {
 };
 
 type Filter = "pending" | "approved" | "all";
+type InactiveFilter = "any" | "7" | "15" | "21" | "30";
 
 const formatDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
@@ -79,6 +80,7 @@ const AdminUserApproval = () => {
   const [rolesByUser, setRolesByUser] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("pending");
+  const [inactiveFilter, setInactiveFilter] = useState<InactiveFilter>("any");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UserProfile | null>(null);
   const [details, setDetails] = useState<{
@@ -121,14 +123,20 @@ const AdminUserApproval = () => {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
+    const minDays = inactiveFilter === "any" ? 0 : parseInt(inactiveFilter, 10);
     return users.filter((u) => {
       if (filter === "pending" && u.approved) return false;
       if (filter === "approved" && !u.approved) return false;
+      if (minDays > 0) {
+        const d = daysSince(u.last_active_at);
+        if (d == null || d < minDays) return false;
+      }
       if (!term) return true;
       const roles = rolesByUser[u.user_id] || [];
       const activities = roles.map((r) => ROLE_TO_ACTIVITY[r] || r);
       return (
         (u.display_name || "").toLowerCase().includes(term) ||
+        (u.email || "").toLowerCase().includes(term) ||
         (u.unit || "").toLowerCase().includes(term) ||
         (u.phone || "").toLowerCase().includes(term) ||
         (u.cpf || "").toLowerCase().includes(term) ||
@@ -136,7 +144,7 @@ const AdminUserApproval = () => {
         activities.some((a) => a.includes(term))
       );
     });
-  }, [users, filter, search, rolesByUser]);
+  }, [users, filter, search, rolesByUser, inactiveFilter]);
 
   const counts = useMemo(
     () => ({
@@ -311,8 +319,8 @@ const AdminUserApproval = () => {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome, CPF/matrícula, unidade, papel ou atividade..."
-            className="pl-8 h-9 text-sm"
+            placeholder="Buscar por nome, e-mail, CPF/matrícula, unidade, papel ou atividade..."
+            className="pl-8 h-10 text-base"
           />
         </div>
         <Button onClick={exportCSV} size="sm" variant="outline" className="gap-1">
@@ -323,6 +331,30 @@ const AdminUserApproval = () => {
         </Button>
       </div>
 
+      {/* Filtro de inatividade */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <span className="text-sm text-muted-foreground">Inativos há:</span>
+        {([
+          { id: "any", label: "Todos" },
+          { id: "7", label: "7+ dias" },
+          { id: "15", label: "15+ dias" },
+          { id: "21", label: "21+ dias" },
+          { id: "30", label: "30+ dias" },
+        ] as { id: InactiveFilter; label: string }[]).map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => setInactiveFilter(opt.id)}
+            className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+              inactiveFilter === opt.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       {/* Lista */}
       <div className="space-y-2">
         {filtered.map((u) => {
@@ -330,16 +362,16 @@ const AdminUserApproval = () => {
           return (
             <div
               key={u.id}
-              className="bg-card border border-border rounded-xl p-3"
+              className="bg-card border border-border rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="text-base font-semibold text-foreground truncate">
                       {u.display_name || "Sem nome"}
                     </p>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         u.approved
                           ? "bg-green-500/10 text-green-500"
                           : "bg-yellow-500/10 text-yellow-500"
@@ -349,35 +381,39 @@ const AdminUserApproval = () => {
                     </span>
                   </div>
                   {u.cpf && (
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       🆔 {u.cpf}
                     </p>
                   )}
                   {u.email && (
-                    <p className="text-[10px] text-muted-foreground break-all">
+                    <p className="text-sm text-muted-foreground break-all">
                       ✉️ {u.email}
                     </p>
                   )}
                   {u.phone && (
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       📱 {u.phone}
                     </p>
                   )}
                   {u.unit && (
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       📍 {u.unit}
                     </p>
                   )}
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Cadastro: {formatDate(u.created_at)}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Última atividade: {formatDateTime(u.last_active_at)}
                     {inactive != null && (
                       <span
                         className={
-                          inactive > 15
+                          inactive >= 30
+                            ? " text-destructive font-semibold"
+                            : inactive >= 15
                             ? " text-yellow-500 font-medium"
+                            : inactive >= 7
+                            ? " text-orange-500 font-medium"
                             : ""
                         }
                       >
