@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const VALIDAR_NOME_URL = "https://mapadevendas360.com.br/candidatos/validar-nome";
+const VALIDAR_NOME_URL = "https://gvulpruievqfjdgowrdb.supabase.co/functions/v1/validar-nome";
 
 type ValidationResponse = {
   allowed: boolean;
