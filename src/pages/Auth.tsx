@@ -18,6 +18,7 @@ const UNITS = [
   "Poços de Caldas",
   "São João da Boa Vista",
   "Digital",
+  "Administrativo",
 ];
 
 const Auth = () => {
