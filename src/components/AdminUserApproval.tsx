@@ -533,6 +533,14 @@ const AdminUserApproval = () => {
                     >
                       {u.approved ? "Aprovado" : "Pendente"}
                     </span>
+                    {(rolesByUser[u.user_id] || []).map((r) => (
+                      <span
+                        key={r}
+                        className="text-xs px-2 py-0.5 rounded-full font-medium bg-primary/10 text-primary"
+                      >
+                        {ROLE_LABELS_PT[r] || r}
+                      </span>
+                    ))}
                   </div>
                   {u.cpf && (
                     <p className="text-sm text-muted-foreground">
