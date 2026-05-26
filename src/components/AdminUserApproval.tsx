@@ -23,6 +23,7 @@ import {
   Trash2,
   KeyRound,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -95,6 +96,8 @@ const AdminUserApproval = () => {
     lastActive: string | null;
   } | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkResetting, setBulkResetting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -212,6 +215,62 @@ const AdminUserApproval = () => {
       return;
     }
     toast.success("Senha redefinida para 123456");
+  };
+
+  const toggleSelected = (userId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(userId) ? next.delete(userId) : next.add(userId);
+      return next;
+    });
+  };
+
+  const allOnPageSelected =
+    paginated.length > 0 && paginated.every((u) => selectedIds.has(u.user_id));
+
+  const togglePageSelection = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) {
+        paginated.forEach((u) => next.delete(u.user_id));
+      } else {
+        paginated.forEach((u) => next.add(u.user_id));
+      }
+      return next;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(filtered.map((u) => u.user_id)));
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkReset = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const ok = window.confirm(
+      `Resetar a senha de ${ids.length} usuário(s) selecionado(s) para 123456?`,
+    );
+    if (!ok) return;
+    setBulkResetting(true);
+    let okCount = 0;
+    let failCount = 0;
+    for (const uid of ids) {
+      try {
+        const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+          body: { target_user_id: uid, password: "123456" },
+        });
+        if (error || (data as any)?.error) failCount++;
+        else okCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setBulkResetting(false);
+    clearSelection();
+    if (failCount === 0) toast.success(`${okCount} senha(s) redefinida(s) para 123456`);
+    else toast.warning(`${okCount} OK, ${failCount} falha(s)`);
   };
 
   const exportCSV = () => {
@@ -404,6 +463,47 @@ const AdminUserApproval = () => {
 
       {/* Lista */}
       <div className="space-y-2">
+        {/* Barra de seleção em massa */}
+        {paginated.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 bg-muted/30 border border-border rounded-lg px-3 py-2">
+            <Checkbox
+              checked={allOnPageSelected}
+              onCheckedChange={togglePageSelection}
+              aria-label="Selecionar página"
+            />
+            <span className="text-sm text-muted-foreground">
+              {selectedIds.size > 0
+                ? `${selectedIds.size} selecionado(s)`
+                : "Selecionar página"}
+            </span>
+            {selectedIds.size < filtered.length && (
+              <Button size="sm" variant="ghost" onClick={selectAllFiltered}>
+                Selecionar todos ({filtered.length})
+              </Button>
+            )}
+            {selectedIds.size > 0 && (
+              <>
+                <Button size="sm" variant="ghost" onClick={clearSelection}>
+                  Limpar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleBulkReset}
+                  disabled={bulkResetting}
+                  className="gap-1 ml-auto"
+                >
+                  {bulkResetting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="w-4 h-4" />
+                  )}
+                  Resetar senha em massa
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
         {paginated.map((u) => {
           const inactive = daysSince(u.last_active_at);
           return (
@@ -412,6 +512,13 @@ const AdminUserApproval = () => {
               className="bg-card border border-border rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-2">
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedIds.has(u.user_id)}
+                    onCheckedChange={() => toggleSelected(u.user_id)}
+                    aria-label={`Selecionar ${u.display_name || u.email}`}
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-base font-semibold text-foreground truncate">
