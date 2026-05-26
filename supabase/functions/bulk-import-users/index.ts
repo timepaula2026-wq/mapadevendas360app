@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
         phone: r.phone,
         unit: r.unit,
         cpf: r.matricula_cpf,
+        email: email,
         approved: true,
         must_change_password: true,
         last_active_at: new Date().toISOString(),

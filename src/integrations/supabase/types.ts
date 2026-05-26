@@ -603,6 +603,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
           last_active_at: string | null
           must_change_password: boolean
@@ -618,6 +619,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
           last_active_at?: string | null
           must_change_password?: boolean
@@ -633,6 +635,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
           last_active_at?: string | null
           must_change_password?: boolean
