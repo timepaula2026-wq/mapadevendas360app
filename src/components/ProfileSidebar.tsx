@@ -78,10 +78,10 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
         <div className="border-t border-border mx-4" />
 
         <div className="px-5 py-4 space-y-3">
-          {profile?.phone && (
+          {user?.email && (
             <div>
-              <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Telefone</p>
-              <p className="text-sm text-foreground">{profile.phone}</p>
+              <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Email</p>
+              <p className="text-sm text-foreground break-all">{user.email}</p>
             </div>
           )}
           {profile?.unit && (
