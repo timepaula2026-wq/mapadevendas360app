@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Map, Mail, Lock, User, Loader2, Phone, Building2, Calendar, IdCard } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, IdCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
@@ -28,11 +28,9 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
   const [unit, setUnit] = useState("");
   const [customUnit, setCustomUnit] = useState("");
-  const [unitStartDate, setUnitStartDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -60,13 +58,6 @@ const Auth = () => {
       setForgotMode(false);
     }
     setSubmitting(false);
-  };
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
   const formatCpf = (value: string) => {
@@ -121,11 +112,6 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
-      if (phone.replace(/\D/g, "").length < 10) {
-        toast({ title: "Erro", description: "Preencha o telefone com DDD.", variant: "destructive" });
-        setSubmitting(false);
-        return;
-      }
       // Validação rigorosa de e-mail
       const emailCheck = validateEmail(email);
       if (!emailCheck.valid) {
@@ -137,11 +123,6 @@ const Auth = () => {
       const finalUnit = unit === "outra" ? customUnit.trim() : unit;
       if (!finalUnit) {
         toast({ title: "Erro", description: "Selecione uma unidade.", variant: "destructive" });
-        setSubmitting(false);
-        return;
-      }
-      if (!unitStartDate) {
-        toast({ title: "Erro", description: "Informe a data de início na unidade.", variant: "destructive" });
         setSubmitting(false);
         return;
       }
@@ -164,9 +145,7 @@ const Auth = () => {
 
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
-        phone: phone.replace(/\D/g, ""),
         unit: finalUnit,
-        unitStartDate,
         cpf: cpf.replace(/\D/g, ""),
       });
       if (error) {
@@ -288,19 +267,6 @@ const Auth = () => {
                 />
               </div>
 
-              {/* Telefone com DDD */}
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(formatPhone(e.target.value))}
-                  placeholder="Telefone com DDD"
-                  required
-                  className={inputClass}
-                />
-              </div>
-
               {/* Unidade */}
               <div className="relative">
                 <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -331,21 +297,6 @@ const Auth = () => {
                   />
                 </div>
               )}
-
-              {/* Data de início na unidade */}
-              <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="date"
-                  value={unitStartDate}
-                  onChange={(e) => setUnitStartDate(e.target.value)}
-                  required
-                  className={`${inputClass} [color-scheme:dark]`}
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-                  Início na unidade
-                </span>
-              </div>
             </>
           )}
 
