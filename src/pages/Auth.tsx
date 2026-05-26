@@ -276,19 +276,6 @@ const Auth = () => {
                 />
               </div>
 
-              {/* Telefone com DDD */}
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(formatPhone(e.target.value))}
-                  placeholder="Telefone com DDD"
-                  required
-                  className={inputClass}
-                />
-              </div>
-
               {/* Unidade */}
               <div className="relative">
                 <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -319,21 +306,6 @@ const Auth = () => {
                   />
                 </div>
               )}
-
-              {/* Data de início na unidade */}
-              <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="date"
-                  value={unitStartDate}
-                  onChange={(e) => setUnitStartDate(e.target.value)}
-                  required
-                  className={`${inputClass} [color-scheme:dark]`}
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-                  Início na unidade
-                </span>
-              </div>
             </>
           )}
 
