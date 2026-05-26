@@ -75,16 +75,27 @@ export default function AdminBulkImport() {
     }
     setLoading(true);
     try {
-      // chunk by 50 to keep edge function within timeout
+      // chunk by 25 to keep edge function within timeout
       const chunks: Row[][] = [];
-      for (let i = 0; i < valid.length; i += 50) chunks.push(valid.slice(i, i + 50));
+      for (let i = 0; i < valid.length; i += 25) chunks.push(valid.slice(i, i + 25));
       const all: any[] = [];
+      let chunkIdx = 0;
       for (const c of chunks) {
-        const { data, error } = await supabase.functions.invoke("bulk-import-users", {
-          body: { rows: c, password: "123456" },
-        });
-        if (error) throw error;
-        all.push(...(data?.results || []));
+        chunkIdx++;
+        try {
+          const { data, error } = await supabase.functions.invoke("bulk-import-users", {
+            body: { rows: c, password: "123456" },
+          });
+          if (error) throw error;
+          all.push(...(data?.results || []));
+          toast.message(`Lote ${chunkIdx}/${chunks.length} processado`);
+        } catch (err: any) {
+          // Não interromper a importação — registra falha do lote e segue
+          for (const r of c) {
+            all.push({ email: r.email, status: "error", message: `lote ${chunkIdx}: ${err?.message || "falhou"}` });
+          }
+          toast.error(`Lote ${chunkIdx} falhou — seguindo com os próximos`);
+        }
       }
       setResults([
         ...invalid.map((i) => ({ email: i.email, status: "skip", message: i.error })),
