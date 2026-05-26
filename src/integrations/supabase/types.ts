@@ -605,6 +605,7 @@ export type Database = {
           display_name: string | null
           id: string
           last_active_at: string | null
+          must_change_password: boolean
           phone: string | null
           unit: string | null
           unit_start_date: string | null
@@ -619,6 +620,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           last_active_at?: string | null
+          must_change_password?: boolean
           phone?: string | null
           unit?: string | null
           unit_start_date?: string | null
@@ -633,6 +635,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           last_active_at?: string | null
+          must_change_password?: boolean
           phone?: string | null
           unit?: string | null
           unit_start_date?: string | null
