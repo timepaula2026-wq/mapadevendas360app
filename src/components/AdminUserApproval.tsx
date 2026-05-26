@@ -34,6 +34,7 @@ interface UserProfile {
   unit_start_date: string | null;
   last_active_at: string | null;
   cpf: string | null;
+  email: string | null;
 }
 
 const ROLE_LABELS_PT: Record<string, string> = {
