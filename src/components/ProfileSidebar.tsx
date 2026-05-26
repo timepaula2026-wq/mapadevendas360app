@@ -1,5 +1,6 @@
-import { User, Shield, Bell } from "lucide-react";
+import { User, Shield, Bell, Pencil } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import EditProfileDialog from "@/components/EditProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,7 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
+  const [editOpen, setEditOpen] = useState(false);
   const [profile, setProfile] = useState<{
     display_name: string | null;
     phone: string | null;
@@ -24,15 +26,19 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
     avatar_url: string | null;
   } | null>(null);
 
+  const loadProfile = () => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("display_name, phone, unit, unit_start_date, avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setProfile(data));
+  };
+
   useEffect(() => {
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("display_name, phone, unit, unit_start_date, avatar_url")
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data }) => setProfile(data));
-    }
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return (
@@ -60,6 +66,13 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
             <NotificationBell />
             <span className="text-sm font-medium text-foreground">Notificações</span>
           </div>
+          <button
+            onClick={() => setEditOpen(true)}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-accent transition-colors"
+          >
+            <Pencil className="w-5 h-5" />
+            Editar perfil
+          </button>
         </div>
 
         <div className="border-t border-border mx-4" />
@@ -101,6 +114,11 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
             </div>
           </>
         )}
+        <EditProfileDialog
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          onSaved={loadProfile}
+        />
       </SheetContent>
     </Sheet>
   );
