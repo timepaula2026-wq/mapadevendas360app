@@ -121,11 +121,6 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
-      if (phone.replace(/\D/g, "").length < 10) {
-        toast({ title: "Erro", description: "Preencha o telefone com DDD.", variant: "destructive" });
-        setSubmitting(false);
-        return;
-      }
       // Validação rigorosa de e-mail
       const emailCheck = validateEmail(email);
       if (!emailCheck.valid) {
@@ -137,11 +132,6 @@ const Auth = () => {
       const finalUnit = unit === "outra" ? customUnit.trim() : unit;
       if (!finalUnit) {
         toast({ title: "Erro", description: "Selecione uma unidade.", variant: "destructive" });
-        setSubmitting(false);
-        return;
-      }
-      if (!unitStartDate) {
-        toast({ title: "Erro", description: "Informe a data de início na unidade.", variant: "destructive" });
         setSubmitting(false);
         return;
       }
@@ -164,9 +154,7 @@ const Auth = () => {
 
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
-        phone: phone.replace(/\D/g, ""),
         unit: finalUnit,
-        unitStartDate,
         cpf: cpf.replace(/\D/g, ""),
       });
       if (error) {
