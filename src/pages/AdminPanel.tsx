@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity, Headphones } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity, Headphones, Settings, UserCog, LifeBuoy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -53,6 +53,20 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
+
+  const [category, setCategoryGroup] = useState<"app" | "cadastros" | "suporte">("app");
+  const [activeTab, setActiveTab] = useState<string>("trainings");
+
+  const categoryTabs: Record<string, string[]> = {
+    app: ["trainings", "sections", "banner", "notifications", "layout"],
+    cadastros: ["users", "roles", "activities", "stats"],
+    suporte: ["support"],
+  };
+
+  const handleCategoryChange = (cat: "app" | "cadastros" | "suporte") => {
+    setCategoryGroup(cat);
+    setActiveTab(categoryTabs[cat][0]);
+  };
 
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
