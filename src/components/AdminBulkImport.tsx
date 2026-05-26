@@ -156,6 +156,7 @@ export default function AdminBulkImport() {
               <span className={
                 r.status === "created" ? "text-green-500" :
                 r.status === "updated" ? "text-blue-500" :
+                r.status === "fixed" ? "text-cyan-500" :
                 r.status === "skip" ? "text-yellow-500" : "text-destructive"
               }>{r.status}{r.message ? ` — ${r.message}` : ""}</span>
             </div>
