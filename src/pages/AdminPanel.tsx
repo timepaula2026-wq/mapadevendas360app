@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity, Headphones, Settings, UserCog, LifeBuoy } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity, Headphones, Settings, UserCog, LifeBuoy, ListChecks } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -18,6 +18,7 @@ import AdminUserActivities from "@/components/AdminUserActivities";
 import AdminUserApproval from "@/components/AdminUserApproval";
 import AdminBulkImport from "@/components/AdminBulkImport";
 import AdminSupportTickets from "@/components/AdminSupportTickets";
+import AdminQuizz from "@/components/AdminQuizz";
 
 interface Training {
   id: string;
@@ -60,7 +61,7 @@ const AdminPanel = () => {
   const categoryTabs: Record<string, string[]> = {
     app: ["trainings", "sections", "banner", "notifications", "layout"],
     cadastros: ["users", "roles", "activities", "stats"],
-    suporte: ["support"],
+    suporte: ["support", "quizz"],
   };
 
   const handleCategoryChange = (cat: "app" | "cadastros" | "suporte") => {
@@ -348,9 +349,14 @@ const AdminPanel = () => {
               </>
             )}
             {categoryGroup === "suporte" && (
-              <TabsTrigger value="support" className="flex-1 gap-1">
-                <Headphones className="w-4 h-4" /> Suporte
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="support" className="flex-1 gap-1">
+                  <Headphones className="w-4 h-4" /> Suporte
+                </TabsTrigger>
+                <TabsTrigger value="quizz" className="flex-1 gap-1">
+                  <ListChecks className="w-4 h-4" /> Quizz
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -590,6 +596,11 @@ const AdminPanel = () => {
           {/* ===== SUPPORT TAB ===== */}
           <TabsContent value="support">
             <AdminSupportTickets />
+          </TabsContent>
+
+          {/* ===== QUIZZ TAB ===== */}
+          <TabsContent value="quizz">
+            <AdminQuizz />
           </TabsContent>
 
         </Tabs>
