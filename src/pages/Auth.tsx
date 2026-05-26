@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
@@ -17,6 +17,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [cpf, setCpf] = useState("");
+  const [atividade, setAtividade] = useState("");
+  const [matricula, setMatricula] = useState("");
   const [unit, setUnit] = useState("");
   const [customUnit, setCustomUnit] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -96,8 +98,13 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
-      if (cpf.replace(/\D/g, "").length !== 11) {
-        toast({ title: "Erro", description: "Informe um CPF válido (11 dígitos).", variant: "destructive" });
+      if (!atividade) {
+        toast({ title: "Erro", description: "Selecione sua atividade.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      if (atividade === "autorizado" && !matricula.trim()) {
+        toast({ title: "Erro", description: "Informe sua matrícula.", variant: "destructive" });
         setSubmitting(false);
         return;
       }
@@ -116,27 +123,13 @@ const Auth = () => {
         return;
       }
 
-      // Validate CPF against Mapadevendas360 before creating account
-      const validation = await validateConsultor(cpf);
-      if (!validation) {
-        setSubmitting(false);
-        return;
-      }
-      if (!validation.allowed) {
-        toast({
-          title: "Acesso bloqueado",
-          description: validation.message || "Seu CPF não está autorizado. Entre em contato com o suporte.",
-          variant: "destructive",
-        });
-        setSubmitting(false);
-        return;
-      }
-
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
         unit: finalUnit,
-        cpf: cpf.replace(/\D/g, ""),
-      });
+        cpf: atividade === "autorizado" ? matricula.replace(/\D/g, "") : "",
+        atividade,
+        matricula: atividade === "autorizado" ? matricula.trim() : "",
+      } as any);
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
       } else {
