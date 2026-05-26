@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useApprovalCheck } from "@/hooks/useApprovalCheck";
 import { supabase } from "@/integrations/supabase/client";
 import AppSettingsApplier from "@/components/AppSettingsApplier";
+import ForcePasswordChange from "@/components/ForcePasswordChange";
 import Index from "./pages/Index";
 import TrainingsList from "./pages/TrainingsList";
 import TrainingDetail from "./pages/TrainingDetail";
@@ -44,7 +45,7 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  const { approved, loading: approvalLoading } = useApprovalCheck();
+  const { approved, loading: approvalLoading, mustChangePassword, refresh } = useApprovalCheck();
 
   if (loading || approvalLoading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -52,6 +53,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     </div>
   );
   if (!user) return <Navigate to="/auth" replace />;
+  if (mustChangePassword) return <ForcePasswordChange onDone={refresh} />;
   if (approved === false) return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
       <div className="bg-card border border-border rounded-2xl p-8 max-w-sm w-full space-y-4">
