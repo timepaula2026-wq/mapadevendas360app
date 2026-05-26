@@ -235,20 +235,6 @@ const Auth = () => {
                 />
               </div>
 
-              {/* CPF */}
-              <div className="relative">
-                <IdCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={cpf}
-                  onChange={(e) => setCpf(formatCpf(e.target.value))}
-                  placeholder="CPF"
-                  required
-                  className={inputClass}
-                />
-              </div>
-
               {/* Unidade */}
               <div className="relative">
                 <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -274,6 +260,38 @@ const Auth = () => {
                     value={customUnit}
                     onChange={(e) => setCustomUnit(e.target.value)}
                     placeholder="Digite o nome da unidade"
+                    required
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Atividade */}
+              <div className="relative">
+                <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <select
+                  value={atividade}
+                  onChange={(e) => setAtividade(e.target.value)}
+                  required
+                  className={`${inputClass} appearance-none`}
+                >
+                  <option value="">Selecione sua atividade</option>
+                  <option value="gestor">Gestor</option>
+                  <option value="administrativo">Administrativo</option>
+                  <option value="iniciante">Consultor Iniciante</option>
+                  <option value="autorizado">Consultor Autorizado</option>
+                </select>
+              </div>
+
+              {/* Matrícula (somente para Consultor Autorizado) */}
+              {atividade === "autorizado" && (
+                <div className="relative">
+                  <IdCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={matricula}
+                    onChange={(e) => setMatricula(e.target.value)}
+                    placeholder="Matrícula"
                     required
                     className={inputClass}
                   />
