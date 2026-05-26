@@ -543,6 +543,11 @@ const AdminPanel = () => {
             <AdminUserActivities />
           </TabsContent>
 
+          {/* ===== SUPPORT TAB ===== */}
+          <TabsContent value="support">
+            <AdminSupportTickets />
+          </TabsContent>
+
         </Tabs>
       </div>
     </div>
