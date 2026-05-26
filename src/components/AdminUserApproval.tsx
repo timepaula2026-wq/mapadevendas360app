@@ -66,6 +66,7 @@ const downloadFile = (content: string, filename: string, mime: string) => {
 
 const AdminUserApproval = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [rolesByUser, setRolesByUser] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("pending");
   const [search, setSearch] = useState("");
@@ -81,12 +82,17 @@ const AdminUserApproval = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) toast.error("Erro ao carregar usuários");
-    else setUsers((data || []) as UserProfile[]);
+    const [profilesRes, rolesRes] = await Promise.all([
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
+    ]);
+    if (profilesRes.error) toast.error("Erro ao carregar usuários");
+    else setUsers((profilesRes.data || []) as UserProfile[]);
+    const map: Record<string, string[]> = {};
+    (rolesRes.data || []).forEach((r: any) => {
+      (map[r.user_id] ||= []).push(r.role);
+    });
+    setRolesByUser(map);
     setLoading(false);
   };
 
@@ -94,20 +100,33 @@ const AdminUserApproval = () => {
     fetchUsers();
   }, []);
 
+  const ROLE_TO_ACTIVITY: Record<string, string> = {
+    iniciante: "consultor iniciante",
+    autorizado: "consultor autorizado",
+    gestor: "gestor de unidade",
+    secretaria: "administrativo",
+    supervisor: "supervisor",
+    admin: "administrador",
+  };
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return users.filter((u) => {
       if (filter === "pending" && u.approved) return false;
       if (filter === "approved" && !u.approved) return false;
       if (!term) return true;
+      const roles = rolesByUser[u.user_id] || [];
+      const activities = roles.map((r) => ROLE_TO_ACTIVITY[r] || r);
       return (
         (u.display_name || "").toLowerCase().includes(term) ||
         (u.unit || "").toLowerCase().includes(term) ||
         (u.phone || "").toLowerCase().includes(term) ||
-        (u.cpf || "").toLowerCase().includes(term)
+        (u.cpf || "").toLowerCase().includes(term) ||
+        roles.some((r) => r.toLowerCase().includes(term)) ||
+        activities.some((a) => a.includes(term))
       );
     });
-  }, [users, filter, search]);
+  }, [users, filter, search, rolesByUser]);
 
   const counts = useMemo(
     () => ({
@@ -282,7 +301,7 @@ const AdminUserApproval = () => {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome, CPF, telefone..."
+            placeholder="Buscar por nome, CPF/matrícula, unidade, papel ou atividade..."
             className="pl-8 h-9 text-sm"
           />
         </div>
