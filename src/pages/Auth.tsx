@@ -18,7 +18,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [cpf, setCpf] = useState("");
   const [atividade, setAtividade] = useState("");
-  const [matricula, setMatricula] = useState("");
+  // matrícula removida — validação agora é por nome completo
   const [unit, setUnit] = useState("");
   const [customUnit, setCustomUnit] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -293,20 +293,6 @@ const Auth = () => {
                 </select>
               </div>
 
-              {/* Matrícula (somente para Consultor Autorizado) */}
-              {atividade === "autorizado" && (
-                <div className="relative">
-                  <IdCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={matricula}
-                    onChange={(e) => setMatricula(e.target.value)}
-                    placeholder="Matrícula"
-                    required
-                    className={inputClass}
-                  />
-                </div>
-              )}
             </>
           )}
 
