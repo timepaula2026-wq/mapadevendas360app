@@ -53,6 +53,22 @@ Deno.serve(async (req) => {
 
     const results: Array<{ email: string; status: string; message?: string }> = [];
 
+    // Pre-load existing users once (avoid calling listUsers per row, which times out on large imports)
+    const existing = new Map<string, string>(); // email -> userId
+    try {
+      let page = 1;
+      while (true) {
+        const { data: list } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+        const users = list?.users || [];
+        for (const u of users) {
+          if (u.email) existing.set(u.email.toLowerCase(), u.id);
+        }
+        if (users.length < 1000) break;
+        page++;
+        if (page > 20) break;
+      }
+    } catch (_) { /* ignore */ }
+
     for (const r of rows) {
       const email = (r.email || "").trim().toLowerCase();
       if (!email || !email.includes("@")) {
@@ -61,31 +77,31 @@ Deno.serve(async (req) => {
       }
       const role = activityToRole(r.activity);
 
-      // Create or fetch user
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email,
-        password: defaultPassword,
-        email_confirm: true,
-        user_metadata: {
-          display_name: r.display_name,
-          phone: r.phone,
-          unit: r.unit,
-          cpf: r.matricula_cpf,
-        },
-      });
-
-      let userId = created?.user?.id;
-      if (createErr || !userId) {
-        // try lookup existing
-        const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-        const found = list?.users?.find((u) => (u.email || "").toLowerCase() === email);
-        if (!found) {
+      let userId: string | undefined;
+      let wasCreated = false;
+      const existingId = existing.get(email);
+      if (existingId) {
+        userId = existingId;
+        await admin.auth.admin.updateUserById(userId, { password: defaultPassword, email_confirm: true });
+      } else {
+        const { data: created, error: createErr } = await admin.auth.admin.createUser({
+          email,
+          password: defaultPassword,
+          email_confirm: true,
+          user_metadata: {
+            display_name: r.display_name,
+            phone: r.phone,
+            unit: r.unit,
+            cpf: r.matricula_cpf,
+          },
+        });
+        userId = created?.user?.id;
+        if (!userId) {
           results.push({ email, status: "error", message: createErr?.message || "falha ao criar" });
           continue;
         }
-        userId = found.id;
-        // reset password to default
-        await admin.auth.admin.updateUserById(userId, { password: defaultPassword, email_confirm: true });
+        wasCreated = true;
+        existing.set(email, userId);
       }
 
       // Upsert profile
@@ -104,7 +120,7 @@ Deno.serve(async (req) => {
       // Insert role
       await admin.from("user_roles").upsert({ user_id: userId, role }, { onConflict: "user_id,role" });
 
-      results.push({ email, status: created ? "created" : "updated" });
+      results.push({ email, status: wasCreated ? "created" : "updated" });
     }
 
     return new Response(JSON.stringify({ results }), {
