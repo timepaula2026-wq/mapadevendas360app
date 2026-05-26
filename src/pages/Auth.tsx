@@ -59,7 +59,7 @@ const Auth = () => {
     return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
   };
 
-  const validateConsultor = async (nomeToCheck: string): Promise<{ allowed: boolean; message: string; nome?: string | null } | null> => {
+  const validateConsultor = async (nomeToCheck: string): Promise<{ allowed: boolean; message: string; status?: string; nome?: string | null } | null> => {
     const cleanNome = nomeToCheck.trim().replace(/\s+/g, " ");
     if (cleanNome.split(" ").length < 2) {
       return { allowed: false, message: "Informe seu nome completo (nome e sobrenome)." };
@@ -71,15 +71,13 @@ const Auth = () => {
       });
       if (error) {
         console.error("Erro ao validar consultor:", error);
-        toast({ title: "Erro de validação", description: "Não foi possível validar seu cadastro. Tente novamente.", variant: "destructive" });
-        return null;
+        return { allowed: false, status: "api_unavailable", message: "Serviço de validação indisponível." };
       }
 
-      return data as { allowed: boolean; message: string; nome?: string | null };
+      return data as { allowed: boolean; message: string; status?: string; nome?: string | null };
     } catch (err) {
       console.error("Erro ao chamar validação:", err);
-      toast({ title: "Erro de validação", description: "Não foi possível validar seu cadastro. Tente novamente.", variant: "destructive" });
-      return null;
+      return { allowed: false, status: "api_unavailable", message: "Serviço de validação indisponível." };
     }
   };
 
@@ -124,7 +122,12 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
-      if (!validation.allowed) {
+      // Se o endpoint estiver fora do ar / com erro técnico, permite o cadastro
+      // e deixa a aprovação manual a cargo do admin.
+      const fallbackStatuses = ["api_unavailable", "parse_error", "error"];
+      const isFallback = !validation.allowed && validation.status && fallbackStatuses.includes(validation.status);
+
+      if (!validation.allowed && !isFallback) {
         toast({
           title: "Acesso bloqueado",
           description: validation.message || "Seu nome não está autorizado. Entre em contato com o suporte.",
@@ -134,14 +137,22 @@ const Auth = () => {
         return;
       }
 
+      const autoApproved = validation.allowed === true;
+
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
         unit: finalUnit,
         atividade,
-        auto_approved: true,
+        auto_approved: autoApproved,
       } as any);
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+      } else if (isFallback) {
+        toast({
+          title: "Cadastro recebido!",
+          description:
+            "Não conseguimos validar automaticamente seu nome no momento. Sua conta foi criada e aguarda liberação manual do administrador.",
+        });
       } else {
         toast({ title: "Cadastro realizado!", description: "Verifique seu e-mail para confirmar a conta." });
       }
@@ -232,6 +243,12 @@ const Auth = () => {
         <form onSubmit={handleSubmit} className="space-y-3">
           {!isLogin && (
             <>
+              {/* Aviso importante */}
+              <div className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-white/80 leading-relaxed">
+                Use o <strong>mesmo nome completo</strong> e o <strong>mesmo e-mail</strong> informados no
+                seu cadastro de consultor. Caso contrário, o acesso não será liberado.
+              </div>
+
               {/* Nome completo */}
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
