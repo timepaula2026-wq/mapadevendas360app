@@ -463,6 +463,47 @@ const AdminUserApproval = () => {
 
       {/* Lista */}
       <div className="space-y-2">
+        {/* Barra de seleção em massa */}
+        {paginated.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 bg-muted/30 border border-border rounded-lg px-3 py-2">
+            <Checkbox
+              checked={allOnPageSelected}
+              onCheckedChange={togglePageSelection}
+              aria-label="Selecionar página"
+            />
+            <span className="text-sm text-muted-foreground">
+              {selectedIds.size > 0
+                ? `${selectedIds.size} selecionado(s)`
+                : "Selecionar página"}
+            </span>
+            {selectedIds.size < filtered.length && (
+              <Button size="sm" variant="ghost" onClick={selectAllFiltered}>
+                Selecionar todos ({filtered.length})
+              </Button>
+            )}
+            {selectedIds.size > 0 && (
+              <>
+                <Button size="sm" variant="ghost" onClick={clearSelection}>
+                  Limpar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleBulkReset}
+                  disabled={bulkResetting}
+                  className="gap-1 ml-auto"
+                >
+                  {bulkResetting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="w-4 h-4" />
+                  )}
+                  Resetar senha em massa
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
         {paginated.map((u) => {
           const inactive = daysSince(u.last_active_at);
           return (
@@ -471,6 +512,13 @@ const AdminUserApproval = () => {
               className="bg-card border border-border rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-2">
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedIds.has(u.user_id)}
+                    onCheckedChange={() => toggleSelected(u.user_id)}
+                    aria-label={`Selecionar ${u.display_name || u.email}`}
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-base font-semibold text-foreground truncate">
