@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { UNITS } from "@/lib/units";
 import { ArrowLeft, Plus, ChevronLeft, ChevronRight, Calendar as CalIcon, Clock, List, LayoutGrid } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";

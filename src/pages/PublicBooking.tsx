@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { UNITS } from "@/lib/units";
 import { CalendarDays, Clock, CheckCircle2, ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
