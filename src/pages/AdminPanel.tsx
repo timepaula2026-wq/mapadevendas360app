@@ -16,6 +16,7 @@ import AdminAppLayout from "@/components/AdminAppLayout";
 import AdminUserRoles from "@/components/AdminUserRoles";
 import AdminUserActivities from "@/components/AdminUserActivities";
 import AdminUserApproval from "@/components/AdminUserApproval";
+import AdminBulkImport from "@/components/AdminBulkImport";
 
 interface Training {
   id: string;
@@ -476,6 +477,9 @@ const AdminPanel = () => {
 
           {/* ===== USERS TAB ===== */}
           <TabsContent value="users">
+            <div className="mb-4">
+              <AdminBulkImport />
+            </div>
             <AdminUserApproval />
           </TabsContent>
 
