@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Map, Mail, Lock, User, Loader2, Phone, Building2, Calendar, IdCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
+import { validateEmail } from "@/lib/emailValidation";
 
 const UNITS = [
   "Araucária",
