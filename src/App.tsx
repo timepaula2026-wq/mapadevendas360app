@@ -38,6 +38,10 @@ import EscolaLideres from "./pages/EscolaLideres";
 import TermoCorrespondente from "./pages/TermoCorrespondente";
 import Planejamento from "./pages/Planejamento";
 import CustomSection from "./pages/CustomSection";
+import Quizz from "./pages/Quizz";
+import QuizzEdit from "./pages/QuizzEdit";
+import QuizzHost from "./pages/QuizzHost";
+import QuizzPlay from "./pages/QuizzPlay";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -115,6 +119,10 @@ const App = () => (
             <Route path="/termo-correspondente" element={<ProtectedRoute><TermoCorrespondente /></ProtectedRoute>} />
             <Route path="/planejamento" element={<ProtectedRoute><Planejamento /></ProtectedRoute>} />
             <Route path="/c/:slug" element={<ProtectedRoute><CustomSection /></ProtectedRoute>} />
+            <Route path="/quizz" element={<ProtectedRoute><Quizz /></ProtectedRoute>} />
+            <Route path="/quizz/edit/:id" element={<ProtectedRoute><QuizzEdit /></ProtectedRoute>} />
+            <Route path="/quizz/host/:id" element={<ProtectedRoute><QuizzHost /></ProtectedRoute>} />
+            <Route path="/quizz/play/:pin" element={<ProtectedRoute><QuizzPlay /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
