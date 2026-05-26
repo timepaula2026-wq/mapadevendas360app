@@ -63,9 +63,12 @@ function levenshtein(a: string, b: string): number {
   return dp[m][n];
 }
 
-export type EmailValidationResult =
-  | { valid: true; email: string }
-  | { valid: false; error: string; suggestion?: string };
+export type EmailValidationResult = {
+  valid: boolean;
+  email?: string;
+  error?: string;
+  suggestion?: string;
+};
 
 export function validateEmail(raw: string): EmailValidationResult {
   const email = (raw || "").trim().toLowerCase();
