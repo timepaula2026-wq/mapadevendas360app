@@ -54,7 +54,7 @@ const AdminPanel = () => {
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
 
-  const [category, setCategoryGroup] = useState<"app" | "cadastros" | "suporte">("app");
+  const [categoryGroup, setCategoryGroup] = useState<"app" | "cadastros" | "suporte">("app");
   const [activeTab, setActiveTab] = useState<string>("trainings");
 
   const categoryTabs: Record<string, string[]> = {
