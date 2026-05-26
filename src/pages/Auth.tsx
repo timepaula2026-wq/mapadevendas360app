@@ -18,7 +18,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [cpf, setCpf] = useState("");
   const [atividade, setAtividade] = useState("");
-  const [matricula, setMatricula] = useState("");
+  // matrícula removida — validação agora é por nome completo
   const [unit, setUnit] = useState("");
   const [customUnit, setCustomUnit] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -59,15 +59,15 @@ const Auth = () => {
     return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
   };
 
-  const validateConsultor = async (cpfToCheck: string): Promise<{ allowed: boolean; message: string; nome?: string | null } | null> => {
-    const cleanCpf = cpfToCheck.replace(/\D/g, "");
-    if (cleanCpf.length !== 11) {
-      return { allowed: false, message: "CPF inválido. Informe os 11 dígitos." };
+  const validateConsultor = async (nomeToCheck: string): Promise<{ allowed: boolean; message: string; nome?: string | null } | null> => {
+    const cleanNome = nomeToCheck.trim().replace(/\s+/g, " ");
+    if (cleanNome.split(" ").length < 2) {
+      return { allowed: false, message: "Informe seu nome completo (nome e sobrenome)." };
     }
 
     try {
       const { data, error } = await supabase.functions.invoke("validate-consultor", {
-        body: { cpf: cleanCpf },
+        body: { nome: cleanNome },
       });
       if (error) {
         console.error("Erro ao validar consultor:", error);
@@ -103,11 +103,6 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
-      if (atividade === "autorizado" && !matricula.trim()) {
-        toast({ title: "Erro", description: "Informe sua matrícula.", variant: "destructive" });
-        setSubmitting(false);
-        return;
-      }
       // Validação rigorosa de e-mail
       const emailCheck = validateEmail(email);
       if (!emailCheck.valid) {
@@ -123,12 +118,27 @@ const Auth = () => {
         return;
       }
 
+      // Valida nome completo contra a base do Gestão360
+      const validation = await validateConsultor(displayName);
+      if (!validation) {
+        setSubmitting(false);
+        return;
+      }
+      if (!validation.allowed) {
+        toast({
+          title: "Acesso bloqueado",
+          description: validation.message || "Seu nome não está autorizado. Entre em contato com o suporte.",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
         unit: finalUnit,
-        cpf: atividade === "autorizado" ? matricula.replace(/\D/g, "") : "",
         atividade,
-        matricula: atividade === "autorizado" ? matricula.trim() : "",
+        auto_approved: true,
       } as any);
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
@@ -283,20 +293,6 @@ const Auth = () => {
                 </select>
               </div>
 
-              {/* Matrícula (somente para Consultor Autorizado) */}
-              {atividade === "autorizado" && (
-                <div className="relative">
-                  <IdCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={matricula}
-                    onChange={(e) => setMatricula(e.target.value)}
-                    placeholder="Matrícula"
-                    required
-                    className={inputClass}
-                  />
-                </div>
-              )}
             </>
           )}
 
