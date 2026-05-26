@@ -21,6 +21,7 @@ import {
   BookOpen,
   Activity,
   Trash2,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -196,6 +197,21 @@ const AdminUserApproval = () => {
     }
     toast.success("Usuário excluído");
     fetchUsers();
+  };
+
+  const handleResetPassword = async (u: UserProfile) => {
+    const ok = window.confirm(
+      `Resetar a senha de "${u.display_name || u.email}" para 123456?`,
+    );
+    if (!ok) return;
+    const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+      body: { target_user_id: u.user_id, password: "123456" },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || error?.message || "Erro ao resetar senha");
+      return;
+    }
+    toast.success("Senha redefinida para 123456");
   };
 
   const exportCSV = () => {
@@ -485,6 +501,13 @@ const AdminUserApproval = () => {
                     title="Excluir usuário (erro de cadastro)"
                   >
                     <Trash2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleResetPassword(u)}
+                    className="p-1.5 text-primary hover:bg-primary/10 rounded"
+                    title="Resetar senha para 123456"
+                  >
+                    <KeyRound className="w-4 h-4" />
                   </button>
                 </div>
               </div>
