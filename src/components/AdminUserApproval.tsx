@@ -388,7 +388,7 @@ const AdminUserApproval = () => {
 
       {/* Lista */}
       <div className="space-y-2">
-        {filtered.map((u) => {
+        {paginated.map((u) => {
           const inactive = daysSince(u.last_active_at);
           return (
             <div
@@ -498,6 +498,66 @@ const AdminUserApproval = () => {
           </div>
         )}
       </div>
+
+      {/* Paginação */}
+      {filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              {(currentPage - 1) * pageSize + 1}–
+              {Math.min(currentPage * pageSize, filtered.length)} de {filtered.length}
+            </span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+              className="bg-card border border-border rounded px-2 py-1 text-sm"
+            >
+              {[10, 20, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n}/pág
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(1)}
+              disabled={currentPage === 1}
+            >
+              «
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              ‹ Anterior
+            </Button>
+            <span className="text-sm px-2">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Próxima ›
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              »
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Modal de detalhes */}
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
