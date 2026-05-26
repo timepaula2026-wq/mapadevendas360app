@@ -125,6 +125,14 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
+      // Validação rigorosa de e-mail
+      const emailCheck = validateEmail(email);
+      if (!emailCheck.valid) {
+        toast({ title: "E-mail inválido", description: emailCheck.error, variant: "destructive" });
+        if (emailCheck.suggestion) setEmail(emailCheck.suggestion);
+        setSubmitting(false);
+        return;
+      }
       const finalUnit = unit === "outra" ? customUnit.trim() : unit;
       if (!finalUnit) {
         toast({ title: "Erro", description: "Selecione uma unidade.", variant: "destructive" });
