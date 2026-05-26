@@ -83,6 +83,8 @@ const AdminUserApproval = () => {
   const [filter, setFilter] = useState<Filter>("pending");
   const [inactiveFilter, setInactiveFilter] = useState<InactiveFilter>("any");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [selected, setSelected] = useState<UserProfile | null>(null);
   const [details, setDetails] = useState<{
     trainings: { title: string; created_at: string }[];
@@ -146,6 +148,18 @@ const AdminUserApproval = () => {
       );
     });
   }, [users, filter, search, rolesByUser, inactiveFilter]);
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setPage(1);
+  }, [filter, search, inactiveFilter, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize],
+  );
 
   const counts = useMemo(
     () => ({
