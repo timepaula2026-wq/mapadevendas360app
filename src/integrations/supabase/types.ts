@@ -1062,6 +1062,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      revoke_inactive_iniciantes: {
+        Args: never
+        Returns: {
+          display_name: string
+          last_active_at: string
+          revoked_user_id: string
+        }[]
+      }
     }
     Enums: {
       app_role:
