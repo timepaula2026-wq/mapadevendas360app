@@ -348,6 +348,16 @@ const Auth = () => {
           </button>
         </p>
       </div>
+      <button
+        type="button"
+        onClick={() => setSupportOpen(true)}
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-opacity"
+        aria-label="Suporte"
+      >
+        <Headphones className="w-5 h-5" />
+        <span className="text-sm font-semibold hidden sm:inline">Suporte</span>
+      </button>
+      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
   );
 };
