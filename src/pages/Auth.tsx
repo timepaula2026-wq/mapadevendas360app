@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Map, Mail, Lock, User, Loader2, Phone, Building2, Calendar, IdCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
+import { validateEmail } from "@/lib/emailValidation";
 
 const UNITS = [
   "Araucária",
@@ -122,6 +123,14 @@ const Auth = () => {
       }
       if (phone.replace(/\D/g, "").length < 10) {
         toast({ title: "Erro", description: "Preencha o telefone com DDD.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      // Validação rigorosa de e-mail
+      const emailCheck = validateEmail(email);
+      if (!emailCheck.valid) {
+        toast({ title: "E-mail inválido", description: emailCheck.error, variant: "destructive" });
+        if (emailCheck.suggestion) setEmail(emailCheck.suggestion);
         setSubmitting(false);
         return;
       }
