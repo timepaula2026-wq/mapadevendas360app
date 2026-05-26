@@ -11,22 +11,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Camera, User as UserIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-
-const UNITS = [
-  "Araucária",
-  "Araçatuba",
-  "Almirante Tamandaré",
-  "Colombo",
-  "Paranaguá",
-  "Palácio do Café",
-  "Pinheiros",
-  "Poços de Caldas",
-  "São João da Boa Vista",
-  "Digital",
-  "Administrativo",
-];
+import { UNITS } from "@/lib/units";
 
 interface Props {
   open: boolean;
@@ -45,13 +32,15 @@ const EditProfileDialog = ({ open, onClose, onSaved }: Props) => {
   const [unitStartDate, setUnitStartDate] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     if (!open || !user) return;
     setLoading(true);
     supabase
       .from("profiles")
-      .select("display_name, phone, unit, unit_start_date")
+      .select("display_name, phone, unit, unit_start_date, avatar_url")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -67,10 +56,64 @@ const EditProfileDialog = ({ open, onClose, onSaved }: Props) => {
             setCustomUnit("");
           }
           setUnitStartDate(data.unit_start_date || "");
+          setAvatarUrl((data as any).avatar_url || null);
         }
         setLoading(false);
       });
   }, [open, user]);
+
+  const uploadAvatar = async (file: File) => {
+    if (!user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB");
+      return;
+    }
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      toast.error("Erro ao enviar foto");
+      setUploadingAvatar(false);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+    const url = pub.publicUrl;
+    const { error: updErr } = await supabase
+      .from("profiles")
+      .update({ avatar_url: url })
+      .eq("user_id", user.id);
+    if (updErr) {
+      toast.error("Erro ao salvar foto no perfil");
+    } else {
+      setAvatarUrl(url);
+      toast.success("Foto atualizada!");
+      onSaved?.();
+    }
+    setUploadingAvatar(false);
+  };
+
+  const removeAvatar = async () => {
+    if (!user) return;
+    setUploadingAvatar(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: null })
+      .eq("user_id", user.id);
+    if (error) toast.error("Erro ao remover foto");
+    else {
+      setAvatarUrl(null);
+      toast.success("Foto removida");
+      onSaved?.();
+    }
+    setUploadingAvatar(false);
+  };
 
   const save = async () => {
     if (!user) return;
@@ -133,6 +176,48 @@ const EditProfileDialog = ({ open, onClose, onSaved }: Props) => {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Foto de perfil */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full bg-secondary overflow-hidden flex items-center justify-center border border-border">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserIcon className="w-10 h-10 text-muted-foreground" />
+                  )}
+                </div>
+                <label
+                  htmlFor="avatar-upload"
+                  className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-1.5 cursor-pointer hover:opacity-90"
+                  title="Trocar foto"
+                >
+                  {uploadingAvatar ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Camera className="w-3.5 h-3.5" />
+                  )}
+                </label>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingAvatar}
+                  onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])}
+                />
+              </div>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={removeAvatar}
+                  disabled={uploadingAvatar}
+                  className="text-[11px] text-destructive flex items-center gap-1 hover:underline"
+                >
+                  <Trash2 className="w-3 h-3" /> Remover foto
+                </button>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <Label>Nome completo</Label>
               <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />

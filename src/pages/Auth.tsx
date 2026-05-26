@@ -6,20 +6,7 @@ import { Mail, Lock, User, Loader2, Building2, IdCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
-
-const UNITS = [
-  "Araucária",
-  "Araçatuba",
-  "Almirante Tamandaré",
-  "Colombo",
-  "Paranaguá",
-  "Palácio do Café",
-  "Pinheiros",
-  "Poços de Caldas",
-  "São João da Boa Vista",
-  "Digital",
-  "Administrativo",
-];
+import { UNITS } from "@/lib/units";
 
 const Auth = () => {
   const { user, loading, signIn, signUp } = useAuth();
