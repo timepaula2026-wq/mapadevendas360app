@@ -85,7 +85,8 @@ const QuizzEdit = () => {
     await supabase.from("quiz_questions").delete().eq("quiz_id", id);
     if (questions.length) {
       const rows = questions.map((q, i) => ({
-        quiz_id: id, type: q.type, question: q.question, options: q.options as unknown as object,
+        quiz_id: id, type: q.type, question: q.question,
+        options: q.options as unknown as import("@/integrations/supabase/types").Json,
         time_limit: q.time_limit, points: q.points, sort_order: i,
       }));
       const { error: e2 } = await supabase.from("quiz_questions").insert(rows);
