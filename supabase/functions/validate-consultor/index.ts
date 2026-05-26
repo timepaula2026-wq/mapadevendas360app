@@ -120,7 +120,6 @@ export const handler = async (req: Request): Promise<Response> => {
       valido?: boolean;
       ativo?: boolean | null;
       nome?: string | null;
-      status?: string | null;
     };
     try {
       data = JSON.parse(responseText);
@@ -132,53 +131,23 @@ export const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Normaliza status textual da API (ex.: "Aprovado", "Aprovado (Pend. Doc)", "Não Aprovado Doc")
-    const rawStatus = (data.status ?? "").toString().trim();
-    const normalizedStatus = rawStatus
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-    // Se a API já envia o campo status, usamos ele como fonte de verdade.
-    if (rawStatus) {
-      const isAprovado = normalizedStatus === "aprovado";
-      const isAprovadoPendDoc =
-        normalizedStatus.startsWith("aprovado") &&
-        normalizedStatus.includes("pend");
-
-      if (!isAprovado && !isAprovadoPendDoc) {
-        return jsonResponse({
-          allowed: false,
-          status: "inactive",
-          message: `Cadastro com status "${rawStatus}". Acesso não liberado. Procure o suporte para regularizar.`,
-        });
-      }
-    } else {
-      // Fallback: API antiga (sem campo status) — usa valido/ativo.
-      if (data.valido !== true) {
-        return jsonResponse({
-          allowed: false,
-          status: "not_found",
-          message: "CPF não encontrado na base de consultores. Entre em contato com o suporte.",
-        });
-      }
-
-      if (data.ativo === false) {
-        return jsonResponse({
-          allowed: false,
-          status: "inactive",
-          message: "Consultor inativo. Acesso não permitido. Procure o suporte para regularizar.",
-        });
-      }
+    // Regra: a API do Gestão360 retorna `valido: true` para cadastros existentes
+    // (que cobrem tanto "Aprovado" quanto "Aprovado (Pend. Doc)"). Cadastros
+    // "Não Aprovado" / "Não Aprovado Doc" vêm como `valido: false`.
+    // Por isso liberamos sempre que `valido === true`, ignorando `ativo`.
+    if (data.valido !== true) {
+      return jsonResponse({
+        allowed: false,
+        status: "not_found",
+        message: "CPF não encontrado ou não aprovado na base de consultores. Entre em contato com o suporte.",
+      });
     }
 
     return jsonResponse({
       allowed: true,
       status: "ok",
       nome: data.nome ?? null,
-      message: rawStatus
-        ? `Cadastro ${rawStatus}. Acesso liberado.`
-        : "Consultor ativo. Acesso liberado.",
+      message: "Cadastro aprovado. Acesso liberado.",
     });
   } catch (error: unknown) {
     console.error("Unexpected error validating CPF:", error);
