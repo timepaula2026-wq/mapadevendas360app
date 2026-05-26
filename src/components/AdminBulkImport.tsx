@@ -63,10 +63,21 @@ export default function AdminBulkImport() {
     // Validar e-mails antes de enviar
     const invalid: { email: string; error: string }[] = [];
     const valid: Row[] = [];
+    const corrected: { from: string; to: string }[] = [];
     for (const r of rows) {
       const v = validateEmail(r.email);
-      if (!v.valid) invalid.push({ email: r.email, error: v.error || "inválido" });
-      else valid.push({ ...r, email: v.email! });
+      if (v.valid) {
+        valid.push({ ...r, email: v.email! });
+      } else if (v.suggestion) {
+        // auto-correct typo domains (gmail.con -> gmail.com, hoail.com -> hotmail.com, etc.)
+        corrected.push({ from: r.email, to: v.suggestion });
+        valid.push({ ...r, email: v.suggestion });
+      } else {
+        invalid.push({ email: r.email, error: v.error || "inválido" });
+      }
+    }
+    if (corrected.length) {
+      toast.message(`${corrected.length} e-mail(s) corrigido(s) automaticamente`);
     }
     if (invalid.length) {
       setResults(invalid.map((i) => ({ email: i.email, status: "skip", message: i.error })));
@@ -99,6 +110,7 @@ export default function AdminBulkImport() {
       }
       setResults([
         ...invalid.map((i) => ({ email: i.email, status: "skip", message: i.error })),
+        ...corrected.map((c) => ({ email: c.to, status: "fixed", message: `corrigido de ${c.from}` })),
         ...all,
       ]);
       const ok = all.filter((r) => r.status === "created" || r.status === "updated").length;
