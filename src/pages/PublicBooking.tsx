@@ -11,7 +11,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { format, addMonths, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isBefore, isToday, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const UNITS = ["Araucária", "Araçatuba", "Almirante Tamandaré", "Colombo", "Paranaguá", "Palácio do café", "Praça do Japão", "Pinheiros", "Poços de Caldas", "São João da Boa Vista", "Digital"];
 
 const TIME_SLOTS = Array.from({ length: 26 }, (_, i) => {
   const hour = Math.floor(i / 2) + 7;
