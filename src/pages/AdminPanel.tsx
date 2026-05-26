@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -17,6 +17,7 @@ import AdminUserRoles from "@/components/AdminUserRoles";
 import AdminUserActivities from "@/components/AdminUserActivities";
 import AdminUserApproval from "@/components/AdminUserApproval";
 import AdminBulkImport from "@/components/AdminBulkImport";
+import AdminSupportTickets from "@/components/AdminSupportTickets";
 
 interface Training {
   id: string;
@@ -301,6 +302,9 @@ const AdminPanel = () => {
              <TabsTrigger value="activities" className="flex-1 gap-1">
                <Activity className="w-4 h-4" /> Atividades
              </TabsTrigger>
+             <TabsTrigger value="support" className="flex-1 gap-1">
+               <Headphones className="w-4 h-4" /> Suporte
+             </TabsTrigger>
               <TabsTrigger value="stats" className="flex-1 gap-1">
                   <Layers className="w-4 h-4" /> Resumo
                 </TabsTrigger>
@@ -537,6 +541,11 @@ const AdminPanel = () => {
           {/* ===== ACTIVITIES TAB ===== */}
           <TabsContent value="activities">
             <AdminUserActivities />
+          </TabsContent>
+
+          {/* ===== SUPPORT TAB ===== */}
+          <TabsContent value="support">
+            <AdminSupportTickets />
           </TabsContent>
 
         </Tabs>

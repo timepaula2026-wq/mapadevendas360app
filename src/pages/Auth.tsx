@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, User, Loader2, Building2, IdCard } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
 import { UNITS } from "@/lib/units";
+import SupportDialog from "@/components/SupportDialog";
 
 const Auth = () => {
   const { user, loading, signIn, signUp } = useAuth();
@@ -21,6 +22,7 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [supportOpen, setSupportOpen] = useState(false);
 
   if (loading) {
     return (
@@ -346,6 +348,16 @@ const Auth = () => {
           </button>
         </p>
       </div>
+      <button
+        type="button"
+        onClick={() => setSupportOpen(true)}
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-opacity"
+        aria-label="Suporte"
+      >
+        <Headphones className="w-5 h-5" />
+        <span className="text-sm font-semibold hidden sm:inline">Suporte</span>
+      </button>
+      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
   );
 };
