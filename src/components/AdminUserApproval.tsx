@@ -426,7 +426,7 @@ const AdminUserApproval = () => {
           <DialogHeader>
             <DialogTitle>{selected?.display_name || "Usuário"}</DialogTitle>
             <DialogDescription>
-              Cursos e uso do app
+              Perfil do consultor
             </DialogDescription>
           </DialogHeader>
 
@@ -436,6 +436,50 @@ const AdminUserApproval = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Dados do consultor */}
+              {selected && (
+                <div className="bg-muted/30 rounded-lg p-3 space-y-1.5 text-xs">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Nome</span>
+                    <span className="font-medium text-right">{selected.display_name || "—"}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">E-mail</span>
+                    <span className="font-medium text-right break-all">{selected.email || "—"}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Unidade</span>
+                    <span className="font-medium text-right">{selected.unit || "—"}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Categoria (papéis)</span>
+                    <span className="font-medium text-right">
+                      {(rolesByUser[selected.user_id] || []).map((r) => ROLE_LABELS_PT[r] || r).join(", ") || "—"}
+                    </span>
+                  </div>
+                  {selected.cpf && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">CPF / Matrícula</span>
+                      <span className="font-medium text-right">{selected.cpf}</span>
+                    </div>
+                  )}
+                  {selected.phone && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Telefone</span>
+                      <span className="font-medium text-right">{selected.phone}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Data de cadastro</span>
+                    <span className="font-medium text-right">{formatDate(selected.created_at)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Último uso do app</span>
+                    <span className="font-medium text-right">{formatDateTime(selected.last_active_at)}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Uso do app */}
               <div className="bg-muted/30 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
