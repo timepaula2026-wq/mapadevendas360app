@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity, Headphones } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit2, Youtube, FileText, File, Loader2, BookOpen, Layers, Users, Upload, CheckCircle, XCircle, Grid3X3, ShoppingCart, ImageIcon, Bell, Palette, ShieldCheck, Activity, Headphones, Settings, UserCog, LifeBuoy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -53,6 +53,20 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
+
+  const [categoryGroup, setCategoryGroup] = useState<"app" | "cadastros" | "suporte">("app");
+  const [activeTab, setActiveTab] = useState<string>("trainings");
+
+  const categoryTabs: Record<string, string[]> = {
+    app: ["trainings", "sections", "banner", "notifications", "layout"],
+    cadastros: ["users", "roles", "activities", "stats"],
+    suporte: ["support"],
+  };
+
+  const handleCategoryChange = (cat: "app" | "cadastros" | "suporte") => {
+    setCategoryGroup(cat);
+    setActiveTab(categoryTabs[cat][0]);
+  };
 
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
@@ -276,39 +290,69 @@ const AdminPanel = () => {
       </header>
 
       <div className="p-4 max-w-2xl mx-auto">
-        <Tabs defaultValue="trainings">
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {([
+            { id: "app" as const, label: "Edição do App", icon: Settings },
+            { id: "cadastros" as const, label: "Cadastros", icon: UserCog },
+            { id: "suporte" as const, label: "Suporte", icon: LifeBuoy },
+          ]).map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => handleCategoryChange(id)}
+              className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                categoryGroup === id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              <Icon className="w-4 h-4" /> {label}
+            </button>
+          ))}
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full mb-4 flex-wrap h-auto gap-1">
-            <TabsTrigger value="trainings" className="flex-1 gap-1">
-              <BookOpen className="w-4 h-4" /> Treinamentos
-            </TabsTrigger>
-            <TabsTrigger value="sections" className="flex-1 gap-1">
-              <Grid3X3 className="w-4 h-4" /> Seções
-            </TabsTrigger>
-             <TabsTrigger value="users" className="flex-1 gap-1">
-               <Users className="w-4 h-4" /> Usuários
-             </TabsTrigger>
-             <TabsTrigger value="banner" className="flex-1 gap-1">
-               <ImageIcon className="w-4 h-4" /> Banner
-             </TabsTrigger>
-             <TabsTrigger value="notifications" className="flex-1 gap-1">
-               <Bell className="w-4 h-4" /> Notificações
-             </TabsTrigger>
-             <TabsTrigger value="layout" className="flex-1 gap-1">
-               <Palette className="w-4 h-4" /> Layout
-             </TabsTrigger>
-             <TabsTrigger value="roles" className="flex-1 gap-1">
-               <ShieldCheck className="w-4 h-4" /> Papéis
-             </TabsTrigger>
-             <TabsTrigger value="activities" className="flex-1 gap-1">
-               <Activity className="w-4 h-4" /> Atividades
-             </TabsTrigger>
-             <TabsTrigger value="support" className="flex-1 gap-1">
-               <Headphones className="w-4 h-4" /> Suporte
-             </TabsTrigger>
-              <TabsTrigger value="stats" className="flex-1 gap-1">
+            {categoryGroup === "app" && (
+              <>
+                <TabsTrigger value="trainings" className="flex-1 gap-1">
+                  <BookOpen className="w-4 h-4" /> Treinamentos
+                </TabsTrigger>
+                <TabsTrigger value="sections" className="flex-1 gap-1">
+                  <Grid3X3 className="w-4 h-4" /> Seções
+                </TabsTrigger>
+                <TabsTrigger value="banner" className="flex-1 gap-1">
+                  <ImageIcon className="w-4 h-4" /> Banner
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="flex-1 gap-1">
+                  <Bell className="w-4 h-4" /> Notificações
+                </TabsTrigger>
+                <TabsTrigger value="layout" className="flex-1 gap-1">
+                  <Palette className="w-4 h-4" /> Layout
+                </TabsTrigger>
+              </>
+            )}
+            {categoryGroup === "cadastros" && (
+              <>
+                <TabsTrigger value="users" className="flex-1 gap-1">
+                  <Users className="w-4 h-4" /> Usuários
+                </TabsTrigger>
+                <TabsTrigger value="roles" className="flex-1 gap-1">
+                  <ShieldCheck className="w-4 h-4" /> Papéis
+                </TabsTrigger>
+                <TabsTrigger value="activities" className="flex-1 gap-1">
+                  <Activity className="w-4 h-4" /> Atividades
+                </TabsTrigger>
+                <TabsTrigger value="stats" className="flex-1 gap-1">
                   <Layers className="w-4 h-4" /> Resumo
                 </TabsTrigger>
-           </TabsList>
+              </>
+            )}
+            {categoryGroup === "suporte" && (
+              <TabsTrigger value="support" className="flex-1 gap-1">
+                <Headphones className="w-4 h-4" /> Suporte
+              </TabsTrigger>
+            )}
+          </TabsList>
 
           {/* ===== TRAININGS TAB ===== */}
           <TabsContent value="trainings">
