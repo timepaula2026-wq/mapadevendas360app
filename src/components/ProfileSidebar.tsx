@@ -1,4 +1,4 @@
-import { User, Shield, Bell, Pencil } from "lucide-react";
+import { User, Shield, Bell, Pencil, Trash2 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface ProfileSidebarProps {
   open: boolean;
@@ -18,6 +30,9 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [profile, setProfile] = useState<{
     display_name: string | null;
     phone: string | null;
@@ -114,11 +129,61 @@ const ProfileSidebar = ({ open, onClose }: ProfileSidebarProps) => {
             </div>
           </>
         )}
+        <div className="border-t border-border mx-4" />
+        <div className="px-5 py-4">
+          <button
+            onClick={() => setDeleteOpen(true)}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+            Excluir conta
+          </button>
+        </div>
         <EditProfileDialog
           open={editOpen}
           onClose={() => setEditOpen(false)}
           onSaved={loadProfile}
         />
+        <AlertDialog open={deleteOpen} onOpenChange={(v) => { if (!deleting) { setDeleteOpen(v); if (!v) setConfirmText(""); } }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir sua conta?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação é permanente e não pode ser desfeita. Todos os seus dados de perfil serão removidos.
+                Para confirmar, digite <strong>EXCLUIR</strong> abaixo.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Digite EXCLUIR"
+              disabled={deleting}
+            />
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={confirmText !== "EXCLUIR" || deleting}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  setDeleting(true);
+                  try {
+                    const { error } = await supabase.functions.invoke("delete-my-account");
+                    if (error) throw error;
+                    toast.success("Conta excluída.");
+                    await supabase.auth.signOut();
+                    navigate("/auth");
+                  } catch (err: any) {
+                    toast.error(err?.message || "Erro ao excluir conta");
+                    setDeleting(false);
+                  }
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Excluindo..." : "Excluir conta"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SheetContent>
     </Sheet>
   );
