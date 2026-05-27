@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { ROLES } from "@/lib/roles";
 
 interface UserProfile {
   id: string;
@@ -99,6 +100,8 @@ const AdminUserApproval = () => {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkResetting, setBulkResetting] = useState(false);
+  const [editingRoles, setEditingRoles] = useState<string[]>([]);
+  const [savingRoles, setSavingRoles] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -360,6 +363,7 @@ const AdminUserApproval = () => {
     setSelected(u);
     setDetails(null);
     setDetailsLoading(true);
+    setEditingRoles(rolesByUser[u.user_id] || []);
     try {
       const [trainingsRes, progressRes, certsRes, planRes] = await Promise.all([
         supabase
