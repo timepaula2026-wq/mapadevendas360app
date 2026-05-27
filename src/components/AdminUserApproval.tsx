@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { ROLES } from "@/lib/roles";
 
 interface UserProfile {
   id: string;
@@ -99,6 +100,8 @@ const AdminUserApproval = () => {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkResetting, setBulkResetting] = useState(false);
+  const [editingRoles, setEditingRoles] = useState<string[]>([]);
+  const [savingRoles, setSavingRoles] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -360,6 +363,7 @@ const AdminUserApproval = () => {
     setSelected(u);
     setDetails(null);
     setDetailsLoading(true);
+    setEditingRoles(rolesByUser[u.user_id] || []);
     try {
       const [trainingsRes, progressRes, certsRes, planRes] = await Promise.all([
         supabase
@@ -392,6 +396,42 @@ const AdminUserApproval = () => {
       toast.error("Erro ao carregar detalhes");
     } finally {
       setDetailsLoading(false);
+    }
+  };
+
+  const toggleEditingRole = (role: string) => {
+    setEditingRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    );
+  };
+
+  const saveRoles = async () => {
+    if (!selected) return;
+    setSavingRoles(true);
+    const current = rolesByUser[selected.user_id] || [];
+    const toAdd = editingRoles.filter((r) => !current.includes(r));
+    const toRemove = current.filter((r) => !editingRoles.includes(r));
+    try {
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", selected.user_id)
+          .in("role", toRemove as any);
+        if (error) throw error;
+      }
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from("user_roles")
+          .insert(toAdd.map((r) => ({ user_id: selected.user_id, role: r as any })));
+        if (error) throw error;
+      }
+      setRolesByUser((prev) => ({ ...prev, [selected.user_id]: [...editingRoles] }));
+      toast.success("Papéis atualizados");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao salvar papéis");
+    } finally {
+      setSavingRoles(false);
     }
   };
 
@@ -766,6 +806,39 @@ const AdminUserApproval = () => {
                     <span className="text-muted-foreground">Último uso do app</span>
                     <span className="font-medium text-right">{formatDateTime(selected.last_active_at)}</span>
                   </div>
+                </div>
+              )}
+
+              {/* Editar papéis */}
+              {selected && (
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <h4 className="text-sm font-semibold mb-2">Editar papéis</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ROLES.map((r) => (
+                      <label
+                        key={r.value}
+                        className="flex items-center gap-2 text-xs cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={editingRoles.includes(r.value)}
+                          onCheckedChange={() => toggleEditingRole(r.value)}
+                        />
+                        <span>{ROLE_LABELS_PT[r.value] || r.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <Button
+                    size="sm"
+                    className="mt-3 w-full"
+                    onClick={saveRoles}
+                    disabled={savingRoles}
+                  >
+                    {savingRoles ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Salvar papéis"
+                    )}
+                  </Button>
                 </div>
               )}
 
