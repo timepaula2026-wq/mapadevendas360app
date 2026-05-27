@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Headphones, Bot, LogOut } from "lucide-react";
+import { Home, Headphones, Bot, LogOut, CircleCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import SupportDialog from "@/components/SupportDialog";
@@ -18,6 +18,7 @@ const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
     { id: "home", label: "Home", icon: Home },
     { id: "chatbot", label: "IA do Consórcio", icon: Bot, route: "/chatbot" },
     { id: "support", label: "Suporte", icon: Headphones, action: () => setSupportOpen(true) },
+    { id: "quizz", label: "Quizz", icon: CircleCheck, route: "/quizz" },
   ];
 
   return (
