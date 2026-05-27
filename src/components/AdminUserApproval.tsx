@@ -315,7 +315,15 @@ const AdminUserApproval = () => {
     lines.push("RELATÓRIO DE USUÁRIOS - MAPA DE VENDAS");
     lines.push(`Gerado em: ${new Date().toLocaleString("pt-BR")}`);
     lines.push(
-      `Filtro: ${filter === "pending" ? "Pendentes" : filter === "approved" ? "Aprovados" : "Todos"}`,
+      `Filtro: ${
+        filter === "pending"
+          ? "Pendentes"
+          : filter === "approved"
+          ? "Aprovados"
+          : filter === "first_access"
+          ? "1º acesso feito"
+          : "Todos"
+      }`,
     );
     lines.push("");
     lines.push(
