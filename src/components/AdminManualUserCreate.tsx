@@ -21,6 +21,8 @@ import {
 import { Loader2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { validateEmail } from "@/lib/emailValidation";
+import { ROLES } from "@/lib/roles";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ACTIVITIES = [
   { value: "CONSULTOR INICIANTE", label: "Consultor Iniciante" },
@@ -36,6 +38,7 @@ interface Props {
 export default function AdminManualUserCreate({ onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState<string[]>([]);
   const [form, setForm] = useState({
     display_name: "",
     email: "",
@@ -45,7 +48,7 @@ export default function AdminManualUserCreate({ onCreated }: Props) {
     matricula_cpf: "",
   });
 
-  const reset = () =>
+  const reset = () => {
     setForm({
       display_name: "",
       email: "",
@@ -54,6 +57,11 @@ export default function AdminManualUserCreate({ onCreated }: Props) {
       activity: "CONSULTOR INICIANTE",
       matricula_cpf: "",
     });
+    setRoles([]);
+  };
+
+  const toggleRole = (r: string) =>
+    setRoles((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
 
   const submit = async () => {
     if (!form.display_name.trim()) return toast.error("Informe o nome");
@@ -67,7 +75,7 @@ export default function AdminManualUserCreate({ onCreated }: Props) {
     try {
       const { data, error } = await supabase.functions.invoke("bulk-import-users", {
         body: {
-          rows: [{ ...form, email: finalEmail }],
+          rows: [{ ...form, email: finalEmail, roles }],
           password: "123456",
         },
       });
