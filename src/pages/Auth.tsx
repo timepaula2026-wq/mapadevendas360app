@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
+import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
 import { UNITS } from "@/lib/units";
 import SupportDialog from "@/components/SupportDialog";
