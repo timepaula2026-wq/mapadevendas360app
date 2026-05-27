@@ -13,6 +13,7 @@ type Row = {
   unit?: string;
   activity?: string;
   matricula_cpf?: string;
+  roles?: string[];
 };
 
 const activityToRole = (a?: string): "iniciante" | "autorizado" | "gestor" | "secretaria" => {
@@ -76,6 +77,9 @@ Deno.serve(async (req) => {
         continue;
       }
       const role = activityToRole(r.activity);
+      const extraRoles = Array.isArray(r.roles)
+        ? r.roles.filter((x) => typeof x === "string" && x.length > 0)
+        : [];
 
       let userId: string | undefined;
       let wasCreated = false;
@@ -117,8 +121,14 @@ Deno.serve(async (req) => {
         last_active_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
 
-      // Insert role
-      await admin.from("user_roles").upsert({ user_id: userId, role }, { onConflict: "user_id,role" });
+      // Insert roles (derived from activity + any extra roles selected by admin)
+      const rolesToAssign = Array.from(new Set<string>([role, ...extraRoles]));
+      for (const rr of rolesToAssign) {
+        await admin.from("user_roles").upsert(
+          { user_id: userId, role: rr },
+          { onConflict: "user_id,role" },
+        );
+      }
 
       results.push({ email, status: wasCreated ? "created" : "updated" });
     }
