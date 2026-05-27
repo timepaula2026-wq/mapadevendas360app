@@ -809,6 +809,39 @@ const AdminUserApproval = () => {
                 </div>
               )}
 
+              {/* Editar papéis */}
+              {selected && (
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <h4 className="text-sm font-semibold mb-2">Editar papéis</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ROLES.map((r) => (
+                      <label
+                        key={r.value}
+                        className="flex items-center gap-2 text-xs cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={editingRoles.includes(r.value)}
+                          onCheckedChange={() => toggleEditingRole(r.value)}
+                        />
+                        <span>{ROLE_LABELS_PT[r.value] || r.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <Button
+                    size="sm"
+                    className="mt-3 w-full"
+                    onClick={saveRoles}
+                    disabled={savingRoles}
+                  >
+                    {savingRoles ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Salvar papéis"
+                    )}
+                  </Button>
+                </div>
+              )}
+
               {/* Uso do app */}
               <div className="bg-muted/30 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
