@@ -38,6 +38,7 @@ interface UserProfile {
   last_active_at: string | null;
   cpf: string | null;
   email: string | null;
+  must_change_password: boolean | null;
 }
 
 const ROLE_LABELS_PT: Record<string, string> = {
@@ -49,7 +50,7 @@ const ROLE_LABELS_PT: Record<string, string> = {
   admin: "Administrador",
 };
 
-type Filter = "pending" | "approved" | "all";
+type Filter = "pending" | "approved" | "first_access" | "all";
 type InactiveFilter = "any" | "7" | "15" | "21" | "30";
 
 const formatDate = (d?: string | null) =>
@@ -134,6 +135,7 @@ const AdminUserApproval = () => {
     return users.filter((u) => {
       if (filter === "pending" && u.approved) return false;
       if (filter === "approved" && !u.approved) return false;
+      if (filter === "first_access" && (u.must_change_password !== false)) return false;
       if (minDays > 0) {
         const d = daysSince(u.last_active_at);
         if (d == null || d < minDays) return false;
@@ -169,6 +171,7 @@ const AdminUserApproval = () => {
     () => ({
       pending: users.filter((u) => !u.approved).length,
       approved: users.filter((u) => u.approved).length,
+      first_access: users.filter((u) => u.must_change_password === false).length,
       total: users.length,
     }),
     [users],
@@ -312,7 +315,15 @@ const AdminUserApproval = () => {
     lines.push("RELATÓRIO DE USUÁRIOS - MAPA DE VENDAS");
     lines.push(`Gerado em: ${new Date().toLocaleString("pt-BR")}`);
     lines.push(
-      `Filtro: ${filter === "pending" ? "Pendentes" : filter === "approved" ? "Aprovados" : "Todos"}`,
+      `Filtro: ${
+        filter === "pending"
+          ? "Pendentes"
+          : filter === "approved"
+          ? "Aprovados"
+          : filter === "first_access"
+          ? "1º acesso feito"
+          : "Todos"
+      }`,
     );
     lines.push("");
     lines.push(
@@ -395,11 +406,12 @@ const AdminUserApproval = () => {
   return (
     <div className="space-y-3">
       {/* Filtros */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {(
           [
             { id: "pending", label: "Pendentes", count: counts.pending },
             { id: "approved", label: "Aprovados", count: counts.approved },
+            { id: "first_access", label: "1º acesso feito", count: counts.first_access },
             { id: "all", label: "Todos", count: counts.total },
           ] as { id: Filter; label: string; count: number }[]
         ).map((f) => (

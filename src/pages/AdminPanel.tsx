@@ -17,6 +17,7 @@ import AdminUserRoles from "@/components/AdminUserRoles";
 import AdminUserActivities from "@/components/AdminUserActivities";
 import AdminUserApproval from "@/components/AdminUserApproval";
 import AdminBulkImport from "@/components/AdminBulkImport";
+import AdminManualUserCreate from "@/components/AdminManualUserCreate";
 import AdminSupportTickets from "@/components/AdminSupportTickets";
 import AdminQuizz from "@/components/AdminQuizz";
 
@@ -531,7 +532,10 @@ const AdminPanel = () => {
 
           {/* ===== USERS TAB ===== */}
           <TabsContent value="users">
-            <div className="mb-4">
+            <div className="mb-4 space-y-2">
+              <div className="flex justify-end">
+                <AdminManualUserCreate onCreated={() => window.location.reload()} />
+              </div>
               <AdminBulkImport />
             </div>
             <AdminUserApproval />
