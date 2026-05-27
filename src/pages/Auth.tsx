@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import logoMapaVendas from "@/assets/mapa-vendas-logo.png";
+import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
 import { UNITS } from "@/lib/units";
 import SupportDialog from "@/components/SupportDialog";
@@ -112,6 +112,28 @@ const Auth = () => {
       const finalUnit = unit === "outra" ? customUnit.trim() : unit;
       if (!finalUnit) {
         toast({ title: "Erro", description: "Selecione uma unidade.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+
+      // Administrativo não passa pela validação Gestão360 — depende de aprovação manual do admin
+      const isAdministrativo = atividade === "administrativo" || finalUnit.toLowerCase() === "administrativo";
+
+      if (isAdministrativo) {
+        const { error } = await signUp(email, password, {
+          displayName: displayName.trim(),
+          unit: finalUnit,
+          atividade,
+          auto_approved: false,
+        } as any);
+        if (error) {
+          toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+        } else {
+          toast({
+            title: "Cadastro recebido!",
+            description: "Sua conta administrativa foi criada e aguarda liberação manual do administrador.",
+          });
+        }
         setSubmitting(false);
         return;
       }
