@@ -165,6 +165,26 @@ export default function AdminManualUserCreate({ onCreated }: Props) {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label>Papéis adicionais (libera abas/ícones)</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Os ícones da home são liberados conforme os papéis do usuário.
+            </p>
+            <div className="grid grid-cols-2 gap-2 rounded-md border border-border p-2">
+              {ROLES.map((r) => (
+                <label
+                  key={r.value}
+                  className="flex items-center gap-2 text-sm cursor-pointer"
+                >
+                  <Checkbox
+                    checked={roles.includes(r.value)}
+                    onCheckedChange={() => toggleRole(r.value)}
+                  />
+                  {r.label}
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancelar
