@@ -116,6 +116,28 @@ const Auth = () => {
         return;
       }
 
+      // Administrativo não passa pela validação Gestão360 — depende de aprovação manual do admin
+      const isAdministrativo = atividade === "administrativo" || finalUnit.toLowerCase() === "administrativo";
+
+      if (isAdministrativo) {
+        const { error } = await signUp(email, password, {
+          displayName: displayName.trim(),
+          unit: finalUnit,
+          atividade,
+          auto_approved: false,
+        } as any);
+        if (error) {
+          toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+        } else {
+          toast({
+            title: "Cadastro recebido!",
+            description: "Sua conta administrativa foi criada e aguarda liberação manual do administrador.",
+          });
+        }
+        setSubmitting(false);
+        return;
+      }
+
       // Valida nome completo contra a base do Gestão360
       const validation = await validateConsultor(displayName);
       if (!validation) {
