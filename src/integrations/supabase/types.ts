@@ -1063,6 +1063,44 @@ export type Database = {
         }
         Relationships: []
       }
+      support_ticket_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          photo_url: string | null
+          sender_kind: string
+          sender_user_id: string | null
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          photo_url?: string | null
+          sender_kind?: string
+          sender_user_id?: string | null
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          photo_url?: string | null
+          sender_kind?: string
+          sender_user_id?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           created_at: string
@@ -1075,6 +1113,7 @@ export type Database = {
           status: string
           unit: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1087,6 +1126,7 @@ export type Database = {
           status?: string
           unit?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1099,6 +1139,7 @@ export type Database = {
           status?: string
           unit?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Loader2, Trash2, ExternalLink, CheckCircle2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import SupportTicketChat from "@/components/SupportTicketChat";
 
 interface Ticket {
   id: string;
@@ -27,6 +28,7 @@ const AdminSupportTickets = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
+  const [openChat, setOpenChat] = useState<Record<string, boolean>>({});
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -138,7 +140,22 @@ const AdminSupportTickets = () => {
                 Reabrir
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              onClick={() => setOpenChat((p) => ({ ...p, [t.id]: !p[t.id] }))}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              {openChat[t.id] ? "Fechar conversa" : "Responder"}
+            </Button>
           </div>
+
+          {openChat[t.id] && (
+            <div className="pt-2 border-t border-border">
+              <SupportTicketChat ticketId={t.id} asAdmin />
+            </div>
+          )}
         </div>
       ))}
     </div>
