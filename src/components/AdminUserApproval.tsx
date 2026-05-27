@@ -399,6 +399,42 @@ const AdminUserApproval = () => {
     }
   };
 
+  const toggleEditingRole = (role: string) => {
+    setEditingRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    );
+  };
+
+  const saveRoles = async () => {
+    if (!selected) return;
+    setSavingRoles(true);
+    const current = rolesByUser[selected.user_id] || [];
+    const toAdd = editingRoles.filter((r) => !current.includes(r));
+    const toRemove = current.filter((r) => !editingRoles.includes(r));
+    try {
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", selected.user_id)
+          .in("role", toRemove as any);
+        if (error) throw error;
+      }
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from("user_roles")
+          .insert(toAdd.map((r) => ({ user_id: selected.user_id, role: r as any })));
+        if (error) throw error;
+      }
+      setRolesByUser((prev) => ({ ...prev, [selected.user_id]: [...editingRoles] }));
+      toast.success("Papéis atualizados");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao salvar papéis");
+    } finally {
+      setSavingRoles(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
