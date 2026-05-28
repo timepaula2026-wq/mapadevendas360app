@@ -188,6 +188,15 @@ const AdminUserApproval = () => {
     if (error) toast.error("Erro ao atualizar");
     else {
       toast.success(approve ? "Usuário aprovado!" : "Acesso revogado");
+      // Notifica o consultor dentro do app
+      await supabase.from("user_notifications").insert({
+        user_id: userId,
+        title: approve ? "Cadastro aprovado!" : "Acesso revogado",
+        message: approve
+          ? "Seu cadastro foi aprovado pelo administrador. Você já pode acessar normalmente a plataforma."
+          : "Seu acesso foi revogado pelo administrador. Em caso de dúvidas, entre em contato com o suporte.",
+        kind: approve ? "approval" : "rejection",
+      });
       fetchUsers();
     }
   };
