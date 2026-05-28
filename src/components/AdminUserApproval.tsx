@@ -823,7 +823,7 @@ const AdminUserApproval = () => {
                 <div className="bg-muted/30 rounded-lg p-3">
                   <h4 className="text-sm font-semibold mb-2">Editar papéis</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    {ROLES.map((r) => (
+                    {ROLES.filter((r) => r.value !== "secretaria").map((r) => (
                       <label
                         key={r.value}
                         className="flex items-center gap-2 text-xs cursor-pointer"
