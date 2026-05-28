@@ -138,28 +138,19 @@ const Auth = () => {
         return;
       }
 
-      // Valida nome completo contra a base do Gestão360
+      // Valida nome completo contra a base do Gestão360.
+      // Política: se a validação falhar por QUALQUER motivo (não encontrado,
+      // inativo, API fora do ar, etc.), o cadastro ainda é criado e fica
+      // pendente de aprovação manual do administrador. Apenas quando o nome
+      // for validado com sucesso a conta é auto-aprovada.
       const validation = await validateConsultor(displayName);
       if (!validation) {
         setSubmitting(false);
         return;
       }
-      // Se o endpoint estiver fora do ar / com erro técnico, permite o cadastro
-      // e deixa a aprovação manual a cargo do admin.
-      const fallbackStatuses = ["api_unavailable", "parse_error", "error"];
-      const isFallback = !validation.allowed && validation.status && fallbackStatuses.includes(validation.status);
-
-      if (!validation.allowed && !isFallback) {
-        toast({
-          title: "Acesso bloqueado",
-          description: validation.message || "Seu nome não está autorizado. Entre em contato com o suporte.",
-          variant: "destructive",
-        });
-        setSubmitting(false);
-        return;
-      }
 
       const autoApproved = validation.allowed === true;
+      const needsManualApproval = !autoApproved;
 
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
@@ -169,11 +160,13 @@ const Auth = () => {
       } as any);
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
-      } else if (isFallback) {
+      } else if (needsManualApproval) {
         toast({
           title: "Cadastro recebido!",
           description:
-            "Não conseguimos validar automaticamente seu nome no momento. Sua conta foi criada e aguarda liberação manual do administrador.",
+            validation.message
+              ? `${validation.message} Sua conta foi criada e aguarda liberação manual do administrador.`
+              : "Não conseguimos validar automaticamente seu nome. Sua conta foi criada e aguarda liberação manual do administrador.",
         });
       } else {
         toast({ title: "Cadastro realizado!", description: "Verifique seu e-mail para confirmar a conta." });
