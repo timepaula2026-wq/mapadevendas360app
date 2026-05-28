@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase, Hash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
 import { UNITS } from "@/lib/units";
@@ -25,6 +26,19 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [supportOpen, setSupportOpen] = useState(false);
+
+  const showSignupError = (description: string) => {
+    toast({
+      title: "Erro ao cadastrar",
+      description: `${description} Se o problema persistir, contate o suporte.`,
+      variant: "destructive",
+      action: (
+        <ToastAction altText="Contate o suporte" onClick={() => setSupportOpen(true)}>
+          Contate o suporte
+        </ToastAction>
+      ),
+    });
+  };
 
   if (loading) {
     return (
@@ -128,7 +142,7 @@ const Auth = () => {
           auto_approved: false,
         } as any);
         if (error) {
-          toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+          showSignupError(error.message);
         } else {
           toast({
             title: "Cadastro recebido!",
@@ -161,7 +175,7 @@ const Auth = () => {
         auto_approved: autoApproved,
       } as any);
       if (error) {
-        toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+        showSignupError(error.message);
       } else if (needsManualApproval) {
         toast({
           title: "Cadastro recebido!",
