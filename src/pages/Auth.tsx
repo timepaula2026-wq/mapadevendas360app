@@ -327,6 +327,23 @@ const Auth = () => {
                 </select>
               </div>
 
+              {/* Matrícula (opcional para iniciantes — concede também o papel de Consultor Autorizado) */}
+              {atividade === "iniciante" && (
+                <div className="relative">
+                  <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                    placeholder="Matrícula (opcional)"
+                    className={inputClass}
+                  />
+                  <p className="mt-1 text-[11px] text-white/50 leading-snug">
+                    Se você já é consultor autorizado, informe sua matrícula para liberar o acesso de Consultor Autorizado.
+                  </p>
+                </div>
+              )}
+
             </>
           )}
 
