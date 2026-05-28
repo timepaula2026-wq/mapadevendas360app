@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase, Hash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
@@ -123,6 +123,7 @@ const Auth = () => {
         const { error } = await signUp(email, password, {
           displayName: displayName.trim(),
           unit: finalUnit,
+        cpf: cpf.trim() || undefined,
           atividade,
           auto_approved: false,
         } as any);
@@ -155,6 +156,7 @@ const Auth = () => {
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
         unit: finalUnit,
+        cpf: cpf.trim() || undefined,
         atividade,
         auto_approved: autoApproved,
       } as any);
