@@ -460,7 +460,11 @@ const Auth = () => {
         <Headphones className="w-5 h-5" />
         <span className="text-sm font-semibold hidden sm:inline">Suporte</span>
       </button>
-      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
+      <SupportDialog
+        open={supportOpen}
+        onOpenChange={setSupportOpen}
+        prefillMessage={lastErrorReport || undefined}
+      />
     </div>
   );
 };
