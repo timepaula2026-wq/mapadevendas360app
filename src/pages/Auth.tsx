@@ -632,6 +632,47 @@ const Auth = () => {
         onOpenChange={setSupportOpen}
         prefillMessage={lastErrorReport || undefined}
       />
+      <AlertDialog open={returnConfirmOpen} onOpenChange={setReturnConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você excluiu seu cadastro anteriormente</AlertDialogTitle>
+            <AlertDialogDescription>
+              O e-mail <strong>{email}</strong> já teve uma conta excluída na plataforma.
+              Tem certeza que deseja retornar e criar um novo cadastro?
+              <br /><br />
+              Seu novo cadastro passará novamente pela validação e, se necessário,
+              pela aprovação manual do administrador.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setReturnConfirmOpen(false);
+                setPendingSubmitEvent(null);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setReturnConfirmOpen(false);
+                setSkipDeletedCheck(true);
+                // Reenvia o cadastro pulando a checagem
+                setTimeout(() => {
+                  if (pendingSubmitEvent) {
+                    handleSubmit({
+                      preventDefault: () => {},
+                    } as React.FormEvent);
+                    setPendingSubmitEvent(null);
+                  }
+                }, 0);
+              }}
+            >
+              Sim, quero retornar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
