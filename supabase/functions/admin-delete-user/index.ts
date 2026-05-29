@@ -47,6 +47,16 @@ Deno.serve(async (req) => {
     }
 
     // Limpa dados relacionados
+    // Captura e-mail/nome antes de excluir para registrar histórico
+    const { data: targetUser } = await admin.auth.admin.getUserById(target_user_id);
+    const { data: targetProfile } = await admin
+      .from("profiles")
+      .select("email, display_name")
+      .eq("user_id", target_user_id)
+      .maybeSingle();
+    const deletedEmail = targetUser?.user?.email || targetProfile?.email || null;
+    const deletedName = targetProfile?.display_name || null;
+
     await admin.from("user_roles").delete().eq("user_id", target_user_id);
     await admin.from("profiles").delete().eq("user_id", target_user_id);
 
@@ -56,6 +66,16 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: delErr.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Registra histórico de exclusão (para mostrar aviso ao tentar novo cadastro)
+    if (deletedEmail) {
+      await admin.from("deleted_accounts").insert({
+        email: deletedEmail,
+        display_name: deletedName,
+        deleted_by: userData.user.id,
+        reason: "admin_delete",
       });
     }
 
