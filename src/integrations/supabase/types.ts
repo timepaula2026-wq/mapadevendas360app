@@ -297,6 +297,33 @@ export type Database = {
           },
         ]
       }
+      deleted_accounts: {
+        Row: {
+          deleted_at: string
+          deleted_by: string | null
+          display_name: string | null
+          email: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by?: string | null
+          display_name?: string | null
+          email: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string | null
+          display_name?: string | null
+          email?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       feedback_messages: {
         Row: {
           category: string
@@ -1339,6 +1366,7 @@ export type Database = {
           revoked_user_id: string
         }[]
       }
+      was_email_deleted: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
       app_role:
