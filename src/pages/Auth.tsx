@@ -243,6 +243,7 @@ const Auth = () => {
       setForgotMode(false);
     }
     setSubmitting(false);
+    if (skipDeletedCheck) setSkipDeletedCheck(false);
   };
 
   const formatCpf = (value: string) => {
