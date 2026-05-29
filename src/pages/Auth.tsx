@@ -9,6 +9,16 @@ import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
 import { UNITS } from "@/lib/units";
 import SupportDialog from "@/components/SupportDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Auth = () => {
   const { user, loading, signIn, signUp } = useAuth();
@@ -27,6 +37,9 @@ const Auth = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [supportOpen, setSupportOpen] = useState(false);
   const [lastErrorReport, setLastErrorReport] = useState<string>("");
+  const [returnConfirmOpen, setReturnConfirmOpen] = useState(false);
+  const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent | null>(null);
+  const [skipDeletedCheck, setSkipDeletedCheck] = useState(false);
 
   // Classifica a mensagem bruta do Supabase em título + instruções amigáveis
   const classifySignupError = (
@@ -295,6 +308,23 @@ const Auth = () => {
         toast({ title: "Erro", description: "Selecione uma unidade.", variant: "destructive" });
         setSubmitting(false);
         return;
+      }
+
+      // Verifica se este e-mail teve cadastro previamente excluído
+      if (!skipDeletedCheck) {
+        try {
+          const { data: wasDeleted } = await supabase.rpc("was_email_deleted", {
+            _email: email.trim(),
+          });
+          if (wasDeleted) {
+            setPendingSubmitEvent(e);
+            setReturnConfirmOpen(true);
+            setSubmitting(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("Falha ao verificar histórico de exclusão:", err);
+        }
       }
 
       // Administrativo não passa pela validação Gestão360 — depende de aprovação manual do admin
