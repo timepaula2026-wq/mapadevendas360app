@@ -8,6 +8,9 @@ interface SignUpData {
   unit?: string;
   unitStartDate?: string;
   cpf?: string;
+  atividade?: string;
+  auto_approved?: boolean;
+  [key: string]: any;
 }
 
 interface AuthContextType {
@@ -53,6 +56,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           unit: data?.unit,
           unit_start_date: data?.unitStartDate,
           cpf: data?.cpf,
+          atividade: data?.atividade,
+          auto_approved: data?.auto_approved,
         },
         emailRedirectTo: window.location.origin,
       },
