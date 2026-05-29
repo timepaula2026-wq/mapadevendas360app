@@ -12,6 +12,7 @@ import SupportTicketChat from "@/components/SupportTicketChat";
 interface SupportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  prefillMessage?: string;
 }
 
 interface MyTicket {
@@ -27,7 +28,7 @@ const STATUS_LABEL: Record<string, string> = {
   resolved: "Resolvido",
 };
 
-const SupportDialog = ({ open, onOpenChange }: SupportDialogProps) => {
+const SupportDialog = ({ open, onOpenChange, prefillMessage }: SupportDialogProps) => {
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -54,6 +55,14 @@ const SupportDialog = ({ open, onOpenChange }: SupportDialogProps) => {
         if (user.email) setEmail(user.email);
       });
   }, [open, user]);
+
+  // Prefill the message body when the dialog is opened with context (e.g. signup error)
+  useEffect(() => {
+    if (open && prefillMessage) {
+      setMessage((prev) => (prev?.trim() ? prev : prefillMessage));
+      setTab("new");
+    }
+  }, [open, prefillMessage]);
 
   const fetchMyTickets = async () => {
     if (!user) return;
