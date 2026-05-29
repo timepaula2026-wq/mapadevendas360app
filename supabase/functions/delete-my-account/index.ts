@@ -28,6 +28,14 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey);
     const uid = userData.user.id;
 
+    const { data: targetProfile } = await admin
+      .from("profiles")
+      .select("email, display_name")
+      .eq("user_id", uid)
+      .maybeSingle();
+    const deletedEmail = userData.user.email || targetProfile?.email || null;
+    const deletedName = targetProfile?.display_name || null;
+
     await admin.from("user_roles").delete().eq("user_id", uid);
     await admin.from("profiles").delete().eq("user_id", uid);
 
@@ -36,6 +44,15 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: delErr.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (deletedEmail) {
+      await admin.from("deleted_accounts").insert({
+        email: deletedEmail,
+        display_name: deletedName,
+        deleted_by: uid,
+        reason: "self_delete",
       });
     }
 
