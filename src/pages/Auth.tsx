@@ -26,8 +26,39 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [supportOpen, setSupportOpen] = useState(false);
+  const [lastErrorReport, setLastErrorReport] = useState<string>("");
+
+  const buildErrorReport = (errorMessage: string) => {
+    const finalUnit = unit === "outra" ? customUnit.trim() : unit;
+    const lines = [
+      "=== Detalhes do erro de cadastro ===",
+      `Data/hora: ${new Date().toLocaleString("pt-BR")}`,
+      `Erro: ${errorMessage}`,
+      "",
+      "Dados informados:",
+      `- Nome: ${displayName || "(vazio)"}`,
+      `- E-mail: ${email || "(vazio)"}`,
+      `- Atividade: ${atividade || "(vazio)"}`,
+      `- Unidade: ${finalUnit || "(vazio)"}`,
+      `- Matrícula/CPF: ${cpf || "(vazio)"}`,
+      "",
+      `Navegador: ${navigator.userAgent}`,
+      `URL: ${window.location.href}`,
+      "",
+      "(Por favor descreva abaixo o que estava tentando fazer.)",
+      "",
+    ].join("\n");
+    return lines;
+  };
 
   const showSignupError = (description: string) => {
+    const report = buildErrorReport(description);
+    setLastErrorReport(report);
+    try {
+      const log = JSON.parse(localStorage.getItem("signup_error_log") || "[]");
+      log.unshift({ at: new Date().toISOString(), error: description, report });
+      localStorage.setItem("signup_error_log", JSON.stringify(log.slice(0, 20)));
+    } catch {}
     toast({
       title: "Erro ao cadastrar",
       description: `${description} Se o problema persistir, contate o suporte.`,
@@ -429,7 +460,11 @@ const Auth = () => {
         <Headphones className="w-5 h-5" />
         <span className="text-sm font-semibold hidden sm:inline">Suporte</span>
       </button>
-      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
+      <SupportDialog
+        open={supportOpen}
+        onOpenChange={setSupportOpen}
+        prefillMessage={lastErrorReport || undefined}
+      />
     </div>
   );
 };
