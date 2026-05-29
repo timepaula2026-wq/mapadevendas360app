@@ -28,11 +28,131 @@ const Auth = () => {
   const [supportOpen, setSupportOpen] = useState(false);
   const [lastErrorReport, setLastErrorReport] = useState<string>("");
 
+  // Classifica a mensagem bruta do Supabase em título + instruções amigáveis
+  const classifySignupError = (
+    raw: string,
+  ): { title: string; description: string; instructions: string[] } => {
+    const msg = (raw || "").toLowerCase();
+
+    if (
+      msg.includes("already registered") ||
+      msg.includes("already been registered") ||
+      msg.includes("user already exists") ||
+      msg.includes("duplicate key") ||
+      msg.includes("email address is already")
+    ) {
+      return {
+        title: "E-mail já cadastrado",
+        description: "Este e-mail já possui uma conta na plataforma.",
+        instructions: [
+          "Se a conta é sua, faça login normalmente.",
+          "Esqueceu a senha? Use a opção 'Esqueci minha senha'.",
+          "Se não foi você quem se cadastrou, contate o suporte.",
+        ],
+      };
+    }
+
+    if (
+      msg.includes("invalid email") ||
+      msg.includes("email address") && msg.includes("invalid")
+    ) {
+      return {
+        title: "E-mail inválido",
+        description: "O e-mail informado não tem um formato válido.",
+        instructions: [
+          "Verifique se digitou corretamente (ex.: nome@dominio.com).",
+          "Evite espaços antes ou depois do e-mail.",
+        ],
+      };
+    }
+
+    if (
+      msg.includes("password") &&
+      (msg.includes("short") || msg.includes("weak") || msg.includes("characters") || msg.includes("at least"))
+    ) {
+      return {
+        title: "Senha muito fraca",
+        description: "A senha não atende aos requisitos mínimos.",
+        instructions: [
+          "Use no mínimo 6 caracteres.",
+          "Combine letras e números para maior segurança.",
+        ],
+      };
+    }
+
+    if (msg.includes("cpf")) {
+      return {
+        title: "CPF/Matrícula inválido",
+        description: "O CPF ou matrícula informado não pôde ser validado.",
+        instructions: [
+          "Confira se digitou todos os dígitos corretamente.",
+          "Use apenas números, sem pontos ou traços.",
+        ],
+      };
+    }
+
+    if (
+      msg.includes("missing") ||
+      msg.includes("required") ||
+      msg.includes("null value") ||
+      msg.includes("not-null")
+    ) {
+      return {
+        title: "Campos obrigatórios faltando",
+        description: "Alguns campos obrigatórios não foram preenchidos.",
+        instructions: [
+          "Verifique se preencheu nome completo, e-mail, atividade e unidade.",
+          "Tente novamente após completar os dados.",
+        ],
+      };
+    }
+
+    if (
+      msg.includes("rate limit") ||
+      msg.includes("too many") ||
+      msg.includes("for security purposes")
+    ) {
+      return {
+        title: "Muitas tentativas",
+        description: "Você fez muitas tentativas em pouco tempo.",
+        instructions: [
+          "Aguarde alguns minutos antes de tentar novamente.",
+        ],
+      };
+    }
+
+    if (
+      msg.includes("network") ||
+      msg.includes("failed to fetch") ||
+      msg.includes("timeout")
+    ) {
+      return {
+        title: "Falha de conexão",
+        description: "Não foi possível se conectar ao servidor.",
+        instructions: [
+          "Verifique sua conexão com a internet.",
+          "Tente novamente em alguns instantes.",
+        ],
+      };
+    }
+
+    return {
+      title: "Erro ao cadastrar",
+      description: raw || "Não foi possível concluir o cadastro.",
+      instructions: [
+        "Confira se todos os campos estão corretos.",
+        "Se o problema persistir, contate o suporte.",
+      ],
+    };
+  };
+
   const buildErrorReport = (errorMessage: string) => {
     const finalUnit = unit === "outra" ? customUnit.trim() : unit;
+    const classified = classifySignupError(errorMessage);
     const lines = [
       "=== Detalhes do erro de cadastro ===",
       `Data/hora: ${new Date().toLocaleString("pt-BR")}`,
+      `Tipo: ${classified.title}`,
       `Erro: ${errorMessage}`,
       "",
       "Dados informados:",
@@ -52,17 +172,29 @@ const Auth = () => {
   };
 
   const showSignupError = (description: string) => {
+    const classified = classifySignupError(description);
     const report = buildErrorReport(description);
     setLastErrorReport(report);
     try {
       const log = JSON.parse(localStorage.getItem("signup_error_log") || "[]");
-      log.unshift({ at: new Date().toISOString(), error: description, report });
+      log.unshift({
+        at: new Date().toISOString(),
+        type: classified.title,
+        error: description,
+        report,
+      });
       localStorage.setItem("signup_error_log", JSON.stringify(log.slice(0, 20)));
     } catch {}
+    const fullDescription = [
+      classified.description,
+      "",
+      ...classified.instructions.map((i) => `• ${i}`),
+    ].join("\n");
     toast({
-      title: "Erro ao cadastrar",
-      description: `${description} Se o problema persistir, contate o suporte.`,
+      title: classified.title,
+      description: fullDescription,
       variant: "destructive",
+      duration: 10000,
       action: (
         <ToastAction altText="Contate o suporte" onClick={() => setSupportOpen(true)}>
           Contate o suporte
