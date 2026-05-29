@@ -185,14 +185,18 @@ const Auth = () => {
       });
       localStorage.setItem("signup_error_log", JSON.stringify(log.slice(0, 20)));
     } catch {}
-    const fullDescription = [
-      classified.description,
-      "",
-      ...classified.instructions.map((i) => `• ${i}`),
-    ].join("\n");
     toast({
       title: classified.title,
-      description: fullDescription,
+      description: (
+        <div className="space-y-1">
+          <p>{classified.description}</p>
+          <ul className="list-disc pl-4 space-y-0.5 text-xs opacity-90">
+            {classified.instructions.map((i, idx) => (
+              <li key={idx}>{i}</li>
+            ))}
+          </ul>
+        </div>
+      ),
       variant: "destructive",
       duration: 10000,
       action: (
