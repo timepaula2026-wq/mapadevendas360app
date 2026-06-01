@@ -25,12 +25,6 @@
       "size": "29x29"
     },
     {
-      "filename": "AppIcon-58.png",
-      "idiom": "iphone",
-      "scale": "2x",
-      "size": "29x29"
-    },
-    {
       "filename": "AppIcon-87.png",
       "idiom": "iphone",
       "scale": "3x",
@@ -40,12 +34,6 @@
       "filename": "AppIcon-40.png",
       "idiom": "iphone",
       "scale": "1x",
-      "size": "40x40"
-    },
-    {
-      "filename": "AppIcon-80.png",
-      "idiom": "iphone",
-      "scale": "2x",
       "size": "40x40"
     },
     {
