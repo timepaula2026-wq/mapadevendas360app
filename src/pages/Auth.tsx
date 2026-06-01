@@ -184,7 +184,7 @@ const Auth = () => {
 
     return {
       title: "Erro ao cadastrar",
-      description: raw || "Não foi possível concluir o cadastro.",
+      description: translateAuthError(raw) || "Não foi possível concluir o cadastro.",
       instructions: [
         "Confira se todos os campos estão corretos.",
         "Se o problema persistir, contate o suporte.",
@@ -270,7 +270,7 @@ const Auth = () => {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: translateAuthError(error.message), variant: "destructive" });
     } else {
       toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada para redefinir a senha." });
       setForgotMode(false);
@@ -318,7 +318,7 @@ const Auth = () => {
       if (error) {
         const msg = (error.message || "").toLowerCase();
         let title = "Erro ao entrar";
-        let description = error.message;
+        let description = translateAuthError(error.message);
         if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
           title = "E-mail ou senha incorretos";
           description = "Verifique seus dados e tente novamente. Se esqueceu a senha, clique em \"Esqueci minha senha\".";
