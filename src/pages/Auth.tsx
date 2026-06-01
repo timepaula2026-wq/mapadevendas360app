@@ -283,7 +283,23 @@ const Auth = () => {
     if (isLogin) {
       const { error } = await signIn(email, password);
       if (error) {
-        toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
+        const msg = (error.message || "").toLowerCase();
+        let title = "Erro ao entrar";
+        let description = error.message;
+        if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+          title = "E-mail ou senha incorretos";
+          description = "Verifique seus dados e tente novamente. Se esqueceu a senha, clique em \"Esqueci minha senha\".";
+        } else if (msg.includes("email not confirmed")) {
+          title = "E-mail não confirmado";
+          description = "Confirme seu e-mail antes de acessar. Verifique sua caixa de entrada e spam.";
+        } else if (msg.includes("too many") || msg.includes("rate limit")) {
+          title = "Muitas tentativas";
+          description = "Aguarde alguns minutos antes de tentar novamente.";
+        } else if (msg.includes("network") || msg.includes("failed to fetch")) {
+          title = "Falha de conexão";
+          description = "Verifique sua internet e tente novamente.";
+        }
+        toast({ title, description, variant: "destructive" });
       }
     } else {
       if (!displayName.trim()) {
