@@ -20,6 +20,10 @@ workflows:
       - name: Remove NSUserTracking
         script: |
           /usr/libexec/PlistBuddy -c "Delete :NSUserTrackingUsageDescription" ios/App/App/Info.plist || true
+      - name: Check project structure
+        script: |
+          ls -la ios/App/
+          ls -la ios/App/App.xcodeproj/
       - name: Create export options
         script: |
           cat > /Users/builder/export_options.plist << EOF
