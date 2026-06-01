@@ -42,6 +42,39 @@ const Auth = () => {
   const [skipDeletedCheck, setSkipDeletedCheck] = useState(false);
 
   // Classifica a mensagem bruta do Supabase em título + instruções amigáveis
+  // Traduz mensagens comuns do Supabase/Auth para português
+  const translateAuthError = (raw: string): string => {
+    const msg = (raw || "").toLowerCase();
+    if (!raw) return "Ocorreu um erro inesperado.";
+    if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials"))
+      return "E-mail ou senha incorretos.";
+    if (msg.includes("email not confirmed")) return "E-mail ainda não confirmado.";
+    if (msg.includes("user already registered") || msg.includes("already registered") || msg.includes("user already exists") || msg.includes("email address is already"))
+      return "Este e-mail já está cadastrado.";
+    if (msg.includes("invalid email")) return "E-mail inválido.";
+    if (msg.includes("password should be at least") || (msg.includes("password") && msg.includes("characters")))
+      return "A senha deve ter no mínimo 6 caracteres.";
+    if (msg.includes("weak password") || (msg.includes("password") && msg.includes("weak")))
+      return "Senha muito fraca. Use letras, números e símbolos.";
+    if (msg.includes("rate limit") || msg.includes("too many requests") || msg.includes("for security purposes"))
+      return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+    if (msg.includes("network") || msg.includes("failed to fetch") || msg.includes("timeout"))
+      return "Falha de conexão. Verifique sua internet e tente novamente.";
+    if (msg.includes("user not found")) return "Usuário não encontrado.";
+    if (msg.includes("token has expired") || msg.includes("jwt expired"))
+      return "Sessão expirada. Faça login novamente.";
+    if (msg.includes("signup disabled") || msg.includes("signups not allowed"))
+      return "Cadastros estão temporariamente desativados.";
+    if (msg.includes("unable to validate email")) return "Não foi possível validar o e-mail informado.";
+    if (msg.includes("new password should be different"))
+      return "A nova senha deve ser diferente da anterior.";
+    if (msg.includes("same password")) return "A nova senha deve ser diferente da atual.";
+    if (msg.includes("provider is not enabled")) return "Método de login não habilitado.";
+    if (msg.includes("permission denied") || msg.includes("not authorized"))
+      return "Você não tem permissão para esta ação.";
+    return raw;
+  };
+
   const classifySignupError = (
     raw: string,
   ): { title: string; description: string; instructions: string[] } => {
