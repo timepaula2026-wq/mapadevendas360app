@@ -43,6 +43,7 @@ import QuizzEdit from "./pages/QuizzEdit";
 import QuizzHost from "./pages/QuizzHost";
 import QuizzPlay from "./pages/QuizzPlay";
 import NotFound from "./pages/NotFound";
+import Privacy from "./pages/Privacy";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -113,6 +114,7 @@ const App = () => (
             <Route path="/presenca-treinamentos" element={<ProtectedRoute><PresencaTreinamentos /></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
             <Route path="/agendar" element={<PublicBooking />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/fale-com-paula" element={<ProtectedRoute><FaleComPaula /></ProtectedRoute>} />
             <Route path="/comissao" element={<ProtectedRoute><Comissao /></ProtectedRoute>} />
             <Route path="/lideres" element={<ProtectedRoute><EscolaLideres /></ProtectedRoute>} />
