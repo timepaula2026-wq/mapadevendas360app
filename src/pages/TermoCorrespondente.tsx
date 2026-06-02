@@ -1,4 +1,4 @@
-import { ArrowLeft, FileSignature, Printer, Loader2 } from "lucide-react";
+import { ArrowLeft, FileSignature, Printer, Loader2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,6 +109,50 @@ const TermoCorrespondente = () => {
     `);
     printWindow.document.close();
     setTimeout(() => printWindow.print(), 250);
+  };
+
+  const buildPrintableHtml = () => {
+    const content = formRef.current?.innerHTML || "";
+    return `
+      <div style="font-family: 'Times New Roman', Georgia, serif; padding: 40px 50px; font-size: 12pt; line-height: 1.6; color: #000; background: #fff; max-width: 800px; margin: 0 auto;">
+        <style>
+          * { box-sizing: border-box; }
+          h2 { font-size: 13pt; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 4px; text-transform: uppercase; color: #000; }
+          h3 { font-size: 12pt; margin-top: 14px; margin-bottom: 6px; color: #000; }
+          p { margin: 6px 0; text-align: justify; color: #000; }
+          label { display: inline-block; font-weight: bold; margin-right: 6px; color: #000; }
+          input { border: none; border-bottom: 1px solid #000; background: transparent; padding: 2px 4px; font-family: inherit; font-size: inherit; color: #000; width: 100%; }
+          button, [role="button"] { display: none !important; }
+        </style>
+        ${content}
+      </div>
+    `;
+  };
+
+  const handleDownloadPdf = async () => {
+    const { default: html2pdf } = await import("html2pdf.js");
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = buildPrintableHtml();
+    document.body.appendChild(wrapper);
+    try {
+      await html2pdf()
+        .set({
+          margin: [10, 10, 10, 10],
+          filename: `Termo-Correspondente-${(nomeCompleto || "consultor").replace(/\s+/g, "-")}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+        })
+        .from(wrapper)
+        .save();
+      toast.success("PDF gerado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao gerar PDF.");
+    } finally {
+      document.body.removeChild(wrapper);
+    }
   };
 
   const handleSubmit = () => {
@@ -364,6 +408,10 @@ const TermoCorrespondente = () => {
           <Button onClick={handleSubmit} disabled={!allChecked} className="flex-1 gap-2">
             <FileSignature className="w-4 h-4" />
             Enviar Termo
+          </Button>
+          <Button variant="outline" onClick={handleDownloadPdf} className="gap-2">
+            <Download className="w-4 h-4" />
+            Baixar PDF
           </Button>
           <Button variant="outline" onClick={handlePrint} className="gap-2">
             <Printer className="w-4 h-4" />
