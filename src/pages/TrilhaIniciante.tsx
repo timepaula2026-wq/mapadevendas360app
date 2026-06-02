@@ -270,8 +270,12 @@ const TrilhaIniciante = () => {
               <FileSignature className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Termo de Correspondente Comercial</p>
-              <p className="text-xs text-muted-foreground">Leia e assine o termo para iniciar</p>
+              <p className="text-sm font-semibold text-foreground">
+                Termo de Correspondente Comercial <span className="text-muted-foreground font-normal">(opcional)</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Preenchimento opcional — não é necessário para avançar nas fases da trilha.
+              </p>
             </div>
             <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180" />
           </div>
