@@ -30,7 +30,7 @@ workflows:
       - name: Set build number
         script: |
           cd ios/App
-          agvtool new-version -all $CM_BUILD_NUMBER
+          agvtool new-version -all $BUILD_NUMBER
       - name: Set code signing
         script: xcode-project use-profiles
       - name: Build IPA
