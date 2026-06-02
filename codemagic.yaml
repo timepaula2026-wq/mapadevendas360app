@@ -20,9 +20,6 @@ workflows:
       - name: Remove NSUserTracking
         script: |
           /usr/libexec/PlistBuddy -c "Delete :NSUserTrackingUsageDescription" ios/App/App/Info.plist || true
-      - name: Fix signing
-        script: |
-          sed -i '' 's/CODE_SIGN_STYLE = Manual/CODE_SIGN_STYLE = Automatic/g' ios/App/App.xcodeproj/project.pbxproj || true
       - name: Create export options
         script: |
           cat > /Users/builder/export_options.plist << EOF
