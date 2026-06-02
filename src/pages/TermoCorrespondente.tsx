@@ -179,7 +179,9 @@ const TermoCorrespondente = () => {
 
         {/* Dados da unidade */}
         <div className="bg-card border border-border rounded-xl p-5 mb-4 space-y-3">
-          <h2 className="font-bold text-base text-foreground">Unidade de Negócios</h2>
+          <h2 className="font-bold text-base text-foreground">
+            Unidade de Negócios <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+          </h2>
           <div className="space-y-2">
             <div>
               <Label className="text-xs">Unidade Ademicon</Label>
@@ -350,7 +352,7 @@ const TermoCorrespondente = () => {
               <Input value={assinatura} onChange={(e) => setAssinatura(e.target.value)} placeholder="Digite seu nome completo" />
             </div>
             <div>
-              <Label className="text-xs">Assinatura do Gestor da Unidade</Label>
+              <Label className="text-xs">Assinatura do Gestor da Unidade <span className="text-muted-foreground">(opcional)</span></Label>
               <Input value={assinaturaGestor} onChange={(e) => setAssinaturaGestor(e.target.value)} placeholder="Nome do gestor" />
             </div>
           </div>
