@@ -23,11 +23,14 @@ workflows:
           find ios -name "*.plist" -type f | while IFS= read -r plist; do
             /usr/libexec/PlistBuddy -c "Delete :NSUserTrackingUsageDescription" "$plist" 2>/dev/null || true
           done
-
           if rg -n "NSUserTrackingUsageDescription" ios --glob "*.plist"; then
             echo "NSUserTrackingUsageDescription ainda existe em algum Info.plist."
             exit 1
           fi
+      - name: Set build number
+        script: |
+          cd ios/App
+          agvtool new-version -all $CM_BUILD_NUMBER
       - name: Set code signing
         script: xcode-project use-profiles
       - name: Build IPA
@@ -43,7 +46,6 @@ workflows:
           mkdir -p /tmp/ipa-att-check
           unzip -q "$IPA_PATH" -d /tmp/ipa-att-check
           APP_PLIST=$(find /tmp/ipa-att-check/Payload -name Info.plist -type f | head -n 1)
-
           if /usr/libexec/PlistBuddy -c "Print :NSUserTrackingUsageDescription" "$APP_PLIST" >/dev/null 2>&1; then
             echo "A chave NSUserTrackingUsageDescription foi encontrada no IPA final."
             exit 1
