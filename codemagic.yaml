@@ -17,9 +17,17 @@ workflows:
         script: npm run build
       - name: Sync Capacitor
         script: npx cap sync ios
-      - name: Remove NSUserTracking
+      - name: Remove ATT usage descriptions
         script: |
-          /usr/libexec/PlistBuddy -c "Delete :NSUserTrackingUsageDescription" ios/App/App/Info.plist || true
+          set -e
+          find ios -name "*.plist" -type f | while IFS= read -r plist; do
+            /usr/libexec/PlistBuddy -c "Delete :NSUserTrackingUsageDescription" "$plist" 2>/dev/null || true
+          done
+
+          if rg -n "NSUserTrackingUsageDescription" ios --glob "*.plist"; then
+            echo "NSUserTrackingUsageDescription ainda existe em algum Info.plist."
+            exit 1
+          fi
       - name: Set code signing
         script: xcode-project use-profiles
       - name: Build IPA
@@ -27,6 +35,19 @@ workflows:
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
             --scheme "App"
+      - name: Verify IPA has no ATT usage key
+        script: |
+          set -e
+          IPA_PATH=$(ls -t build/ios/ipa/*.ipa | head -n 1)
+          rm -rf /tmp/ipa-att-check
+          mkdir -p /tmp/ipa-att-check
+          unzip -q "$IPA_PATH" -d /tmp/ipa-att-check
+          APP_PLIST=$(find /tmp/ipa-att-check/Payload -name Info.plist -type f | head -n 1)
+
+          if /usr/libexec/PlistBuddy -c "Print :NSUserTrackingUsageDescription" "$APP_PLIST" >/dev/null 2>&1; then
+            echo "A chave NSUserTrackingUsageDescription foi encontrada no IPA final."
+            exit 1
+          fi
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
