@@ -62,13 +62,15 @@ const TermoCorrespondente = () => {
     setLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("display_name, unit, phone")
+      .select("display_name, unit, phone, cpf")
       .eq("user_id", user!.id)
       .single();
     if (data) {
       setNomeCompleto(data.display_name || "");
       setUnidade(data.unit || "");
       setPhone(data.phone || "");
+      setCpf(data.cpf || "");
+      setAssinatura(data.display_name || "");
     }
     setLoading(false);
   };
@@ -89,28 +91,29 @@ const TermoCorrespondente = () => {
       <!DOCTYPE html>
       <html><head><title>Termo de Correspondente Comercial</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 30px; font-size: 13px; line-height: 1.6; color: #222; }
-        h1 { text-align: center; font-size: 18px; margin-bottom: 20px; }
-        h2 { font-size: 14px; margin-top: 16px; }
-        .field { margin: 6px 0; }
-        .check-item { margin: 8px 0; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-        .sig { margin-top: 40px; display: flex; justify-content: space-between; }
-        .sig div { text-align: center; border-top: 1px solid #333; padding-top: 8px; width: 45%; }
-        input[type="checkbox"] { margin-right: 8px; }
-        @media print { button { display: none !important; } }
+        * { box-sizing: border-box; }
+        body { font-family: 'Times New Roman', Georgia, serif; padding: 40px 50px; font-size: 12pt; line-height: 1.6; color: #000; background: #fff; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #000; }
+        h2 { font-size: 13pt; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 4px; text-transform: uppercase; }
+        h3 { font-size: 12pt; margin-top: 14px; margin-bottom: 6px; }
+        p { margin: 6px 0; text-align: justify; }
+        label { display: inline-block; font-weight: bold; margin-right: 6px; }
+        input { border: none; border-bottom: 1px solid #000; background: transparent; padding: 2px 4px; font-family: inherit; font-size: inherit; color: #000; width: auto; min-width: 200px; }
+        .field-row { margin: 8px 0; display: block; }
+        .grid { display: block; }
+        input[type="checkbox"] { width: auto; min-width: 0; margin-right: 6px; vertical-align: middle; }
+        button, [role="button"] { display: none !important; }
+        .no-print { display: none !important; }
+        @media print { @page { margin: 2cm; } body { padding: 0; } }
       </style></head><body>${content}</body></html>
     `);
     printWindow.document.close();
-    printWindow.print();
+    setTimeout(() => printWindow.print(), 250);
   };
 
   const handleSubmit = () => {
     if (!allChecked) {
       toast.error("Você precisa marcar todas as cláusulas para enviar.");
-      return;
-    }
-    if (!assinatura.trim()) {
-      toast.error("Preencha sua assinatura (nome completo).");
       return;
     }
     toast.success("Termo enviado com sucesso!");
@@ -176,7 +179,9 @@ const TermoCorrespondente = () => {
 
         {/* Dados da unidade */}
         <div className="bg-card border border-border rounded-xl p-5 mb-4 space-y-3">
-          <h2 className="font-bold text-base text-foreground">Unidade de Negócios</h2>
+          <h2 className="font-bold text-base text-foreground">
+            Unidade de Negócios <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+          </h2>
           <div className="space-y-2">
             <div>
               <Label className="text-xs">Unidade Ademicon</Label>
@@ -347,7 +352,7 @@ const TermoCorrespondente = () => {
               <Input value={assinatura} onChange={(e) => setAssinatura(e.target.value)} placeholder="Digite seu nome completo" />
             </div>
             <div>
-              <Label className="text-xs">Assinatura do Gestor da Unidade</Label>
+              <Label className="text-xs">Assinatura do Gestor da Unidade <span className="text-muted-foreground">(opcional)</span></Label>
               <Input value={assinaturaGestor} onChange={(e) => setAssinaturaGestor(e.target.value)} placeholder="Nome do gestor" />
             </div>
           </div>
