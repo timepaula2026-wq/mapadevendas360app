@@ -145,15 +145,8 @@ const TrilhaIniciante = () => {
 
   // Bloqueio sequencial entre seções (chips do topo)
   const isSectionLocked = (id: string) => {
-    if (isAdmin) return false;
-    const idx = sections.findIndex((s) => s.id === id);
-    if (idx <= 0) return false;
-    for (let i = 0; i < idx; i++) {
-      const prevId = sections[i].id;
-      const prevTotal = sectionTotals[prevId] ?? 0;
-      if (prevTotal === 0) continue; // seção vazia não bloqueia próxima
-      if ((completedPerSection[prevId] ?? 0) < prevTotal) return true;
-    }
+    // Bloqueio sequencial desativado temporariamente — todas as seções
+    // ficam liberadas até que todos os conteúdos da trilha sejam adicionados.
     return false;
   };
 

@@ -287,9 +287,8 @@ const SectionContentList = ({
     if (!trilhaMode) return "free";
     const id = seq[idx];
     if (completed.has(id)) return "done";
-    for (let i = 0; i < idx; i++) {
-      if (!completed.has(seq[i])) return "locked";
-    }
+    // Bloqueio sequencial entre conteúdos desativado — todos liberados
+    // até que toda a trilha tenha conteúdo finalizado.
     return "current";
   };
 
@@ -445,17 +444,8 @@ const SectionContentList = ({
           const isOpen = openTab === t.id;
           const sequence = buildSequence(tabContents);
 
-          // Bloqueio sequencial entre abas
-          let tabLocked = false;
-          if (trilhaMode && tabIdx > 0) {
-            for (let i = 0; i < tabIdx; i++) {
-              const prevIds = contents.filter((c) => c.tab_id === tabs[i].id).map((c) => c.id);
-              if (prevIds.length > 0 && !prevIds.every((id) => completed.has(id))) {
-                tabLocked = true;
-                break;
-              }
-            }
-          }
+          // Bloqueio sequencial entre abas desativado temporariamente.
+          const tabLocked = false;
 
           return (
             <div
