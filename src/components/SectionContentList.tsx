@@ -444,17 +444,8 @@ const SectionContentList = ({
           const isOpen = openTab === t.id;
           const sequence = buildSequence(tabContents);
 
-          // Bloqueio sequencial entre abas
-          let tabLocked = false;
-          if (trilhaMode && tabIdx > 0) {
-            for (let i = 0; i < tabIdx; i++) {
-              const prevIds = contents.filter((c) => c.tab_id === tabs[i].id).map((c) => c.id);
-              if (prevIds.length > 0 && !prevIds.every((id) => completed.has(id))) {
-                tabLocked = true;
-                break;
-              }
-            }
-          }
+          // Bloqueio sequencial entre abas desativado temporariamente.
+          const tabLocked = false;
 
           return (
             <div
