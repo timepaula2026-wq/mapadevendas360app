@@ -287,9 +287,8 @@ const SectionContentList = ({
     if (!trilhaMode) return "free";
     const id = seq[idx];
     if (completed.has(id)) return "done";
-    for (let i = 0; i < idx; i++) {
-      if (!completed.has(seq[i])) return "locked";
-    }
+    // Bloqueio sequencial entre conteúdos desativado — todos liberados
+    // até que toda a trilha tenha conteúdo finalizado.
     return "current";
   };
 
