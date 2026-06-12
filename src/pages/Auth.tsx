@@ -48,7 +48,7 @@ const Auth = () => {
     if (!raw) return "Ocorreu um erro inesperado.";
     if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials"))
       return "E-mail ou senha incorretos.";
-    if (msg.includes("email not confirmed")) return "E-mail ainda não confirmado.";
+    if (msg.includes("email not confirmed")) return "E-mail ainda não liberado. Peça ao administrador para liberar o e-mail no painel de cadastros.";
     if (msg.includes("user already registered") || msg.includes("already registered") || msg.includes("user already exists") || msg.includes("email address is already"))
       return "Este e-mail já está cadastrado.";
     if (msg.includes("invalid email")) return "E-mail inválido.";
@@ -323,8 +323,8 @@ const Auth = () => {
           title = "E-mail ou senha incorretos";
           description = "Verifique seus dados e tente novamente. Se esqueceu a senha, clique em \"Esqueci minha senha\".";
         } else if (msg.includes("email not confirmed")) {
-          title = "E-mail não confirmado";
-          description = "Confirme seu e-mail antes de acessar. Verifique sua caixa de entrada e spam.";
+          title = "E-mail ainda não liberado";
+          description = "Seu cadastro pode estar aprovado, mas este e-mail antigo ainda precisa ser liberado no painel pelo administrador.";
         } else if (msg.includes("too many") || msg.includes("rate limit")) {
           title = "Muitas tentativas";
           description = "Aguarde alguns minutos antes de tentar novamente.";
@@ -432,7 +432,7 @@ const Auth = () => {
               : "Não conseguimos validar automaticamente seu nome. Sua conta foi criada e aguarda liberação manual do administrador.",
         });
       } else {
-        toast({ title: "Cadastro realizado!", description: "Verifique seu e-mail para confirmar a conta." });
+        toast({ title: "Cadastro realizado!", description: "Se estiver aprovado, você já pode acessar com seu e-mail e senha." });
       }
     }
 
