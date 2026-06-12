@@ -22,6 +22,7 @@ import {
   Activity,
   Trash2,
   KeyRound,
+  MailCheck,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -181,13 +182,12 @@ const AdminUserApproval = () => {
   );
 
   const handleApprove = async (userId: string, approve: boolean) => {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ approved: approve })
-      .eq("user_id", userId);
-    if (error) toast.error("Erro ao atualizar");
+    const { data, error } = await supabase.functions.invoke("admin-set-user-access", {
+      body: { target_user_id: userId, approved: approve },
+    });
+    if (error || (data as any)?.error) toast.error((data as any)?.error || error?.message || "Erro ao atualizar");
     else {
-      toast.success(approve ? "Usuário aprovado!" : "Acesso revogado");
+      toast.success(approve ? "Usuário aprovado e e-mail liberado!" : "Acesso revogado");
       // Notifica o consultor dentro do app
       await supabase.from("user_notifications").insert({
         user_id: userId,
@@ -199,6 +199,18 @@ const AdminUserApproval = () => {
       });
       fetchUsers();
     }
+  };
+
+  const handleConfirmEmail = async (u: UserProfile) => {
+    const { data, error } = await supabase.functions.invoke("admin-set-user-access", {
+      body: { target_user_id: u.user_id, approved: true },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || error?.message || "Erro ao liberar e-mail");
+      return;
+    }
+    toast.success(`E-mail liberado para ${u.display_name || u.email || "usuário"}`);
+    fetchUsers();
   };
 
   const handleDelete = async (u: UserProfile) => {
