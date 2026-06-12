@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
     if (approved) {
       const { error: authError } = await admin.auth.admin.updateUserById(target_user_id, {
         email_confirm: true,
+        user_metadata: { email_verified: true },
       });
 
       if (authError) {
