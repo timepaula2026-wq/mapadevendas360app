@@ -309,12 +309,23 @@ const Auth = () => {
     }
   };
 
+  const retryLoginAfterEmailRelease = async () => {
+    await supabase.functions.invoke("release-approved-email", {
+      body: { email: email.trim().toLowerCase() },
+    });
+    return signIn(email, password);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     if (isLogin) {
-      const { error } = await signIn(email, password);
+      let { error } = await signIn(email, password);
+      if (error && (error.message || "").toLowerCase().includes("email not confirmed")) {
+        const retry = await retryLoginAfterEmailRelease();
+        error = retry.error;
+      }
       if (error) {
         const msg = (error.message || "").toLowerCase();
         let title = "Erro ao entrar";
