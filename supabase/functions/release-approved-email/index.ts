@@ -40,7 +40,6 @@ Deno.serve(async (req) => {
 
     await admin.auth.admin.updateUserById(profile.user_id, {
       email_confirm: true,
-      user_metadata: { email_verified: true },
     });
 
     return okResponse();
