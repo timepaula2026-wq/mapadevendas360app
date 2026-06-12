@@ -697,6 +697,15 @@ const AdminUserApproval = () => {
                   >
                     <KeyRound className="w-4 h-4" />
                   </button>
+                  {u.approved && (
+                    <button
+                      onClick={() => handleConfirmEmail(u)}
+                      className="p-1.5 text-green-500 hover:bg-green-500/10 rounded"
+                      title="Liberar e-mail confirmado"
+                    >
+                      <MailCheck className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
