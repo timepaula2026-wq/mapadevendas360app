@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ROLES } from "@/lib/roles";
+import { useRoleCatalog } from "@/hooks/useRoleCatalog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface ProfileRow {
   user_id: string;
@@ -15,6 +25,11 @@ const AdminUserRoles = () => {
   const [rolesByUser, setRolesByUser] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const { roles: ROLES, reload: reloadRoles } = useRoleCatalog();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [newValue, setNewValue] = useState("");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -71,11 +86,45 @@ const AdminUserRoles = () => {
     );
   }
 
+  const handleCreateRole = async () => {
+    const label = newLabel.trim();
+    const value = (newValue.trim() || label)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9_]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    if (!label || !value) {
+      toast.error("Informe um nome para o papel");
+      return;
+    }
+    setCreating(true);
+    const { error } = await supabase.rpc("add_app_role" as any, {
+      p_value: value,
+      p_label: label,
+    });
+    setCreating(false);
+    if (error) {
+      toast.error("Erro ao criar papel: " + error.message);
+      return;
+    }
+    toast.success("Papel criado");
+    setCreateOpen(false);
+    setNewLabel("");
+    setNewValue("");
+    await reloadRoles();
+  };
+
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Defina os papéis de cada usuário. O papel controla quais ícones da tela inicial ficam liberados.
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          Defina os papéis de cada usuário. O papel controla quais ícones da tela inicial ficam liberados.
+        </p>
+        <Button size="sm" onClick={() => setCreateOpen(true)} className="shrink-0">
+          <Plus className="w-3.5 h-3.5 mr-1" /> Novo papel
+        </Button>
+      </div>
       {profiles.map((p) => {
         const userRoles = rolesByUser[p.user_id] || [];
         return (
@@ -112,6 +161,44 @@ const AdminUserRoles = () => {
       {profiles.length === 0 && (
         <p className="text-xs text-muted-foreground text-center py-8">Nenhum usuário cadastrado</p>
       )}
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar novo papel</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Nome exibido</Label>
+              <Input
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="Ex: Escola de Líderes"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Identificador (opcional)</Label>
+              <Input
+                value={newValue}
+                onChange={(e) => setNewValue(e.target.value)}
+                placeholder="Ex: escola_lideres (gerado automaticamente)"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Apenas letras minúsculas, números e _. Será derivado do nome se vazio.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateRole} disabled={creating}>
+              {creating && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+              Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
