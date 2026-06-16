@@ -949,6 +949,24 @@ export type Database = {
           },
         ]
       }
+      role_catalog: {
+        Row: {
+          created_at: string
+          label: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          label: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          label?: string
+          value?: string
+        }
+        Relationships: []
+      }
       schedule_configs: {
         Row: {
           active: boolean
@@ -1351,6 +1369,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_app_role: {
+        Args: { p_label: string; p_value: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1378,6 +1400,7 @@ export type Database = {
         | "supervisor"
         | "gestor"
         | "secretaria"
+        | "escola_lideres"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1514,6 +1537,7 @@ export const Constants = {
         "supervisor",
         "gestor",
         "secretaria",
+        "escola_lideres",
       ],
     },
   },
