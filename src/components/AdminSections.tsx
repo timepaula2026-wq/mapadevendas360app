@@ -711,13 +711,20 @@ const AdminSections = () => {
       updates.description = editContentDesc.trim();
     } else {
       // Tipos baseados em URL (youtube/link)
-      if (!editContentUrl.trim()) {
+      let finalUrl = editContentUrl.trim();
+      if (!finalUrl && /^https?:\/\//i.test(editContentTitle.trim())) {
+        finalUrl = editContentTitle.trim();
+        try {
+          updates.title = new URL(finalUrl).hostname.replace(/^www\./, "");
+        } catch {}
+      }
+      if (!finalUrl) {
         toast.error(type === "youtube" ? "Informe a URL do vídeo" : "Informe a URL do link");
         return;
       }
-      updates.url = editContentUrl.trim();
+      updates.url = finalUrl;
       if (type === "youtube") {
-        updates.youtube_id = extractYoutubeId(editContentUrl);
+        updates.youtube_id = extractYoutubeId(finalUrl);
       } else {
         updates.youtube_id = null;
       }
