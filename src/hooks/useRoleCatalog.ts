@@ -14,7 +14,7 @@ export const useRoleCatalog = () => {
     if (data && Array.isArray(data)) {
       const merged = new Map<string, string>();
       (ROLES as readonly { value: string; label: string }[]).forEach((r) => merged.set(r.value, r.label));
-      (data as { value: string; label: string }[]).forEach((r) => merged.set(r.value, r.label));
+      (data as unknown as { value: string; label: string }[]).forEach((r) => merged.set(r.value, r.label));
       setRoles(Array.from(merged, ([value, label]) => ({ value, label })));
     }
     setLoading(false);
