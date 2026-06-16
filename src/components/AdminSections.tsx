@@ -378,7 +378,16 @@ const AdminSections = () => {
       return;
     }
 
-    if (!contentUrl.trim()) {
+    // Fallback: se o usuário colou a URL no campo Título e deixou o URL vazio, usa o título como URL
+    let finalUrl = contentUrl.trim();
+    let finalTitle = contentTitle.trim();
+    if (!finalUrl && /^https?:\/\//i.test(finalTitle)) {
+      finalUrl = finalTitle;
+      try {
+        finalTitle = new URL(finalUrl).hostname.replace(/^www\./, "");
+      } catch {}
+    }
+    if (!finalUrl) {
       toast.error(contentType === "youtube" ? "Informe a URL do vídeo" : "Informe a URL do link");
       return;
     }
@@ -389,11 +398,11 @@ const AdminSections = () => {
       tab_id: tabId,
       parent_id: parentId ?? null,
       user_id: user.id,
-      title: contentTitle.trim(),
+      title: finalTitle,
       description: contentDesc.trim() || null,
       type: contentType,
-      url: contentUrl.trim(),
-      youtube_id: contentType === "youtube" ? extractYoutubeId(contentUrl) : null,
+      url: finalUrl,
+      youtube_id: contentType === "youtube" ? extractYoutubeId(finalUrl) : null,
       sort_order: nextOrder,
       allow_download: false,
       allow_user_upload: contentAllowUserUpload,
@@ -702,13 +711,20 @@ const AdminSections = () => {
       updates.description = editContentDesc.trim();
     } else {
       // Tipos baseados em URL (youtube/link)
-      if (!editContentUrl.trim()) {
+      let finalUrl = editContentUrl.trim();
+      if (!finalUrl && /^https?:\/\//i.test(editContentTitle.trim())) {
+        finalUrl = editContentTitle.trim();
+        try {
+          updates.title = new URL(finalUrl).hostname.replace(/^www\./, "");
+        } catch {}
+      }
+      if (!finalUrl) {
         toast.error(type === "youtube" ? "Informe a URL do vídeo" : "Informe a URL do link");
         return;
       }
-      updates.url = editContentUrl.trim();
+      updates.url = finalUrl;
       if (type === "youtube") {
-        updates.youtube_id = extractYoutubeId(editContentUrl);
+        updates.youtube_id = extractYoutubeId(finalUrl);
       } else {
         updates.youtube_id = null;
       }
