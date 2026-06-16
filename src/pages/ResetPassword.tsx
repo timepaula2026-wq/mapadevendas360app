@@ -12,21 +12,38 @@ const ResetPassword = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setIsRecovery(true);
+        setChecking(false);
       }
     });
 
-    // Check hash for recovery token
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
+    const hash = window.location.hash || "";
+    const search = window.location.search || "";
+    if (hash.includes("type=recovery") || hash.includes("access_token") || search.includes("code=")) {
       setIsRecovery(true);
     }
 
-    return () => subscription.unsubscribe();
+    // Fallback: if a session exists (SDK already exchanged the recovery code), allow form
+    (async () => {
+      // Give the SDK a brief moment to process the URL
+      await new Promise((r) => setTimeout(r, 600));
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (data.session) setIsRecovery(true);
+      setChecking(false);
+    })();
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,12 +72,28 @@ const ResetPassword = () => {
     setSubmitting(false);
   };
 
-  if (!isRecovery) {
+  if (!isRecovery && checking) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5">
         <div className="w-full max-w-sm text-center space-y-4">
           <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
           <p className="text-sm text-muted-foreground">Verificando link de redefinição...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isRecovery) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5">
+        <div className="w-full max-w-sm text-center space-y-4">
+          <h2 className="text-lg font-bold text-foreground">Link inválido ou expirado</h2>
+          <p className="text-sm text-muted-foreground">
+            Abra novamente o e-mail de redefinição e clique no link mais recente. Se o problema persistir, solicite um novo em "Esqueci minha senha".
+          </p>
+          <button onClick={() => navigate("/auth")} className="text-sm text-primary hover:underline">
+            Voltar para o login
+          </button>
         </div>
       </div>
     );
