@@ -1369,6 +1369,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_app_role: {
+        Args: { p_label: string; p_value: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
