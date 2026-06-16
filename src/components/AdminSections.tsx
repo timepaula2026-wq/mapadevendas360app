@@ -1128,7 +1128,121 @@ const AdminSections = () => {
                               {childrenOf(c.id).map((sub, subIdx, subArr) => (
                                 <Sortable key={sub.id} id={sub.id}>
                                 {(sh) => (
-                                <div className="flex items-center gap-2 px-2 py-1 bg-secondary/40 rounded">
+                                <div className="px-2 py-1 bg-secondary/40 rounded">
+                                {editingContent === sub.id ? (
+                                  <div className="space-y-1.5 p-1">
+                                    <Input
+                                      value={editContentTitle}
+                                      onChange={(e) => setEditContentTitle(e.target.value)}
+                                      placeholder="Título"
+                                      className="h-7 text-xs"
+                                      autoFocus
+                                    />
+                                    <textarea
+                                      value={editContentDesc}
+                                      onChange={(e) => setEditContentDesc(e.target.value)}
+                                      placeholder="Texto (aparece abaixo do conteúdo)"
+                                      rows={3}
+                                      className="w-full text-xs bg-background border border-input rounded-md px-2 py-1.5 resize-y"
+                                    />
+                                    <select
+                                      value={editContentType}
+                                      onChange={(e) => setEditContentType(e.target.value as "youtube" | "pdf" | "link" | "image" | "video" | "text")}
+                                      className="h-7 text-xs w-full bg-background border border-input rounded-md px-2"
+                                    >
+                                      <option value="link">Link</option>
+                                      <option value="youtube">Link de Vídeo (YouTube/Vimeo)</option>
+                                      <option value="video">Vídeo MP4 (upload)</option>
+                                      <option value="pdf">PDF</option>
+                                      <option value="image">Imagem</option>
+                                      <option value="text">Texto</option>
+                                    </select>
+                                    {editContentType === "text" ? (
+                                      <p className="text-[10px] text-muted-foreground">
+                                        Escreva o texto no campo "Texto" acima — ele será exibido no visualizador.
+                                      </p>
+                                    ) : editContentType === "pdf" || editContentType === "image" || editContentType === "video" ? (
+                                      <div className="space-y-1">
+                                        <input
+                                          ref={editFileInputRef}
+                                          type="file"
+                                          accept={
+                                            editContentType === "pdf"
+                                              ? ".pdf"
+                                              : editContentType === "image"
+                                              ? "image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                                              : "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                                          }
+                                          className="text-[10px] w-full"
+                                        />
+                                        {sub.url && (sub.type === "pdf" || sub.type === "image" || sub.type === "video") && (
+                                          <p className="text-[9px] text-muted-foreground truncate">
+                                            Atual: {sub.url.split("/").pop()}
+                                          </p>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <Input
+                                        value={editContentUrl}
+                                        onChange={(e) => setEditContentUrl(e.target.value)}
+                                        placeholder={editContentType === "youtube" ? "URL do vídeo (YouTube, Vimeo, Drive...)" : "URL do link"}
+                                        className="h-7 text-xs"
+                                      />
+                                    )}
+                                    {editContentType === "pdf" && (
+                                      <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                        <input
+                                          type="checkbox"
+                                          checked={editContentAllowDownload}
+                                          onChange={(e) => setEditContentAllowDownload(e.target.checked)}
+                                          className="h-3 w-3 accent-primary"
+                                        />
+                                        Permitir download deste PDF
+                                      </label>
+                                    )}
+                                    <label className="flex items-center gap-2 text-[10px] text-foreground cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={editContentAllowUserUpload}
+                                        onChange={(e) => setEditContentAllowUserUpload(e.target.checked)}
+                                        className="h-3 w-3 accent-primary"
+                                      />
+                                      Permitir que o consultor envie um arquivo neste conteúdo
+                                    </label>
+                                    {(editContentType === "link" || editContentType === "youtube") && (
+                                      <div className="space-y-1">
+                                        <label className="text-[10px] text-muted-foreground">Modo de abertura</label>
+                                        <select
+                                          value={editContentOpenMode}
+                                          onChange={(e) => setEditContentOpenMode(e.target.value as "iframe" | "newtab")}
+                                          className="w-full h-7 text-[11px] px-2 rounded border border-input bg-background"
+                                        >
+                                          <option value="iframe">Dentro do app (iframe)</option>
+                                          <option value="newtab">Nova aba do navegador</option>
+                                        </select>
+                                      </div>
+                                    )}
+                                    <div className="flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        className="h-6 text-[10px] flex-1"
+                                        onClick={() => handleSaveEditContent(sub.id, tab.id, sub.type)}
+                                        disabled={!editContentTitle.trim() || editUploading}
+                                      >
+                                        {editUploading ? "Enviando..." : "Salvar"}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-6 text-[10px]"
+                                        onClick={() => setEditingContent(null)}
+                                      >
+                                        Cancelar
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                <div className="flex items-center gap-2">
                                   <button
                                     {...sh.listeners}
                                     {...sh.attributes}
@@ -1181,6 +1295,8 @@ const AdminSections = () => {
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </button>
+                                </div>
+                                )}
                                 </div>
                                 )}
                                 </Sortable>
