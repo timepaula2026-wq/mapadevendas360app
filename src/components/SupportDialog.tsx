@@ -123,8 +123,28 @@ const SupportDialog = ({ open, onOpenChange, prefillMessage }: SupportDialogProp
         if (error) throw error;
         inserted = data;
       } else {
-        const { error } = await supabase.from("support_tickets").insert(ticketPayload);
-        if (error) throw error;
+        // Visitante: limpa qualquer sessão local obsoleta e envia direto via REST
+        // com a chave anônima, evitando erros de RLS por JWT expirado.
+        try { await supabase.auth.signOut({ scope: "local" }); } catch { /* ignore */ }
+        const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string) || "";
+        const SUPABASE_ANON =
+          (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
+          (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
+          "";
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON,
+            Authorization: `Bearer ${SUPABASE_ANON}`,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify(ticketPayload),
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(txt || `HTTP ${res.status}`);
+        }
       }
       toast.success("Chamado aberto! Acompanhe a resposta em 'Meus chamados'.");
       reset();
