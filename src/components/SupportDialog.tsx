@@ -134,8 +134,9 @@ const SupportDialog = ({ open, onOpenChange, prefillMessage }: SupportDialogProp
       } else {
         onOpenChange(false);
       }
-    } catch (err: any) {
-      toast.error("Erro ao enviar: " + (err.message || "tente novamente"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "tente novamente";
+      toast.error("Erro ao enviar: " + message);
     } finally {
       setSubmitting(false);
     }
