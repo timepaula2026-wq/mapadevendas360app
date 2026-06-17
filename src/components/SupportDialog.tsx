@@ -104,15 +104,28 @@ const SupportDialog = ({ open, onOpenChange, prefillMessage }: SupportDialogProp
         const { data } = supabase.storage.from("support-attachments").getPublicUrl(path);
         photo_url = data.publicUrl;
       }
-      const { data: inserted, error } = await supabase.from("support_tickets").insert({
+      const ticketPayload = {
         name: name.trim(),
         email: email.trim(),
         unit: unit || null,
         message: message.trim(),
         photo_url,
         user_id: user?.id || null,
-      }).select("id").single();
-      if (error) throw error;
+      };
+
+      let inserted: { id: string } | null = null;
+      if (user) {
+        const { data, error } = await supabase
+          .from("support_tickets")
+          .insert(ticketPayload)
+          .select("id")
+          .single();
+        if (error) throw error;
+        inserted = data;
+      } else {
+        const { error } = await supabase.from("support_tickets").insert(ticketPayload);
+        if (error) throw error;
+      }
       toast.success("Chamado aberto! Acompanhe a resposta em 'Meus chamados'.");
       reset();
       if (user && inserted?.id) {
@@ -121,8 +134,9 @@ const SupportDialog = ({ open, onOpenChange, prefillMessage }: SupportDialogProp
       } else {
         onOpenChange(false);
       }
-    } catch (err: any) {
-      toast.error("Erro ao enviar: " + (err.message || "tente novamente"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "tente novamente";
+      toast.error("Erro ao enviar: " + message);
     } finally {
       setSubmitting(false);
     }
