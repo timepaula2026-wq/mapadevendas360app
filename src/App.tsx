@@ -1,13 +1,17 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { App as CapacitorApp } from "@capacitor/app";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useApprovalCheck } from "@/hooks/useApprovalCheck";
 import { supabase } from "@/integrations/supabase/client";
 import AppSettingsApplier from "@/components/AppSettingsApplier";
 import ForcePasswordChange from "@/components/ForcePasswordChange";
+import SupportDialog from "@/components/SupportDialog";
+import { parseMobileDeepLink, SUPPORT_EVENT_NAME } from "@/lib/mobileLinks";
 import Index from "./pages/Index";
 import TrainingsList from "./pages/TrainingsList";
 import TrainingDetail from "./pages/TrainingDetail";
@@ -48,6 +52,35 @@ import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
+const MobileDeepLinkHandler = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const openUrl = (rawUrl: string) => {
+      const target = parseMobileDeepLink(rawUrl);
+      if (!target) return;
+
+      if (target.startsWith("/support")) {
+        window.dispatchEvent(new Event(SUPPORT_EVENT_NAME));
+        return;
+      }
+
+      navigate(target, { replace: true });
+    };
+
+    CapacitorApp.getLaunchUrl().then((launch) => {
+      if (launch?.url) openUrl(launch.url);
+    });
+
+    const listener = CapacitorApp.addListener("appUrlOpen", ({ url }) => openUrl(url));
+    return () => {
+      listener.then((handle) => handle.remove());
+    };
+  }, [navigate]);
+
+  return null;
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const { approved, loading: approvalLoading, mustChangePassword, refresh } = useApprovalCheck();
@@ -81,15 +114,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppSettingsApplier />
-          <Routes>
+const App = () => {
+  const [supportOpen, setSupportOpen] = useState(false);
+
+  useEffect(() => {
+    const openSupport = () => setSupportOpen(true);
+    window.addEventListener(SUPPORT_EVENT_NAME, openSupport);
+    return () => window.removeEventListener(SUPPORT_EVENT_NAME, openSupport);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <MobileDeepLinkHandler />
+            <AppSettingsApplier />
+            <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -126,11 +169,13 @@ const App = () => (
             <Route path="/quizz/host/:id" element={<ProtectedRoute><QuizzHost /></ProtectedRoute>} />
             <Route path="/quizz/play/:pin" element={<ProtectedRoute><QuizzPlay /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+            </Routes>
+            <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
