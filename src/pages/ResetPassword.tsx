@@ -4,6 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Lock, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const translateResetError = (raw: string) => {
+  const msg = (raw || "").toLowerCase();
+  if (msg.includes("auth session missing") || msg.includes("session")) {
+    return "Sessão de redefinição não encontrada. Abra o link mais recente do e-mail novamente.";
+  }
+  if (msg.includes("expired") || msg.includes("invalid")) {
+    return "Link expirado ou inválido. Solicite uma nova recuperação de senha.";
+  }
+  if (msg.includes("password") && msg.includes("characters")) {
+    return "A senha deve ter pelo menos 6 caracteres.";
+  }
+  return raw;
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -63,7 +77,7 @@ const ResetPassword = () => {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      toast({ title: "Erro ao redefinir senha", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao redefinir senha", description: translateResetError(error.message), variant: "destructive" });
     } else {
       setSuccess(true);
       toast({ title: "Senha redefinida!", description: "Sua senha foi alterada com sucesso." });

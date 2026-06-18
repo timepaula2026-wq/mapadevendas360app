@@ -9,6 +9,7 @@ import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
 import { UNITS } from "@/lib/units";
 import SupportDialog from "@/components/SupportDialog";
+import { getPasswordRecoveryRedirectUrl } from "@/lib/mobileLinks";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -267,7 +268,7 @@ const Auth = () => {
     e.preventDefault();
     setSubmitting(true);
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: getPasswordRecoveryRedirectUrl(),
     });
     if (error) {
       toast({ title: "Erro", description: translateAuthError(error.message), variant: "destructive" });

@@ -113,39 +113,11 @@ const SupportDialog = ({ open, onOpenChange, prefillMessage }: SupportDialogProp
         user_id: user?.id || null,
       };
 
-      let inserted: { id: string } | null = null;
-      if (user) {
-        const { data, error } = await supabase
-          .from("support_tickets")
-          .insert(ticketPayload)
-          .select("id")
-          .single();
-        if (error) throw error;
-        inserted = data;
-      } else {
-        // Visitante: limpa qualquer sessão local obsoleta e envia direto via REST
-        // com a chave anônima, evitando erros de RLS por JWT expirado.
-        try { await supabase.auth.signOut({ scope: "local" }); } catch { /* ignore */ }
-        const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string) || "";
-        const SUPABASE_ANON =
-          (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
-          (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
-          "";
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets`, {
-          method: "POST",
-          headers: {
-            apikey: SUPABASE_ANON,
-            Authorization: `Bearer ${SUPABASE_ANON}`,
-            "Content-Type": "application/json",
-            Prefer: "return=minimal",
-          },
-          body: JSON.stringify(ticketPayload),
-        });
-        if (!res.ok) {
-          const txt = await res.text().catch(() => "");
-          throw new Error(txt || `HTTP ${res.status}`);
-        }
-      }
+      const { data, error } = await supabase.functions.invoke("create-support-ticket", {
+        body: ticketPayload,
+      });
+      if (error) throw error;
+      const inserted = data as { id?: string } | null;
       toast.success("Chamado aberto! Acompanhe a resposta em 'Meus chamados'.");
       reset();
       if (user && inserted?.id) {
