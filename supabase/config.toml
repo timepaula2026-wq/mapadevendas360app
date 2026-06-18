@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.chat-ademicon]
 verify_jwt = true
+
+[functions.create-support-ticket]
+verify_jwt = false
