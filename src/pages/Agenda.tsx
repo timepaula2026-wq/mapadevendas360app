@@ -256,6 +256,7 @@ const Agenda = () => {
       </div>
 
       {/* View switcher & navigation */}
+      {false && (
       <div className="px-5 mb-4 flex items-center justify-between">
         <div className="flex gap-1">
           {([["month", LayoutGrid], ["week", List], ["day", Clock]] as const).map(([v, Icon]) => (
@@ -275,8 +276,10 @@ const Agenda = () => {
           <button onClick={() => navigateDate("next")}><ChevronRight className="w-5 h-5 text-muted-foreground" /></button>
         </div>
       </div>
+      )}
 
       {/* Calendar views */}
+      {false && (
       <div className="px-4">
         {view === "month" && (
           <div className="glass-card rounded-2xl p-3">
@@ -381,8 +384,10 @@ const Agenda = () => {
           </div>
         )}
       </div>
+      )}
 
       {/* Upcoming appointments list */}
+      {false && (
       <div className="px-4 mt-4">
         <h3 className="text-sm font-semibold text-foreground mb-2">Próximos agendamentos</h3>
         <div className="space-y-2">
@@ -411,6 +416,7 @@ const Agenda = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
