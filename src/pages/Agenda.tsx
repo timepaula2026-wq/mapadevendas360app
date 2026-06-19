@@ -48,6 +48,9 @@ const STATUS_LABELS: Record<string, string> = {
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7h to 20h
 
+const GOOGLE_CALENDAR_SRC = "coordenacaocomercial.ademilar@gmail.com";
+const GOOGLE_CALENDAR_EMBED_URL = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(GOOGLE_CALENDAR_SRC)}&ctz=America/Sao_Paulo&mode=MONTH&showTitle=0&showPrint=0&showCalendars=0&showTz=0&bgcolor=%23111111`;
+
 
 const Agenda = () => {
   const navigate = useNavigate();
@@ -55,6 +58,7 @@ const Agenda = () => {
   const { isAdmin } = useIsAdmin();
   const [activeTab, setActiveTab] = useState("home");
   const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [showGoogle, setShowGoogle] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,6 +209,42 @@ const Agenda = () => {
           <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(shareLink); toast({ title: "Link copiado!" }); }}>
             Copiar
           </Button>
+        </div>
+      </div>
+
+      {/* Google Calendar embed */}
+      <div className="px-5 mb-4">
+        <div className="glass-card rounded-xl p-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <CalIcon className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-sm font-medium text-foreground truncate">Google Calendar</span>
+            </div>
+            <Button size="sm" variant={showGoogle ? "default" : "outline"} onClick={() => setShowGoogle((v) => !v)}>
+              {showGoogle ? "Ocultar" : "Mostrar"}
+            </Button>
+          </div>
+          {showGoogle && (
+            <div className="rounded-lg overflow-hidden border border-border/40 bg-black">
+              <iframe
+                src={GOOGLE_CALENDAR_EMBED_URL}
+                title="Google Calendar"
+                className="w-full h-[520px]"
+                style={{ border: 0 }}
+                loading="lazy"
+              />
+              <div className="p-2 text-right">
+                <a
+                  href={`https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(GOOGLE_CALENDAR_SRC)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-primary underline"
+                >
+                  Abrir no Google Calendar
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
