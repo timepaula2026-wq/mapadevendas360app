@@ -212,6 +212,42 @@ const Agenda = () => {
         </div>
       </div>
 
+      {/* Google Calendar embed */}
+      <div className="px-5 mb-4">
+        <div className="glass-card rounded-xl p-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <CalIcon className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-sm font-medium text-foreground truncate">Google Calendar</span>
+            </div>
+            <Button size="sm" variant={showGoogle ? "default" : "outline"} onClick={() => setShowGoogle((v) => !v)}>
+              {showGoogle ? "Ocultar" : "Mostrar"}
+            </Button>
+          </div>
+          {showGoogle && (
+            <div className="rounded-lg overflow-hidden border border-border/40 bg-black">
+              <iframe
+                src={GOOGLE_CALENDAR_EMBED_URL}
+                title="Google Calendar"
+                className="w-full h-[520px]"
+                style={{ border: 0 }}
+                loading="lazy"
+              />
+              <div className="p-2 text-right">
+                <a
+                  href={`https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(GOOGLE_CALENDAR_SRC)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-primary underline"
+                >
+                  Abrir no Google Calendar
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* View switcher & navigation */}
       <div className="px-5 mb-4 flex items-center justify-between">
         <div className="flex gap-1">
