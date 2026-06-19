@@ -225,14 +225,21 @@ const Agenda = () => {
             </Button>
           </div>
           {showGoogle && (
-            <div className="rounded-lg overflow-hidden border border-border/40 bg-black">
-              <iframe
-                src={GOOGLE_CALENDAR_EMBED_URL}
-                title="Google Calendar"
-                className="w-full h-[520px]"
-                style={{ border: 0 }}
-                loading="lazy"
-              />
+            <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
+              <div
+                className="w-full"
+                style={{
+                  filter: "invert(0.92) hue-rotate(180deg) contrast(0.95) saturate(1.2)",
+                }}
+              >
+                <iframe
+                  src={GOOGLE_CALENDAR_EMBED_URL}
+                  title="Google Calendar"
+                  className="w-full h-[600px] block"
+                  style={{ border: 0, colorScheme: "light" }}
+                  loading="lazy"
+                />
+              </div>
               <div className="p-2 text-right">
                 <a
                   href={`https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(GOOGLE_CALENDAR_SRC)}`}
