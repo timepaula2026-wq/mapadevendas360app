@@ -48,6 +48,9 @@ const STATUS_LABELS: Record<string, string> = {
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7h to 20h
 
+const GOOGLE_CALENDAR_SRC = "coordenacaocomercial.ademilar@gmail.com";
+const GOOGLE_CALENDAR_EMBED_URL = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(GOOGLE_CALENDAR_SRC)}&ctz=America/Sao_Paulo&mode=MONTH&showTitle=0&showPrint=0&showCalendars=0&showTz=0&bgcolor=%23111111`;
+
 
 const Agenda = () => {
   const navigate = useNavigate();
@@ -55,6 +58,7 @@ const Agenda = () => {
   const { isAdmin } = useIsAdmin();
   const [activeTab, setActiveTab] = useState("home");
   const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [showGoogle, setShowGoogle] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
