@@ -1022,6 +1022,68 @@ const AdminUserApproval = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal de edição de dados */}
+      <Dialog open={!!editUser} onOpenChange={(o) => !o && !savingEdit && setEditUser(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar dados do usuário</DialogTitle>
+            <DialogDescription>
+              Corrija e-mail e demais informações. A alteração de e-mail é aplicada
+              imediatamente no acesso (login).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome completo *</Label>
+              <Input
+                value={editForm.display_name}
+                onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>E-mail *</Label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>WhatsApp</Label>
+                <Input
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Matrícula / CPF</Label>
+                <Input
+                  value={editForm.cpf}
+                  onChange={(e) => setEditForm({ ...editForm, cpf: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Unidade</Label>
+              <Input
+                value={editForm.unit}
+                onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setEditUser(null)} disabled={savingEdit}>
+                Cancelar
+              </Button>
+              <Button onClick={saveEdit} disabled={savingEdit} className="gap-2">
+                {savingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
