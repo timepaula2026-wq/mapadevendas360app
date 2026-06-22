@@ -27,6 +27,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ROLES } from "@/lib/roles";
+import { Label } from "@/components/ui/label";
+import { Pencil } from "lucide-react";
+import { validateEmail } from "@/lib/emailValidation";
 
 interface UserProfile {
   id: string;
@@ -103,6 +106,57 @@ const AdminUserApproval = () => {
   const [bulkResetting, setBulkResetting] = useState(false);
   const [editingRoles, setEditingRoles] = useState<string[]>([]);
   const [savingRoles, setSavingRoles] = useState(false);
+  const [editUser, setEditUser] = useState<UserProfile | null>(null);
+  const [editForm, setEditForm] = useState({
+    display_name: "",
+    email: "",
+    phone: "",
+    unit: "",
+    cpf: "",
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (u: UserProfile) => {
+    setEditUser(u);
+    setEditForm({
+      display_name: u.display_name || "",
+      email: u.email || "",
+      phone: u.phone || "",
+      unit: u.unit || "",
+      cpf: u.cpf || "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editUser) return;
+    if (!editForm.display_name.trim()) return toast.error("Informe o nome");
+    const v = validateEmail(editForm.email);
+    const finalEmail = v.valid ? v.email! : v.suggestion;
+    if (!finalEmail) return toast.error(v.error || "E-mail inválido");
+    if (v.suggestion && !v.valid) toast.message(`E-mail corrigido para ${finalEmail}`);
+    setSavingEdit(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-update-user", {
+        body: {
+          target_user_id: editUser.user_id,
+          email: finalEmail,
+          display_name: editForm.display_name.trim(),
+          phone: editForm.phone.trim(),
+          unit: editForm.unit.trim(),
+          cpf: editForm.cpf.trim(),
+        },
+      });
+      if (error || (data as any)?.error) {
+        toast.error((data as any)?.error || error?.message || "Erro ao salvar");
+        return;
+      }
+      toast.success("Dados atualizados");
+      setEditUser(null);
+      fetchUsers();
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -665,6 +719,13 @@ const AdminUserApproval = () => {
                     title="Ver cursos e uso"
                   >
                     <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => openEdit(u)}
+                    className="p-1.5 text-primary hover:bg-primary/10 rounded"
+                    title="Editar e-mail e dados"
+                  >
+                    <Pencil className="w-4 h-4" />
                   </button>
                   {!u.approved ? (
                     <button
