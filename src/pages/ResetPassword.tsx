@@ -77,7 +77,11 @@ const ResetPassword = () => {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      toast({ title: "Erro ao redefinir senha", description: translateResetError(error.message), variant: "destructive" });
+      toast({
+        title: "Erro ao redefinir senha",
+        description: translateResetError(error.message) + ` (detalhe: ${error.message})`,
+        variant: "destructive",
+      });
     } else {
       setSuccess(true);
       toast({ title: "Senha redefinida!", description: "Sua senha foi alterada com sucesso." });
