@@ -52,11 +52,17 @@ Deno.serve(async (req) => {
       email_confirm: true,
     });
     if (updErr) {
-      return new Response(JSON.stringify({ error: updErr.message }), {
+      return new Response(JSON.stringify({ error: `Falha ao redefinir: ${updErr.message}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Garante que o profile esteja aprovado e marca para troca obrigatória
+    await admin
+      .from("profiles")
+      .update({ must_change_password: true })
+      .eq("user_id", target_user_id);
 
     return new Response(JSON.stringify({ ok: true, password: newPassword }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
