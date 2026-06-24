@@ -27,6 +27,7 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [exchangeError, setExchangeError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,18 +41,49 @@ const ResetPassword = () => {
 
     const hash = window.location.hash || "";
     const search = window.location.search || "";
-    if (hash.includes("type=recovery") || hash.includes("access_token") || search.includes("code=")) {
-      setIsRecovery(true);
-    }
-
-    // Fallback: if a session exists (SDK already exchanged the recovery code), allow form
     (async () => {
-      // Give the SDK a brief moment to process the URL
-      await new Promise((r) => setTimeout(r, 600));
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (data.session) setIsRecovery(true);
-      setChecking(false);
+      try {
+        const params = new URLSearchParams(search);
+        const code = params.get("code");
+
+        // Handle errors returned by Supabase verify endpoint in the hash
+        if (hash.includes("error")) {
+          const hp = new URLSearchParams(hash.replace(/^#/, ""));
+          const errDesc = hp.get("error_description") || hp.get("error") || "Link inválido ou expirado.";
+          setExchangeError(decodeURIComponent(errDesc.replace(/\+/g, " ")));
+          setChecking(false);
+          return;
+        }
+
+        // PKCE flow: explicitly exchange the code for a session
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            setExchangeError(translateResetError(error.message));
+            setChecking(false);
+            return;
+          }
+          // Clean URL
+          window.history.replaceState({}, "", window.location.pathname);
+          setIsRecovery(true);
+          setChecking(false);
+          return;
+        }
+
+        // Implicit/hash flow: SDK auto-detects. Give it a moment.
+        if (hash.includes("access_token") || hash.includes("type=recovery")) {
+          setIsRecovery(true);
+        }
+        await new Promise((r) => setTimeout(r, 600));
+        if (cancelled) return;
+        const { data } = await supabase.auth.getSession();
+        if (data.session) setIsRecovery(true);
+        setChecking(false);
+      } catch (e: any) {
+        if (cancelled) return;
+        setExchangeError(e?.message || "Erro ao validar o link de redefinição.");
+        setChecking(false);
+      }
     })();
 
     return () => {
@@ -107,7 +139,7 @@ const ResetPassword = () => {
         <div className="w-full max-w-sm text-center space-y-4">
           <h2 className="text-lg font-bold text-foreground">Link inválido ou expirado</h2>
           <p className="text-sm text-muted-foreground">
-            Abra novamente o e-mail de redefinição e clique no link mais recente. Se o problema persistir, solicite um novo em "Esqueci minha senha".
+            {exchangeError || "Abra novamente o e-mail de redefinição e clique no link mais recente."} Se o problema persistir, solicite um novo em "Esqueci minha senha".
           </p>
           <button onClick={() => navigate("/auth")} className="text-sm text-primary hover:underline">
             Voltar para o login
