@@ -1,13 +1,16 @@
 export const MOBILE_URL_SCHEME = "mapadevendas";
 export const SUPPORT_EVENT_NAME = "mapa-de-vendas:open-support";
+export const WEB_APP_ORIGIN = "https://mapadevendas.app";
 
 export const getPasswordRecoveryRedirectUrl = () => {
   if (typeof window === "undefined") return "/reset-password";
   const isNativeApp = window.location.protocol === "capacitor:";
   return isNativeApp
     ? `${MOBILE_URL_SCHEME}://reset-password`
-    : `${window.location.origin}/reset-password`;
+    : `${WEB_APP_ORIGIN}/reset-password`;
 };
+
+export const getAuthEmailRedirectUrl = () => `${WEB_APP_ORIGIN}/`;
 
 export const parseMobileDeepLink = (rawUrl: string) => {
   try {

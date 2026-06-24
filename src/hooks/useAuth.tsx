@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
+import { getAuthEmailRedirectUrl } from "@/lib/mobileLinks";
 
 interface SignUpData {
   displayName?: string;
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           atividade: data?.atividade,
           auto_approved: data?.auto_approved,
         },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getAuthEmailRedirectUrl(),
       },
     });
     return { error: error as Error | null };
