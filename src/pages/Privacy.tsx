@@ -7,13 +7,13 @@ const Privacy = () => {
         <header className="space-y-2">
           <Link to="/" className="text-sm text-primary hover:underline">← Voltar</Link>
           <h1 className="text-3xl font-bold">Política de Privacidade</h1>
-          <p className="text-sm text-muted-foreground">Mapa de Vendas — última atualização: 02/06/2026</p>
+          <p className="text-sm text-muted-foreground">Plataforma de Gestão de Vendas de Consórcio — última atualização: 02/06/2026</p>
         </header>
 
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">1. Sobre o app</h2>
           <p className="text-sm leading-relaxed">
-            O Mapa de Vendas é uma plataforma destinada a consultores e equipes de vendas, oferecendo
+            A Plataforma de Gestão de Vendas de Consórcio é uma plataforma destinada a consultores e equipes de vendas, oferecendo
             ferramentas de treinamento, gestão de carreira, agenda e materiais comerciais.
           </p>
         </section>

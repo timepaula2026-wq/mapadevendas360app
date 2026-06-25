@@ -518,14 +518,14 @@ const Auth = () => {
         <div className="text-center mb-6">
           <img
             src={logoMapaVendas}
-            alt="Mapa de Vendas"
+            alt="Plataforma de Gestão de Vendas de Consórcio"
             className="w-full max-w-[22rem] sm:max-w-[26rem] h-auto object-contain mx-auto mb-2 drop-shadow-2xl"
           />
-          {!isLogin && (
-            <h1 className="text-2xl font-extrabold text-white">Criar conta</h1>
-          )}
+          <h1 className="text-2xl font-extrabold text-white">
+            {isLogin ? "Plataforma de Gestão de Vendas de Consórcio" : "Criar conta"}
+          </h1>
           <p className="text-sm text-white/60 mt-1">
-            {isLogin ? "plataforma de gestão de vendas de consórcio" : "Cadastre-se para começar"}
+            {isLogin ? "Acesse sua conta para gerenciar vendas e equipe" : "Cadastre-se para começar"}
           </p>
         </div>
 

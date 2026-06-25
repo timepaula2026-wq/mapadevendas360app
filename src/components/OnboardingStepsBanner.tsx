@@ -62,7 +62,7 @@ const OnboardingStepsBanner = () => {
         <div className="overflow-y-auto max-h-[92vh]">
           <img
             src={onboardingImage}
-            alt="Passo a passo do novo Mapa de Vendas"
+            alt="Passo a passo da Plataforma de Gestão de Vendas de Consórcio"
             className="w-full h-auto block"
           />
         </div>

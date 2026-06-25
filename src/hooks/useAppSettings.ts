@@ -27,7 +27,7 @@ const DEFAULT: AppSettings = {
   primary_color: "348 70% 35%",
   background_color: "0 0% 7%",
   text_color: "0 0% 98%",
-  header_title: "Mapa de Vendas",
+  header_title: "Plataforma de Gestão de Vendas de Consórcio",
   header_logo_url: null,
   header_alignment: "center",
   show_header: true,

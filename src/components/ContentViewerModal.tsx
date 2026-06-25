@@ -476,13 +476,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const original = await res.arrayBuffer();
 
-      // Aplica marca d'água "Mapa de Vendas" embutida em todas as páginas do PDF.
+      // Aplica marca d'água "Plataforma de Gestão de Vendas de Consórcio" embutida em todas as páginas do PDF.
       // A marca é desenhada como conteúdo real do PDF (não é metadado) — para removê-la
       // seria necessário editar manualmente cada página em um editor de PDF.
       const { PDFDocument, StandardFonts, rgb, degrees } = await import("pdf-lib");
       const pdfDoc = await PDFDocument.load(original, { ignoreEncryption: true });
       const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const text = "MAPA DE VENDAS";
+      const text = "PLATAFORMA DE GESTÃO DE VENDAS DE CONSÓRCIO";
       const fontSize = 38;
       const textWidth = font.widthOfTextAtSize(text, fontSize);
 
