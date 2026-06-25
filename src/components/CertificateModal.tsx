@@ -70,7 +70,7 @@ const CertificateModal = ({
               Emitido em {dateText}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Mapa de Vendas · Trilha do Iniciante
+              Plataforma de Gestão de Vendas de Consórcio · Trilha do Iniciante
             </p>
           </div>
 

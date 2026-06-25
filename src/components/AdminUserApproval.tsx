@@ -390,7 +390,7 @@ const AdminUserApproval = () => {
 
   const exportReport = () => {
     const lines: string[] = [];
-    lines.push("RELATÓRIO DE USUÁRIOS - MAPA DE VENDAS");
+    lines.push("RELATÓRIO DE USUÁRIOS - PLATAFORMA DE GESTÃO DE VENDAS DE CONSÓRCIO");
     lines.push(`Gerado em: ${new Date().toLocaleString("pt-BR")}`);
     lines.push(
       `Filtro: ${
