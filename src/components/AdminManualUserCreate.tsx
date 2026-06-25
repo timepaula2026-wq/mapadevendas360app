@@ -23,6 +23,18 @@ import { toast } from "sonner";
 import { validateEmail } from "@/lib/emailValidation";
 import { ROLES } from "@/lib/roles";
 import { Checkbox } from "@/components/ui/checkbox";
+import { UNITS } from "@/lib/units";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ACTIVITIES = [
   { value: "CONSULTOR INICIANTE", label: "Consultor Iniciante" },
@@ -39,6 +51,7 @@ export default function AdminManualUserCreate({ onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
+  const [unitOpen, setUnitOpen] = useState(false);
   const [form, setForm] = useState({
     display_name: "",
     email: "",
@@ -112,7 +125,7 @@ export default function AdminManualUserCreate({ onCreated }: Props) {
             Senha provisória <b>123456</b>. O usuário definirá a senha no primeiro acesso.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
           <div>
             <Label>Nome completo *</Label>
             <Input
@@ -146,10 +159,47 @@ export default function AdminManualUserCreate({ onCreated }: Props) {
           </div>
           <div>
             <Label>Unidade</Label>
-            <Input
-              value={form.unit}
-              onChange={(e) => setForm({ ...form, unit: e.target.value })}
-            />
+            <Popover open={unitOpen} onOpenChange={setUnitOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between font-normal"
+                >
+                  {form.unit || "Selecione a unidade"}
+                  <ChevronsUpDown className="w-4 h-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar unidade..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
+                    <CommandGroup>
+                      {UNITS.map((u) => (
+                        <CommandItem
+                          key={u}
+                          value={u}
+                          onSelect={() => {
+                            setForm({ ...form, unit: u });
+                            setUnitOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              form.unit === u ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          {u}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <Label>Atividade / Papel</Label>
