@@ -525,7 +525,7 @@ const Auth = () => {
             <h1 className="text-2xl font-extrabold text-white">Criar conta</h1>
           )}
           <p className="text-sm text-white/60 mt-1">
-            {isLogin ? "Acesse aqui sua plataforma de vendas" : "Cadastre-se para começar"}
+            {isLogin ? "plataforma de gestão de vendas de consórcio" : "Cadastre-se para começar"}
           </p>
         </div>
 
