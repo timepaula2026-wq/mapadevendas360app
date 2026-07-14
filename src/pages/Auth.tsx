@@ -9,6 +9,7 @@ import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
 import { validateEmail } from "@/lib/emailValidation";
 import { UNITS } from "@/lib/units";
 import SupportDialog from "@/components/SupportDialog";
+import AppUpdateBanner from "@/components/AppUpdateBanner";
 import { getPasswordRecoveryRedirectUrl } from "@/lib/mobileLinks";
 import {
   AlertDialog,
