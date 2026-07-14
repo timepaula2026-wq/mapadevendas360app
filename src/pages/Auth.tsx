@@ -450,6 +450,12 @@ const Auth = () => {
       const autoApproved = validation.allowed === true;
       const needsManualApproval = !autoApproved;
 
+      if (!autoApproved) {
+        await logSignupError("validate-consultor", validation.status, validation.message, {
+          nome_retornado: validation.nome ?? null,
+        });
+      }
+
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
         unit: finalUnit,
@@ -458,14 +464,13 @@ const Auth = () => {
         auto_approved: autoApproved,
       } as any);
       if (error) {
+        await logSignupError("supabase-signup", "signup_error", error.message || "erro desconhecido");
         showSignupError(error.message);
       } else if (needsManualApproval) {
         toast({
           title: "Cadastro recebido!",
           description:
-            validation.message
-              ? `${validation.message} Sua conta foi criada e aguarda liberação manual do administrador.`
-              : "Não conseguimos validar automaticamente seu nome. Sua conta foi criada e aguarda liberação manual do administrador.",
+            "Não conseguimos validar automaticamente seu nome na base da equipe agora. Sua conta foi criada e aguarda liberação manual do administrador.",
         });
       } else {
         toast({ title: "Cadastro realizado!", description: "Se estiver aprovado, você já pode acessar com seu e-mail e senha." });
