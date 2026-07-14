@@ -310,6 +310,30 @@ const Auth = () => {
     }
   };
 
+  const logSignupError = async (
+    stage: string,
+    status: string | undefined,
+    message: string,
+    details?: Record<string, unknown>,
+  ) => {
+    try {
+      await (supabase as any).from("signup_error_logs").insert({
+        email: email.trim().toLowerCase() || null,
+        display_name: displayName.trim() || null,
+        cpf: cpf.trim() || null,
+        unit: (unit === "outra" ? customUnit.trim() : unit) || null,
+        atividade: atividade || null,
+        stage,
+        status: status ?? null,
+        message: message?.slice(0, 500) ?? null,
+        details: details ?? null,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      });
+    } catch (err) {
+      console.warn("Falha ao registrar log de cadastro:", err);
+    }
+  };
+
   const retryLoginAfterEmailRelease = async () => {
     await supabase.functions.invoke("release-approved-email", {
       body: { email: email.trim().toLowerCase() },
