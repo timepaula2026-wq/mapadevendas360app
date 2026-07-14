@@ -543,6 +543,9 @@ const Auth = () => {
           "radial-gradient(ellipse at center, #2a0608 0%, #120203 55%, #050102 100%)",
       }}
     >
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <AppUpdateBanner />
+      </div>
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-6">
