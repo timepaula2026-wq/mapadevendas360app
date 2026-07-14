@@ -74,11 +74,11 @@ const SupportTicketChat = ({ ticketId, asAdmin = false }: Props) => {
     try {
       let photo_url: string | null = null;
       if (file) {
-        const ext = file.name.split(".").pop();
+        const ext = (file.name.split(".").pop() || "bin").toLowerCase();
         const path = `${ticketId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("support-attachments")
-          .upload(path, file);
+          .upload(path, file, { contentType: file.type || undefined });
         if (upErr) throw upErr;
         photo_url = supabase.storage.from("support-attachments").getPublicUrl(path).data.publicUrl;
       }
@@ -98,6 +98,24 @@ const SupportTicketChat = ({ ticketId, asAdmin = false }: Props) => {
       setSending(false);
     }
   };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const it of Array.from(items)) {
+      if (it.kind === "file") {
+        const f = it.getAsFile();
+        if (f) {
+          setFile(f);
+          toast.success("Print colado. Envie para anexar.");
+          e.preventDefault();
+          return;
+        }
+      }
+    }
+  };
+
+  const isImage = (url: string | null) => !!url && /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(url);
 
   return (
     <div className="flex flex-col gap-2">
@@ -134,11 +152,17 @@ const SupportTicketChat = ({ ticketId, asAdmin = false }: Props) => {
                       rel="noreferrer"
                       className="block mt-1"
                     >
-                      <img
-                        src={m.photo_url}
-                        alt="anexo"
-                        className="rounded-md max-h-40 object-cover"
-                      />
+                      {isImage(m.photo_url) ? (
+                        <img
+                          src={m.photo_url}
+                          alt="anexo"
+                          className="rounded-md max-h-40 object-cover"
+                        />
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] underline">
+                          <Paperclip className="w-3 h-3" /> Ver anexo
+                        </span>
+                      )}
                     </a>
                   )}
                 </div>
@@ -153,6 +177,7 @@ const SupportTicketChat = ({ ticketId, asAdmin = false }: Props) => {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onPaste={handlePaste}
           placeholder="Escreva uma resposta..."
           rows={2}
           maxLength={2000}
@@ -163,7 +188,7 @@ const SupportTicketChat = ({ ticketId, asAdmin = false }: Props) => {
             <Paperclip className="w-4 h-4" />
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,application/pdf"
               className="hidden"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
@@ -174,8 +199,17 @@ const SupportTicketChat = ({ ticketId, asAdmin = false }: Props) => {
         </div>
       </div>
       {file && (
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span className="truncate">{file.name}</span>
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-muted/30 rounded-md p-1.5">
+          {file.type.startsWith("image/") && (
+            <img
+              src={URL.createObjectURL(file)}
+              alt="preview"
+              className="w-10 h-10 object-cover rounded"
+            />
+          )}
+          <span className="truncate flex-1">
+            {file.name || "print.png"} · {(file.size / 1024).toFixed(0)} KB
+          </span>
           <button onClick={() => setFile(null)} className="text-destructive">
             <X className="w-3 h-3" />
           </button>
