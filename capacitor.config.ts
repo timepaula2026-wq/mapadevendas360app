@@ -5,6 +5,11 @@ const config: CapacitorConfig = {
   appName: 'Mapa de Vendas',
   webDir: 'dist',
   version: '0.0.1',
+  server: {
+    url: 'https://mapadevendas.app',
+    cleartext: false,
+    androidScheme: 'https',
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 0,
