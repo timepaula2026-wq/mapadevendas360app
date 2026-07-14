@@ -310,6 +310,30 @@ const Auth = () => {
     }
   };
 
+  const logSignupError = async (
+    stage: string,
+    status: string | undefined,
+    message: string,
+    details?: Record<string, unknown>,
+  ) => {
+    try {
+      await (supabase as any).from("signup_error_logs").insert({
+        email: email.trim().toLowerCase() || null,
+        display_name: displayName.trim() || null,
+        cpf: cpf.trim() || null,
+        unit: (unit === "outra" ? customUnit.trim() : unit) || null,
+        atividade: atividade || null,
+        stage,
+        status: status ?? null,
+        message: message?.slice(0, 500) ?? null,
+        details: details ?? null,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      });
+    } catch (err) {
+      console.warn("Falha ao registrar log de cadastro:", err);
+    }
+  };
+
   const retryLoginAfterEmailRelease = async () => {
     await supabase.functions.invoke("release-approved-email", {
       body: { email: email.trim().toLowerCase() },
@@ -426,6 +450,12 @@ const Auth = () => {
       const autoApproved = validation.allowed === true;
       const needsManualApproval = !autoApproved;
 
+      if (!autoApproved) {
+        await logSignupError("validate-consultor", validation.status, validation.message, {
+          nome_retornado: validation.nome ?? null,
+        });
+      }
+
       const { error } = await signUp(email, password, {
         displayName: displayName.trim(),
         unit: finalUnit,
@@ -434,14 +464,13 @@ const Auth = () => {
         auto_approved: autoApproved,
       } as any);
       if (error) {
+        await logSignupError("supabase-signup", "signup_error", error.message || "erro desconhecido");
         showSignupError(error.message);
       } else if (needsManualApproval) {
         toast({
           title: "Cadastro recebido!",
           description:
-            validation.message
-              ? `${validation.message} Sua conta foi criada e aguarda liberação manual do administrador.`
-              : "Não conseguimos validar automaticamente seu nome. Sua conta foi criada e aguarda liberação manual do administrador.",
+            "Não conseguimos validar automaticamente seu nome na base da equipe agora. Sua conta foi criada e aguarda liberação manual do administrador.",
         });
       } else {
         toast({ title: "Cadastro realizado!", description: "Se estiver aprovado, você já pode acessar com seu e-mail e senha." });

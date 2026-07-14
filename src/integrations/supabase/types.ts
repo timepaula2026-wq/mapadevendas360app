@@ -1195,6 +1195,54 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_error_logs: {
+        Row: {
+          atividade: string | null
+          cpf: string | null
+          created_at: string
+          details: Json | null
+          display_name: string | null
+          email: string | null
+          id: string
+          message: string | null
+          phone: string | null
+          stage: string
+          status: string | null
+          unit: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          atividade?: string | null
+          cpf?: string | null
+          created_at?: string
+          details?: Json | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          stage: string
+          status?: string | null
+          unit?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          atividade?: string | null
+          cpf?: string | null
+          created_at?: string
+          details?: Json | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          stage?: string
+          status?: string | null
+          unit?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       support_ticket_messages: {
         Row: {
           created_at: string
