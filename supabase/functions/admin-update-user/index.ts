@@ -55,18 +55,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Atualiza e-mail em auth (se fornecido)
+    // Atualiza e-mail em auth apenas quando mudou, evitando falha desnecessária
+    // em usuários que já estão com o mesmo e-mail confirmado.
     if (email && typeof email === "string") {
       const trimmed = email.trim().toLowerCase();
-      const { error: authErr } = await admin.auth.admin.updateUserById(target_user_id, {
-        email: trimmed,
-        email_confirm: true,
-      });
-      if (authErr) {
-        return new Response(JSON.stringify({ error: `Erro ao atualizar e-mail: ${authErr.message}` }), {
+      const { data: authUser, error: getAuthErr } = await admin.auth.admin.getUserById(target_user_id);
+      if (getAuthErr) {
+        return new Response(JSON.stringify({ error: `Erro ao localizar usuário: ${getAuthErr.message}` }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+      const currentEmail = authUser?.user?.email?.trim().toLowerCase();
+      const alreadyConfirmed = Boolean(authUser?.user?.email_confirmed_at || authUser?.user?.confirmed_at);
+
+      if (trimmed !== currentEmail || !alreadyConfirmed) {
+        const { error: authErr } = await admin.auth.admin.updateUserById(target_user_id, {
+          ...(trimmed !== currentEmail ? { email: trimmed } : {}),
+          email_confirm: true,
+        });
+        if (authErr) {
+          return new Response(JSON.stringify({ error: `Erro ao atualizar e-mail: ${authErr.message}` }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
     }
 
