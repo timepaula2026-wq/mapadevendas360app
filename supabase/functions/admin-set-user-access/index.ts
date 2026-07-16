@@ -61,20 +61,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (approved) {
-      const { error: authError } = await admin.auth.admin.updateUserById(target_user_id, {
-        email_confirm: true,
-      });
+    let warning: string | null = null;
 
-      if (authError) {
-        return new Response(JSON.stringify({ error: authError.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (approved) {
+      const { data: authUser, error: getAuthError } = await admin.auth.admin.getUserById(target_user_id);
+      const user = authUser?.user;
+      const alreadyConfirmed = Boolean(user?.email_confirmed_at || user?.confirmed_at);
+
+      if (!getAuthError && user && !alreadyConfirmed) {
+        const { error: authError } = await admin.auth.admin.updateUserById(target_user_id, {
+          email_confirm: true,
         });
+
+        if (authError) {
+          console.warn("admin-set-user-access: approved profile, email confirmation skipped", authError.message);
+          warning = "Cadastro aprovado. O e-mail não precisou ser confirmado automaticamente; se o acesso falhar, use o botão de liberar e-mail.";
+        }
+      } else if (getAuthError) {
+        console.warn("admin-set-user-access: approved profile, auth user lookup failed", getAuthError.message);
+        warning = "Cadastro aprovado, mas não foi possível conferir a confirmação do e-mail.";
       }
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    return new Response(JSON.stringify({ ok: true, warning }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

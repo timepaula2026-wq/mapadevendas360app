@@ -241,7 +241,8 @@ const AdminUserApproval = () => {
     });
     if (error || (data as any)?.error) toast.error((data as any)?.error || error?.message || "Erro ao atualizar");
     else {
-      toast.success(approve ? "Usuário aprovado e e-mail liberado!" : "Acesso revogado");
+      if ((data as any)?.warning) toast.warning((data as any).warning);
+      else toast.success(approve ? "Usuário aprovado e e-mail liberado!" : "Acesso revogado");
       // Notifica o consultor dentro do app
       await supabase.from("user_notifications").insert({
         user_id: userId,
@@ -263,7 +264,8 @@ const AdminUserApproval = () => {
       toast.error((data as any)?.error || error?.message || "Erro ao liberar e-mail");
       return;
     }
-    toast.success(`E-mail liberado para ${u.display_name || u.email || "usuário"}`);
+    if ((data as any)?.warning) toast.warning((data as any).warning);
+    else toast.success(`E-mail liberado para ${u.display_name || u.email || "usuário"}`);
     fetchUsers();
   };
 
