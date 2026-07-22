@@ -1,4 +1,4 @@
-import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2, FastForward, ArrowLeft } from "lucide-react";
+import { Printer, Download, ZoomIn, ZoomOut, Maximize2, Loader2, RotateCw, ExternalLink, CheckCircle2, FastForward, ArrowLeft, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -536,9 +536,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl w-[100vw] sm:w-[95vw] h-[100dvh] sm:h-[90vh] max-h-[100dvh] sm:max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden rounded-none sm:rounded-lg">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-card shrink-0">
+      <DialogContent
+        className="max-w-4xl w-[100vw] sm:w-[95vw] h-[100dvh] sm:h-[90vh] max-h-[100dvh] sm:max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden rounded-none sm:rounded-lg [&>button]:hidden"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        {/* Header (sticky, respeita safe-area do notch) */}
+        <div className="relative flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-card shrink-0">
           <button
             onClick={onClose}
             className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-secondary/60 mr-3 shrink-0"
@@ -548,8 +551,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Voltar</span>
           </button>
-          <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-4">{title}</h3>
-          <div className="flex items-center gap-1 mr-8">
+          <h3 className="text-sm font-semibold text-foreground truncate flex-1 mr-2">{title}</h3>
+          <div className="flex items-center gap-1 mr-1">
             {requiresWatch && (url || youtubeId) && (
               completedFlag ? (
                 <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-emerald-500 px-2 py-1 rounded-full bg-emerald-500/10 mr-1">
@@ -669,6 +672,16 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 <ExternalLink className="w-4 h-4" />
               </Button>
             )}
+            {/* Botão de fechar sempre visível (mobile e desktop) */}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar"
+              title="Fechar"
+              className="ml-1 w-9 h-9 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black/85 active:scale-95 transition shadow-md"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
