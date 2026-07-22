@@ -227,10 +227,25 @@ const SectionContentList = ({
     openMode: "iframe" | "newtab";
     description: string | null;
   }) => {
+    // Em dispositivos móveis, forçamos abrir em nova aba para todos os
+    // conteúdos externos/arquivos, evitando o problema do botão "X" de
+    // fechar ficar escondido pelo notch/barra de status e travar o app.
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(max-width: 768px)").matches ||
+        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
+    const forceNewTab =
+      isMobile && v.type !== "text" && v.type !== "image";
+
+    // Resolve uma URL alvo (inclui YouTube quando só temos o ID).
+    const rawTarget =
+      v.url ||
+      (v.youtubeId ? `https://www.youtube.com/watch?v=${v.youtubeId}` : null);
+
     // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
     // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.
-    if (v.openMode === "newtab" && v.url) {
-      const target = (await resolveTrainingUrl(v.url)) || v.url;
+    if ((v.openMode === "newtab" || forceNewTab) && rawTarget) {
+      const target = (await resolveTrainingUrl(rawTarget)) || rawTarget;
       const win = window.open(target, "_blank", "noopener,noreferrer");
       if (!win) {
         // Pop-up bloqueado: navega na própria janela como fallback
