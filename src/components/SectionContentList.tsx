@@ -234,13 +234,20 @@ const SectionContentList = ({
       typeof window !== "undefined" &&
       (window.matchMedia?.("(max-width: 768px)").matches ||
         /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
-    const forceNewTab =
-      isMobile && v.type !== "text" && v.type !== "image";
 
     // Resolve uma URL alvo (inclui YouTube quando só temos o ID).
     const rawTarget =
       v.url ||
       (v.youtubeId ? `https://www.youtube.com/watch?v=${v.youtubeId}` : null);
+
+    // Links externos (CRM, ERP, sistemas com login) bloqueiam iframe e deixam
+    // o visualizador em branco — o usuário fica "travado". Esses sempre abrem
+    // em nova aba, em qualquer dispositivo.
+    const internalTypes = ["text", "image", "pdf", "video", "youtube"];
+    const isExternalLink = !internalTypes.includes(v.type);
+
+    const forceNewTab =
+      isExternalLink || (isMobile && v.type !== "text" && v.type !== "image");
 
     // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
     // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.
