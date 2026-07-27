@@ -50,3 +50,9 @@ jobs:
         run: |
           echo "Arquivos gerados:"
           ls -lah android/app/build/outputs/bundle/release/
+                - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 1
