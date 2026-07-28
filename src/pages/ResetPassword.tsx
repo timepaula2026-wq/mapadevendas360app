@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ const translateResetError = (raw: string) => {
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,8 +40,8 @@ const ResetPassword = () => {
       }
     });
 
-    const hash = window.location.hash || "";
-    const search = window.location.search || "";
+    const hash = window.location.hash || location.hash || "";
+    const search = window.location.search || location.search || "";
     (async () => {
       try {
         const params = new URLSearchParams(search);
