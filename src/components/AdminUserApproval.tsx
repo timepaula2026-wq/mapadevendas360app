@@ -411,8 +411,10 @@ const AdminUserApproval = () => {
     lines.push(`Gerado em: ${new Date().toLocaleString("pt-BR")}`);
     lines.push(
       `Filtro: ${
-        filter === "pending"
-          ? "Pendentes"
+        filter === "requests"
+          ? "Solicitações de acesso"
+          : filter === "imported"
+          ? "Pendentes (lista importada)"
           : filter === "approved"
           ? "Aprovados"
           : filter === "first_access"
@@ -422,7 +424,7 @@ const AdminUserApproval = () => {
     );
     lines.push("");
     lines.push(
-      `Total: ${counts.total}  |  Aprovados: ${counts.approved}  |  Pendentes: ${counts.pending}`,
+      `Total: ${counts.total}  |  Aprovados: ${counts.approved}  |  Solicitações: ${counts.requests}  |  Lista importada: ${counts.imported}`,
     );
     lines.push("");
     lines.push("=".repeat(60));
