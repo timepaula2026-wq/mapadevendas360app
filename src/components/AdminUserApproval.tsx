@@ -55,8 +55,15 @@ const ROLE_LABELS_PT: Record<string, string> = {
   admin: "Administrador",
 };
 
-type Filter = "pending" | "approved" | "first_access" | "all";
+type Filter = "requests" | "imported" | "approved" | "first_access" | "all";
 type InactiveFilter = "any" | "7" | "15" | "21" | "30";
+type SortOrder = "newest" | "oldest";
+
+// Cadastros criados pelo admin (importação CSV / cadastro manual) nascem com
+// senha provisória (must_change_password = true). Cadastros feitos pelo próprio
+// usuário não têm essa marcação.
+const isImported = (u: { must_change_password: boolean | null }) =>
+  u.must_change_password === true;
 
 const formatDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
@@ -88,7 +95,8 @@ const AdminUserApproval = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<Filter>("pending");
+  const [filter, setFilter] = useState<Filter>("requests");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
   const [inactiveFilter, setInactiveFilter] = useState<InactiveFilter>("any");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -190,8 +198,9 @@ const AdminUserApproval = () => {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     const minDays = inactiveFilter === "any" ? 0 : parseInt(inactiveFilter, 10);
-    return users.filter((u) => {
-      if (filter === "pending" && u.approved) return false;
+    const list = users.filter((u) => {
+      if (filter === "requests" && (u.approved || isImported(u))) return false;
+      if (filter === "imported" && !isImported(u)) return false;
       if (filter === "approved" && !u.approved) return false;
       if (filter === "first_access" && (u.must_change_password !== false)) return false;
       if (minDays > 0) {
@@ -211,12 +220,17 @@ const AdminUserApproval = () => {
         activities.some((a) => a.includes(term))
       );
     });
-  }, [users, filter, search, rolesByUser, inactiveFilter]);
+    return list.sort((a, b) => {
+      const da = new Date(a.created_at).getTime();
+      const db = new Date(b.created_at).getTime();
+      return sortOrder === "newest" ? db - da : da - db;
+    });
+  }, [users, filter, search, rolesByUser, inactiveFilter, sortOrder]);
 
   // Reset to first page when filters/search change
   useEffect(() => {
     setPage(1);
-  }, [filter, search, inactiveFilter, pageSize]);
+  }, [filter, search, inactiveFilter, pageSize, sortOrder]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -227,7 +241,8 @@ const AdminUserApproval = () => {
 
   const counts = useMemo(
     () => ({
-      pending: users.filter((u) => !u.approved).length,
+      requests: users.filter((u) => !u.approved && !isImported(u)).length,
+      imported: users.filter((u) => isImported(u)).length,
       approved: users.filter((u) => u.approved).length,
       first_access: users.filter((u) => u.must_change_password === false).length,
       total: users.length,
@@ -523,10 +538,11 @@ const AdminUserApproval = () => {
   return (
     <div className="space-y-3">
       {/* Filtros */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {(
           [
-            { id: "pending", label: "Pendentes", count: counts.pending },
+            { id: "requests", label: "Solicitações de acesso", count: counts.requests },
+            { id: "imported", label: "Pendentes (lista importada)", count: counts.imported },
             { id: "approved", label: "Aprovados", count: counts.approved },
             { id: "first_access", label: "1º acesso feito", count: counts.first_access },
             { id: "all", label: "Todos", count: counts.total },
@@ -543,6 +559,27 @@ const AdminUserApproval = () => {
           >
             {f.label}
             <span className="ml-1 opacity-80">({f.count})</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Ordenação por data de cadastro */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <span className="text-sm text-muted-foreground">Data de cadastro:</span>
+        {([
+          { id: "newest", label: "Mais recentes" },
+          { id: "oldest", label: "Mais antigos" },
+        ] as { id: SortOrder; label: string }[]).map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => setSortOrder(opt.id)}
+            className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+              sortOrder === opt.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {opt.label}
           </button>
         ))}
       </div>
