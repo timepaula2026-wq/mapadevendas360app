@@ -53,6 +53,7 @@ const ContentRow = ({
   c,
   onOpen,
   state = "free",
+  onMarkWatched,
 }: {
   c: SectionContent;
   onOpen: (v: {
@@ -67,11 +68,13 @@ const ContentRow = ({
     description: string | null;
   }) => void;
   state?: RowState;
+  onMarkWatched?: (id: string) => void;
 }) => {
   const isLocked = state === "locked";
   const isDone = state === "done";
   const isNext = state === "current";
   return (
+    <div className="space-y-1.5">
     <button
       onClick={() => {
         if (isLocked) return;
@@ -152,6 +155,16 @@ const ContentRow = ({
         </div>
       )}
     </button>
+      {onMarkWatched && !isLocked && !isDone && (
+        <button
+          onClick={() => onMarkWatched(c.id)}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          Marcar como assistido
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -394,16 +407,17 @@ const SectionContentList = ({
     const isOpen = !!openParents[c.id];
     const parentIdx = sequence.indexOf(c.id);
     const parentState = stateForSequence(sequence, parentIdx);
+    const markWatched = trilhaMode ? (id: string) => markCompleted(id, sectionId) : undefined;
     if (kids.length === 0) {
       return (
-        <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} />
+        <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} onMarkWatched={markWatched} />
       );
     }
     return (
       <div key={c.id} className="space-y-2">
         <div className="flex items-stretch gap-2">
           <div className="flex-1">
-            <ContentRow c={c} onOpen={handleOpenContent} state={parentState} />
+            <ContentRow c={c} onOpen={handleOpenContent} state={parentState} onMarkWatched={markWatched} />
           </div>
           <button
             onClick={() => setOpenParents((p) => ({ ...p, [c.id]: !isOpen }))}
@@ -424,7 +438,7 @@ const SectionContentList = ({
               const kIdx = sequence.indexOf(k.id);
               const kState = stateForSequence(sequence, kIdx);
               return (
-                <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} />
+                <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} onMarkWatched={markWatched} />
               );
             })}
           </div>
