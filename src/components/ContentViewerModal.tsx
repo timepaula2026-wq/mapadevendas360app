@@ -370,6 +370,14 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     return () => window.clearTimeout(timer);
   }, [open, type, url, pdfLoaded, signingFailed, useFallback, pdfJsFailed, pdfRenderAttempt]);
 
+  useEffect(() => {
+    if (!open || !isFileVideo || !url || mediaLoadFailed) return;
+    const timer = window.setTimeout(() => {
+      setMediaLoadFailed(true);
+    }, 20000);
+    return () => window.clearTimeout(timer);
+  }, [open, isFileVideo, url, mediaLoadFailed, pdfRenderAttempt]);
+
   // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
   useEffect(() => {
     if (open) setMediaRotation(0);
@@ -834,9 +842,24 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 Este conteúdo está sem arquivo ou link. Edite no painel administrativo e adicione o arquivo ou URL.
               </p>
             </div>
+          ) : isFileVideo && url && mediaLoadFailed ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Não foi possível carregar o arquivo, tente novamente.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={retryLoadingFile}
+              >
+                <RotateCw className="w-4 h-4" /> Tentar novamente
+              </Button>
+            </div>
           ) : isFileVideo && url ? (
             <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
               <video
+                key={`${url}-${pdfRenderAttempt}`}
                 src={url}
                 controls
                 autoPlay
@@ -844,8 +867,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 controlsList="nodownload noremoteplayback noplaybackrate"
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
+                onError={() => setMediaLoadFailed(true)}
                 onEnded={() => fireCompleted()}
               onLoadedMetadata={(e) => {
+                setMediaLoadFailed(false);
                 const v = e.currentTarget;
                 const saved = savedAtOpenRef.current;
                 if (!seekAppliedRef.current && saved?.t && saved.t > 3 && v.duration > 0 && saved.t < v.duration - 3) {
@@ -906,6 +931,20 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 <ExternalLink className="w-4 h-4" /> Abrir em nova aba
               </Button>
             </div>
+          ) : type === "pdf" && url && pdfLoadFailed ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Não foi possível carregar o arquivo, tente novamente.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={retryLoadingFile}
+              >
+                <RotateCw className="w-4 h-4" /> Tentar novamente
+              </Button>
+            </div>
           ) : type === "pdf" && url ? (
             <div
               className="relative w-full h-full bg-muted"
@@ -920,6 +959,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             >
               {!pdfJsFailed ? (
                 <PdfCanvasViewer
+                  key={`${url}-${pdfRenderAttempt}`}
                   url={url}
                   zoom={pdfZoom}
                   onLoaded={() => setPdfLoaded(true)}
