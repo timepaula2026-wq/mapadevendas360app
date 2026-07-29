@@ -6,7 +6,7 @@ import ImageZoomModal from "@/components/ImageZoomModal";
 import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
-import { resolveTrainingUrl } from "@/lib/storageUrl";
+import { resolveTrainingUrl, extractTrainingPath } from "@/lib/storageUrl";
 import UserContentUpload from "@/components/UserContentUpload";
 
 interface ContentViewerModalProps {
@@ -99,14 +99,22 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
   // value, to avoid an infinite re-sign loop.
   const originalUrl = url || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(originalUrl);
+  // Arquivos do bucket privado `training-files` PRECISAM de URL assinada.
+  // Se entregarmos a URL pública ao pdf.js, o storage responde 400/403 e o
+  // visualizador cai no fallback (tela em branco). Por isso seguramos o
+  // render até a assinatura chegar.
+  const needsSigning = !!extractTrainingPath(originalUrl);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(
+    needsSigning ? null : originalUrl
+  );
   useEffect(() => {
     let active = true;
     if (!open || !originalUrl) {
       setResolvedUrl(originalUrl);
       return;
     }
-    setResolvedUrl(originalUrl);
+    // Enquanto assina, não renderiza nada apontando para a URL pública.
+    setResolvedUrl(extractTrainingPath(originalUrl) ? null : originalUrl);
     resolveTrainingUrl(originalUrl).then((u) => {
       if (active) setResolvedUrl(u);
     });
@@ -150,6 +158,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [useFallback, setUseFallback] = useState(false);
   // Quando o pdf.js falha (CORS, arquivo corrompido), caímos para iframe/gview.
   const [pdfJsFailed, setPdfJsFailed] = useState(false);
+  // Cada nova URL (ex.: assinatura recém-gerada) merece uma nova tentativa
+  // com o renderer nativo pdf.js — senão ficamos presos no fallback em branco.
+  useEffect(() => {
+    setPdfJsFailed(false);
+    setUseFallback(false);
+    setPdfLoaded(false);
+  }, [url]);
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
   const [pdfZoom, setPdfZoom] = useState(1);
@@ -726,7 +741,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           >
             <X className="w-6 h-6" />
           </button>
-          {!url && !youtubeId ? (
+          {!url && needsSigning ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <p className="text-xs text-muted-foreground">Preparando arquivo…</p>
+            </div>
+          ) : !url && !youtubeId ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
                 Este conteúdo está sem arquivo ou link. Edite no painel administrativo e adicione o arquivo ou URL.
