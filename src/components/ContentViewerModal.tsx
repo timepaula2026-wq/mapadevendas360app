@@ -199,6 +199,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [pdfLoaded, setPdfLoaded] = useState(false);
   const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
   const [pdfRenderAttempt, setPdfRenderAttempt] = useState(0);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
   const [mediaLoadFailed, setMediaLoadFailed] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
   const [useFallback, setUseFallback] = useState(false);
@@ -211,6 +212,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     setUseFallback(false);
     setPdfLoaded(false);
     setPdfLoadFailed(false);
+    setMediaLoaded(false);
     setMediaLoadFailed(false);
   }, [url]);
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
@@ -316,6 +318,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const retryLoadingFile = () => {
     setSigningFailed(false);
     setPdfLoadFailed(false);
+    setMediaLoaded(false);
     setMediaLoadFailed(false);
     setPdfLoaded(false);
     setPdfJsFailed(false);
@@ -371,12 +374,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   }, [open, type, url, pdfLoaded, signingFailed, useFallback, pdfJsFailed, pdfRenderAttempt]);
 
   useEffect(() => {
-    if (!open || !isFileVideo || !url || mediaLoadFailed) return;
+    if (!open || !isFileVideo || !url || mediaLoaded || mediaLoadFailed) return;
     const timer = window.setTimeout(() => {
       setMediaLoadFailed(true);
     }, 20000);
     return () => window.clearTimeout(timer);
-  }, [open, isFileVideo, url, mediaLoadFailed, pdfRenderAttempt]);
+  }, [open, isFileVideo, url, mediaLoaded, mediaLoadFailed, pdfRenderAttempt]);
 
   // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
   useEffect(() => {
@@ -869,7 +872,12 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 onContextMenu={(e) => e.preventDefault()}
                 onError={() => setMediaLoadFailed(true)}
                 onEnded={() => fireCompleted()}
+                onCanPlay={() => {
+                  setMediaLoaded(true);
+                  setMediaLoadFailed(false);
+                }}
               onLoadedMetadata={(e) => {
+                setMediaLoaded(true);
                 setMediaLoadFailed(false);
                 const v = e.currentTarget;
                 const saved = savedAtOpenRef.current;
