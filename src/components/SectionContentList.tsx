@@ -240,14 +240,6 @@ const SectionContentList = ({
     openMode: "iframe" | "newtab";
     description: string | null;
   }) => {
-    // Em dispositivos móveis, forçamos abrir em nova aba para todos os
-    // conteúdos externos/arquivos, evitando o problema do botão "X" de
-    // fechar ficar escondido pelo notch/barra de status e travar o app.
-    const isMobile =
-      typeof window !== "undefined" &&
-      (window.matchMedia?.("(max-width: 768px)").matches ||
-        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
-
     // Resolve uma URL alvo (inclui YouTube quando só temos o ID).
     const rawTarget =
       v.url ||
@@ -259,8 +251,10 @@ const SectionContentList = ({
     const internalTypes = ["text", "image", "pdf", "video", "youtube"];
     const isExternalLink = !internalTypes.includes(v.type);
 
-    const forceNewTab =
-      isExternalLink || (isMobile && v.type !== "text" && v.type !== "image");
+    // Abordagem única do app: conteúdo de treinamento (vídeo, PDF, imagem,
+    // texto) SEMPRE abre embutido no visualizador interno, com botão de fechar
+    // sempre visível. Apenas links de sistemas externos abrem em nova aba.
+    const forceNewTab = isExternalLink;
 
     // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
     // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.

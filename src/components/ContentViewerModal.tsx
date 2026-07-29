@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
 import { resolveTrainingUrl } from "@/lib/storageUrl";
@@ -129,6 +130,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [pdfLoaded, setPdfLoaded] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
   const [useFallback, setUseFallback] = useState(false);
+  // Quando o pdf.js falha (CORS, arquivo corrompido), caímos para iframe/gview.
+  const [pdfJsFailed, setPdfJsFailed] = useState(false);
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
   const [pdfZoom, setPdfZoom] = useState(1);
@@ -241,6 +244,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   useEffect(() => {
     if (!(open && type === "pdf")) return;
     setPdfLoaded(false);
+    setPdfJsFailed(false);
     // Sempre inicia em Fit (100%) — sem zoom inicial nem corte central.
     setPdfZoom(1);
     // No iOS o renderer nativo de PDF abre travado em zoom e não rola direito.
@@ -690,6 +694,20 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           className="flex-1 min-h-0 bg-muted select-none overflow-hidden"
           onContextMenu={(e) => e.preventDefault()}
         >
+          {/* Botão flutuante de fechar — sempre por cima do vídeo/PDF, respeita o notch */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar conteúdo"
+            title="Fechar"
+            className="fixed z-[120] w-12 h-12 rounded-full bg-black/75 ring-1 ring-white/40 text-white flex items-center justify-center shadow-lg active:scale-95 transition sm:hidden"
+            style={{
+              bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
+              right: "calc(env(safe-area-inset-right, 0px) + 1rem)",
+            }}
+          >
+            <X className="w-6 h-6" />
+          </button>
           {!url && !youtubeId ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
@@ -781,6 +799,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               ref={pdfZoom > 1 ? pdfScrollRef : undefined}
               onScroll={pdfZoom > 1 ? handlePdfScroll : undefined}
             >
+              {!pdfJsFailed ? (
+                <PdfCanvasViewer
+                  url={url}
+                  zoom={pdfZoom}
+                  onLoaded={() => setPdfLoaded(true)}
+                  onError={() => {
+                    setPdfJsFailed(true);
+                    setUseFallback(true);
+                    setPdfLoaded(false);
+                  }}
+                  onProgress={updateProgress}
+                  onReachEnd={fireCompleted}
+                />
+              ) : (
+              <>
               {!pdfLoaded && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -895,6 +928,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 />
               )}
               </div>
+              </>
+              )}
             </div>
           ) : type === "image" && url ? (
             <div className="relative w-full h-full flex items-center justify-center bg-black/40 p-4">
