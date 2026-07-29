@@ -98,7 +98,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // Resolve private training-files URLs into short-lived signed URLs.
   // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
   // value, to avoid an infinite re-sign loop.
-  const originalUrl = url;
+  const originalUrl = url || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(originalUrl);
   useEffect(() => {
     let active = true;

@@ -282,7 +282,7 @@ const SectionContentList = ({
       if (trilhaMode) markCompleted(v.id, sectionId);
       return;
     }
-    setViewer({ ...v, type: viewerType });
+    setViewer({ ...v, type: viewerType, url: rawTarget });
   };
   const [certModal, setCertModal] = useState<{
     title: string;
