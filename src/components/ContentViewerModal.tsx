@@ -785,6 +785,21 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               ref={pdfZoom > 1 ? pdfScrollRef : undefined}
               onScroll={pdfZoom > 1 ? handlePdfScroll : undefined}
             >
+              {!pdfJsFailed ? (
+                <PdfCanvasViewer
+                  url={url}
+                  zoom={pdfZoom}
+                  onLoaded={() => setPdfLoaded(true)}
+                  onError={() => {
+                    setPdfJsFailed(true);
+                    setUseFallback(true);
+                    setPdfLoaded(false);
+                  }}
+                  onProgress={updateProgress}
+                  onReachEnd={fireCompleted}
+                />
+              ) : (
+              <>
               {!pdfLoaded && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted z-10 px-4 text-center">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -899,6 +914,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 />
               )}
               </div>
+              </>
+              )}
             </div>
           ) : type === "image" && url ? (
             <div className="relative w-full h-full flex items-center justify-center bg-black/40 p-4">
