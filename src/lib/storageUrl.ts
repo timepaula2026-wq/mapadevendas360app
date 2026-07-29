@@ -1,6 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const TRAINING_BUCKET = "training-files";
+const SIGN_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(promise: Promise<T>, ms = SIGN_TIMEOUT_MS): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("Tempo esgotado ao preparar arquivo")), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
 
 /**
  * Extracts the object path from a Supabase storage URL of the
@@ -15,6 +32,22 @@ export function extractTrainingPath(url: string | null | undefined): string | nu
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+async function signThroughBackend(path: string, expiresIn: number): Promise<string | null> {
+  const { data, error } = await withTimeout(
+    supabase.functions.invoke("sign-training-file", {
+      body: { path, expiresIn },
+    })
+  );
+
+  if (error) {
+    console.error("sign-training-file failed", error);
+    return null;
+  }
+
+  const signedUrl = (data as { signedUrl?: string | null } | null)?.signedUrl;
+  return signedUrl || null;
+}
+
 /**
  * Returns a short-lived signed URL for a training-files asset.
  * If the URL does not point to the private bucket, returns it unchanged.
@@ -26,12 +59,19 @@ export async function resolveTrainingUrl(
   if (!url) return null;
   const path = extractTrainingPath(url);
   if (!path) return url;
-  const { data, error } = await supabase.storage
-    .from(TRAINING_BUCKET)
-    .createSignedUrl(path, expiresIn);
-  if (error || !data?.signedUrl) {
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase.storage.from(TRAINING_BUCKET).createSignedUrl(path, expiresIn)
+    );
+    if (!error && data?.signedUrl) return data.signedUrl;
     console.error("createSignedUrl failed", error);
-    return url;
+  } catch (error) {
+    console.error("createSignedUrl timed out", error);
   }
-  return data.signedUrl;
+
+  // Fallback: mobile sessions can fail to sign private files even while the app
+  // is logged in. The backend validates the logged-in user and signs with admin
+  // privileges, avoiding the infinite PDF loading screen.
+  return signThroughBackend(path, expiresIn);
 }
