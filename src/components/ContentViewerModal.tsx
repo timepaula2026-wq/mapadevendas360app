@@ -107,17 +107,27 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(
     needsSigning ? null : originalUrl
   );
+  const [signingFailed, setSigningFailed] = useState(false);
   useEffect(() => {
     let active = true;
+    setSigningFailed(false);
     if (!open || !originalUrl) {
       setResolvedUrl(originalUrl);
       return;
     }
     // Enquanto assina, não renderiza nada apontando para a URL pública.
     setResolvedUrl(extractTrainingPath(originalUrl) ? null : originalUrl);
-    resolveTrainingUrl(originalUrl).then((u) => {
-      if (active) setResolvedUrl(u);
-    });
+    resolveTrainingUrl(originalUrl)
+      .then((u) => {
+        if (!active) return;
+        setResolvedUrl(u);
+        setSigningFailed(!u && !!extractTrainingPath(originalUrl));
+      })
+      .catch(() => {
+        if (!active) return;
+        setResolvedUrl(null);
+        setSigningFailed(!!extractTrainingPath(originalUrl));
+      });
     return () => {
       active = false;
     };
@@ -741,10 +751,16 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           >
             <X className="w-6 h-6" />
           </button>
-          {!url && needsSigning ? (
+          {!url && needsSigning && !signingFailed ? (
             <div className="flex flex-col items-center justify-center h-full gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
               <p className="text-xs text-muted-foreground">Preparando arquivo…</p>
+            </div>
+          ) : !url && needsSigning && signingFailed ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Não foi possível preparar este arquivo. Feche e tente abrir novamente. Se continuar, peça ao administrador para reenviar o PDF.
+              </p>
             </div>
           ) : !url && !youtubeId ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
