@@ -760,8 +760,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               <iframe
                 ref={videoIframeRef}
                 src={videoInfo.embedUrl}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 title={title}
                 style={{
                   width: mediaRotation % 180 === 0 ? "100%" : "100vh",
