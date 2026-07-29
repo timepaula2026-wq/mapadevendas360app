@@ -111,7 +111,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   );
   const [signingFailed, setSigningFailed] = useState(false);
   const [signingAttempt, setSigningAttempt] = useState(0);
-  const hasValidSession = !!session?.access_token && (!session.expires_at || session.expires_at * 1000 > Date.now() + 30_000);
+  const hasSession = !!session?.access_token;
   useEffect(() => {
     let active = true;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -131,7 +131,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     if (authLoading) return () => {
       active = false;
     };
-    if (!hasValidSession) {
+    if (!hasSession) {
       setSigningFailed(true);
       return () => {
         active = false;
@@ -164,7 +164,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       active = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [open, originalUrl, authLoading, hasValidSession, signingAttempt]);
+  }, [open, originalUrl, authLoading, hasSession, signingAttempt]);
   // Use the resolved URL throughout the rest of the component.
   url = resolvedUrl;
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
@@ -197,6 +197,9 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
   // Loading state para PDF (iOS demora a renderizar o primeiro frame)
   const [pdfLoaded, setPdfLoaded] = useState(false);
+  const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
+  const [pdfRenderAttempt, setPdfRenderAttempt] = useState(0);
+  const [mediaLoadFailed, setMediaLoadFailed] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
   const [useFallback, setUseFallback] = useState(false);
   // Quando o pdf.js falha (CORS, arquivo corrompido), caímos para iframe/gview.
@@ -207,6 +210,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     setPdfJsFailed(false);
     setUseFallback(false);
     setPdfLoaded(false);
+    setPdfLoadFailed(false);
+    setMediaLoadFailed(false);
   }, [url]);
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
@@ -308,6 +313,17 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     setPdfZoom((z) => Math.max(PDF_MIN_ZOOM, +(z - PDF_ZOOM_STEP).toFixed(2)));
   const zoomFit = () => setPdfZoom(1);
 
+  const retryLoadingFile = () => {
+    setSigningFailed(false);
+    setPdfLoadFailed(false);
+    setMediaLoadFailed(false);
+    setPdfLoaded(false);
+    setPdfJsFailed(false);
+    setUseFallback(isIOS || !!onCompleted);
+    setPdfRenderAttempt((attempt) => attempt + 1);
+    if (needsSigning) setSigningAttempt((attempt) => attempt + 1);
+  };
+
   // iOS Safari não rola dentro de <object>; usamos Google Docs Viewer como alternativa
   const isIOS =
     typeof navigator !== "undefined" &&
@@ -344,6 +360,15 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }, 4000);
     return () => window.clearTimeout(t);
   }, [open, url, type, isMobile, isIOS, onCompleted]);
+
+  useEffect(() => {
+    if (!open || type !== "pdf" || !url || pdfLoaded || signingFailed) return;
+    setPdfLoadFailed(false);
+    const timer = window.setTimeout(() => {
+      setPdfLoadFailed(true);
+    }, 20000);
+    return () => window.clearTimeout(timer);
+  }, [open, type, url, pdfLoaded, signingFailed, useFallback, pdfJsFailed, pdfRenderAttempt]);
 
   // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
   useEffect(() => {
