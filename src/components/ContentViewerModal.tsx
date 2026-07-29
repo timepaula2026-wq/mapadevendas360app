@@ -6,7 +6,7 @@ import ImageZoomModal from "@/components/ImageZoomModal";
 import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
-import { resolveTrainingUrl } from "@/lib/storageUrl";
+import { resolveTrainingUrl, extractTrainingPath } from "@/lib/storageUrl";
 import UserContentUpload from "@/components/UserContentUpload";
 
 interface ContentViewerModalProps {
@@ -99,14 +99,22 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
   // value, to avoid an infinite re-sign loop.
   const originalUrl = url || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(originalUrl);
+  // Arquivos do bucket privado `training-files` PRECISAM de URL assinada.
+  // Se entregarmos a URL pública ao pdf.js, o storage responde 400/403 e o
+  // visualizador cai no fallback (tela em branco). Por isso seguramos o
+  // render até a assinatura chegar.
+  const needsSigning = !!extractTrainingPath(originalUrl);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(
+    needsSigning ? null : originalUrl
+  );
   useEffect(() => {
     let active = true;
     if (!open || !originalUrl) {
       setResolvedUrl(originalUrl);
       return;
     }
-    setResolvedUrl(originalUrl);
+    // Enquanto assina, não renderiza nada apontando para a URL pública.
+    setResolvedUrl(extractTrainingPath(originalUrl) ? null : originalUrl);
     resolveTrainingUrl(originalUrl).then((u) => {
       if (active) setResolvedUrl(u);
     });
