@@ -98,7 +98,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // Resolve private training-files URLs into short-lived signed URLs.
   // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
   // value, to avoid an infinite re-sign loop.
-  const originalUrl = url;
+  const originalUrl = url || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(originalUrl);
   useEffect(() => {
     let active = true;
@@ -122,6 +122,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const isFileVideo = type === "video";
   const isVideoType = isLinkVideo || isFileVideo;
   const videoInfo = isLinkVideo && url ? getVideoEmbed(url, youtubeId) : null;
+  const isInternalViewerType = ["pdf", "image", "video", "youtube", "text"].includes(type);
 
   // Zoom da imagem dentro do conteúdo
   const [zoomImage, setZoomImage] = useState<string | null>(null);
@@ -678,7 +679,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 <Download className="w-4 h-4" />
               </Button>
             )}
-            {url && (
+            {url && !isInternalViewerType && (
               <Button
                 variant="ghost"
                 size="icon"

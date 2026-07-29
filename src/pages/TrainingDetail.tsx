@@ -1,16 +1,24 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Play, Loader2 } from "lucide-react";
-import { useTrainings } from "@/hooks/useTrainings";
+import { ArrowLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { useTrainings, type ContentItem } from "@/hooks/useTrainings";
 import ContentCard from "@/components/ContentCard";
 import AddContentModal from "@/components/AddContentModal";
+import ContentViewerModal from "@/components/ContentViewerModal";
+
+const getViewerType = (content: ContentItem) => {
+  const cleanUrl = (content.url || "").split(/[?#]/)[0].toLowerCase();
+  if (content.type === "pdf" || cleanUrl.endsWith(".pdf")) return "pdf";
+  if (content.type === "youtube") return "youtube";
+  return content.type;
+};
 
 const TrainingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { trainings, loading, addContent, removeContent, toggleContentComplete, removeTraining } = useTrainings();
   const [showAdd, setShowAdd] = useState(false);
-  const [showPlayer, setShowPlayer] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<ContentItem | null>(null);
 
   if (loading) {
     return (
@@ -37,17 +45,6 @@ const TrainingDetail = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {showPlayer && (
-        <div className="w-full aspect-video bg-background">
-          <iframe
-            src={`https://www.youtube.com/embed/${showPlayer}?autoplay=1`}
-            className="w-full h-full"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-          />
-        </div>
-      )}
-
       <header className="px-5 pt-8 pb-4">
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
@@ -84,15 +81,8 @@ const TrainingDetail = () => {
                 content={content}
                 onToggle={() => toggleContentComplete(training.id, content.id)}
                 onRemove={() => removeContent(training.id, content.id)}
+                onOpen={() => setViewer(content)}
               />
-              {content.type === "youtube" && content.youtubeId && (
-                <button
-                  onClick={() => setShowPlayer(showPlayer === content.youtubeId ? null : content.youtubeId!)}
-                  className="absolute right-14 top-1/2 -translate-y-1/2 w-8 h-8 gradient-gold rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
-                >
-                  <Play className="w-3.5 h-3.5 text-primary-foreground ml-0.5" />
-                </button>
-              )}
             </div>
           ))}
 
@@ -116,6 +106,20 @@ const TrainingDetail = () => {
         onClose={() => setShowAdd(false)}
         onAdd={(content) => addContent(training.id, content)}
       />
+
+      {viewer && (
+        <ContentViewerModal
+          open={!!viewer}
+          onClose={() => setViewer(null)}
+          title={viewer.title}
+          type={getViewerType(viewer)}
+          url={viewer.url || (viewer.youtubeId ? `https://www.youtube.com/watch?v=${viewer.youtubeId}` : null)}
+          youtubeId={viewer.youtubeId || null}
+          onCompleted={() => {
+            if (!viewer.completed) toggleContentComplete(training.id, viewer.id);
+          }}
+        />
+      )}
     </div>
   );
 };

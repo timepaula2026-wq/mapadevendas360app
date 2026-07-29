@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, X, FileText, Video, Link2, Loader2, LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import ContentViewerModal from "@/components/ContentViewerModal";
 
 const GRID_SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante", route: "/trilha" },
@@ -38,11 +39,26 @@ interface SearchOverlayProps {
   onClose: () => void;
 }
 
+const INTERNAL_VIEWER_TYPES = ["youtube", "pdf", "image", "video", "text"];
+
+const inferViewerType = (result: SearchResult) => {
+  if (result.youtube_id) return "youtube";
+  const cleanUrl = (result.url || "").split(/[?#]/)[0].toLowerCase();
+  if (result.type === "document" || result.type === "pdf" || cleanUrl.endsWith(".pdf")) return "pdf";
+  return result.type;
+};
+
 const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [viewer, setViewer] = useState<{
+    title: string;
+    type: string;
+    url: string | null;
+    youtubeId: string | null;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -129,17 +145,35 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
   const handleOpen = (result: SearchResult) => {
     if (result.route) {
       navigate(result.route);
-    } else if (result.youtube_id) {
-      window.open(`https://www.youtube.com/watch?v=${result.youtube_id}`, "_blank");
-    } else if (result.url) {
+      onClose();
+      return;
+    }
+
+    const viewerType = inferViewerType(result);
+    const viewerUrl = result.url || (result.youtube_id ? `https://www.youtube.com/watch?v=${result.youtube_id}` : null);
+
+    if (INTERNAL_VIEWER_TYPES.includes(viewerType)) {
+      setViewer({
+        title: result.title,
+        type: viewerType,
+        url: viewerUrl,
+        youtubeId: result.youtube_id || null,
+      });
+      onClose();
+      return;
+    }
+
+    if (result.url) {
       window.open(result.url, "_blank");
     }
     onClose();
   };
 
-  if (!open) return null;
+  if (!open && !viewer) return null;
 
   return (
+    <>
+    {open && (
     <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in">
       <div className="flex flex-col max-w-md mx-auto px-4 pt-12">
         {/* Search bar */}
@@ -196,6 +230,18 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
         </div>
       </div>
     </div>
+    )}
+    {viewer && (
+      <ContentViewerModal
+        open={!!viewer}
+        onClose={() => setViewer(null)}
+        title={viewer.title}
+        type={viewer.type}
+        url={viewer.url}
+        youtubeId={viewer.youtubeId}
+      />
+    )}
+    </>
   );
 };
 

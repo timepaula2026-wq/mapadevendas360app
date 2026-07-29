@@ -34,6 +34,15 @@ interface SectionContentListProps {
 
 type RowState = "done" | "current" | "locked" | "free";
 
+const INTERNAL_VIEWER_TYPES = ["text", "image", "pdf", "video", "youtube"];
+
+const inferViewerType = (type: string, url: string | null, youtubeId: string | null) => {
+  if (youtubeId) return "youtube";
+  const cleanUrl = (url || "").split(/[?#]/)[0].toLowerCase();
+  if (type === "document" || type === "pdf" || cleanUrl.endsWith(".pdf")) return "pdf";
+  return type;
+};
+
 const ContentText = ({ text }: { text?: string | null }) => {
   if (!text || !text.trim()) return null;
   return (
@@ -245,11 +254,12 @@ const SectionContentList = ({
       v.url ||
       (v.youtubeId ? `https://www.youtube.com/watch?v=${v.youtubeId}` : null);
 
+    const viewerType = inferViewerType(v.type, rawTarget, v.youtubeId);
+
     // Links externos (CRM, ERP, sistemas com login) bloqueiam iframe e deixam
     // o visualizador em branco — o usuário fica "travado". Esses sempre abrem
     // em nova aba, em qualquer dispositivo.
-    const internalTypes = ["text", "image", "pdf", "video", "youtube"];
-    const isExternalLink = !internalTypes.includes(v.type);
+    const isExternalLink = !INTERNAL_VIEWER_TYPES.includes(viewerType);
 
     // Abordagem única do app: conteúdo de treinamento (vídeo, PDF, imagem,
     // texto) SEMPRE abre embutido no visualizador interno, com botão de fechar
@@ -272,7 +282,7 @@ const SectionContentList = ({
       if (trilhaMode) markCompleted(v.id, sectionId);
       return;
     }
-    setViewer(v);
+    setViewer({ ...v, type: viewerType, url: rawTarget });
   };
   const [certModal, setCertModal] = useState<{
     title: string;

@@ -8,10 +8,10 @@ const TRAINING_BUCKET = "training-files";
  */
 export function extractTrainingPath(url: string | null | undefined): string | null {
   if (!url) return null;
-  // Only the canonical "public" path form is stored in section_contents.
-  // Signed URLs (`/sign/...?token=`) must NOT be re-signed — that would
-  // create an infinite resolve loop because each signed URL is unique.
-  const m = url.match(/\/storage\/v1\/object\/public\/training-files\/([^?]+)/);
+  // Canonical stored URLs usually use `/public/`, but some older records may
+  // contain a previously signed URL. Extract both so expired signed links are
+  // refreshed before the in-app PDF/video viewer receives them.
+  const m = url.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/training-files\/([^?]+)/);
   return m ? decodeURIComponent(m[1]) : null;
 }
 
