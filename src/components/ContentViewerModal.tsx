@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { resolveTrainingUrl, extractTrainingPath } from "@/lib/storageUrl";
 import UserContentUpload from "@/components/UserContentUpload";
@@ -95,6 +96,7 @@ const getVideoEmbed = (
 
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, allowUserUpload = false, contentId, description, onOpened, onCompleted }: ContentViewerModalProps) => {
   const { isAdmin } = useIsAdmin();
+  const { session, loading: authLoading } = useAuth();
   // Resolve private training-files URLs into short-lived signed URLs.
   // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
   // value, to avoid an infinite re-sign loop.
@@ -108,30 +110,61 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     needsSigning ? null : originalUrl
   );
   const [signingFailed, setSigningFailed] = useState(false);
+  const [signingAttempt, setSigningAttempt] = useState(0);
+  const hasSession = !!session?.access_token;
   useEffect(() => {
     let active = true;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     setSigningFailed(false);
     if (!open || !originalUrl) {
       setResolvedUrl(originalUrl);
-      return;
+      return () => {
+        active = false;
+      };
     }
+    const requiresSignature = !!extractTrainingPath(originalUrl);
     // Enquanto assina, não renderiza nada apontando para a URL pública.
-    setResolvedUrl(extractTrainingPath(originalUrl) ? null : originalUrl);
-    resolveTrainingUrl(originalUrl)
+    setResolvedUrl(requiresSignature ? null : originalUrl);
+    if (!requiresSignature) return () => {
+      active = false;
+    };
+    if (authLoading) return () => {
+      active = false;
+    };
+    if (!hasSession) {
+      setSigningFailed(true);
+      return () => {
+        active = false;
+      };
+    }
+
+    const signingTimeout = new Promise<null>((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new Error("Tempo esgotado ao carregar o arquivo")),
+        18000
+      );
+    });
+
+    Promise.race([resolveTrainingUrl(originalUrl), signingTimeout])
       .then((u) => {
         if (!active) return;
         setResolvedUrl(u);
-        setSigningFailed(!u && !!extractTrainingPath(originalUrl));
+        setSigningFailed(!u);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Training file signing failed", error);
         if (!active) return;
         setResolvedUrl(null);
-        setSigningFailed(!!extractTrainingPath(originalUrl));
+        setSigningFailed(true);
+      })
+      .finally(() => {
+        if (timeoutId) clearTimeout(timeoutId);
       });
     return () => {
       active = false;
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [open, originalUrl]);
+  }, [open, originalUrl, authLoading, hasSession, signingAttempt]);
   // Use the resolved URL throughout the rest of the component.
   url = resolvedUrl;
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
@@ -164,6 +197,10 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
 
   // Loading state para PDF (iOS demora a renderizar o primeiro frame)
   const [pdfLoaded, setPdfLoaded] = useState(false);
+  const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
+  const [pdfRenderAttempt, setPdfRenderAttempt] = useState(0);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
+  const [mediaLoadFailed, setMediaLoadFailed] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
   const [useFallback, setUseFallback] = useState(false);
   // Quando o pdf.js falha (CORS, arquivo corrompido), caímos para iframe/gview.
@@ -174,6 +211,9 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     setPdfJsFailed(false);
     setUseFallback(false);
     setPdfLoaded(false);
+    setPdfLoadFailed(false);
+    setMediaLoaded(false);
+    setMediaLoadFailed(false);
   }, [url]);
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
@@ -275,6 +315,18 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     setPdfZoom((z) => Math.max(PDF_MIN_ZOOM, +(z - PDF_ZOOM_STEP).toFixed(2)));
   const zoomFit = () => setPdfZoom(1);
 
+  const retryLoadingFile = () => {
+    setSigningFailed(false);
+    setPdfLoadFailed(false);
+    setMediaLoaded(false);
+    setMediaLoadFailed(false);
+    setPdfLoaded(false);
+    setPdfJsFailed(false);
+    setUseFallback(isIOS || !!onCompleted);
+    setPdfRenderAttempt((attempt) => attempt + 1);
+    if (needsSigning) setSigningAttempt((attempt) => attempt + 1);
+  };
+
   // iOS Safari não rola dentro de <object>; usamos Google Docs Viewer como alternativa
   const isIOS =
     typeof navigator !== "undefined" &&
@@ -311,6 +363,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     }, 4000);
     return () => window.clearTimeout(t);
   }, [open, url, type, isMobile, isIOS, onCompleted]);
+
+  useEffect(() => {
+    if (!open || type !== "pdf" || !url || pdfLoaded || signingFailed) return;
+    setPdfLoadFailed(false);
+    const timer = window.setTimeout(() => {
+      setPdfLoadFailed(true);
+    }, 20000);
+    return () => window.clearTimeout(timer);
+  }, [open, type, url, pdfLoaded, signingFailed, useFallback, pdfJsFailed, pdfRenderAttempt]);
+
+  useEffect(() => {
+    if (!open || !isFileVideo || !url || mediaLoaded || mediaLoadFailed) return;
+    const timer = window.setTimeout(() => {
+      setMediaLoadFailed(true);
+    }, 20000);
+    return () => window.clearTimeout(timer);
+  }, [open, isFileVideo, url, mediaLoaded, mediaLoadFailed, pdfRenderAttempt]);
 
   // Sempre que abrir um conteúdo novo, zera a rotação da mídia.
   useEffect(() => {
@@ -759,8 +828,16 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           ) : !url && needsSigning && signingFailed ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
-                Não foi possível preparar este arquivo. Feche e tente abrir novamente. Se continuar, peça ao administrador para reenviar o PDF.
+                Não foi possível carregar o arquivo, tente novamente.
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setSigningAttempt((attempt) => attempt + 1)}
+              >
+                <RotateCw className="w-4 h-4" /> Tentar novamente
+              </Button>
             </div>
           ) : !url && !youtubeId ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
@@ -768,9 +845,24 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 Este conteúdo está sem arquivo ou link. Edite no painel administrativo e adicione o arquivo ou URL.
               </p>
             </div>
+          ) : isFileVideo && url && mediaLoadFailed ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Não foi possível carregar o arquivo, tente novamente.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={retryLoadingFile}
+              >
+                <RotateCw className="w-4 h-4" /> Tentar novamente
+              </Button>
+            </div>
           ) : isFileVideo && url ? (
             <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
               <video
+                key={`${url}-${pdfRenderAttempt}`}
                 src={url}
                 controls
                 autoPlay
@@ -778,8 +870,15 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 controlsList="nodownload noremoteplayback noplaybackrate"
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
+                onError={() => setMediaLoadFailed(true)}
                 onEnded={() => fireCompleted()}
+                onCanPlay={() => {
+                  setMediaLoaded(true);
+                  setMediaLoadFailed(false);
+                }}
               onLoadedMetadata={(e) => {
+                setMediaLoaded(true);
+                setMediaLoadFailed(false);
                 const v = e.currentTarget;
                 const saved = savedAtOpenRef.current;
                 if (!seekAppliedRef.current && saved?.t && saved.t > 3 && v.duration > 0 && saved.t < v.duration - 3) {
@@ -840,6 +939,20 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 <ExternalLink className="w-4 h-4" /> Abrir em nova aba
               </Button>
             </div>
+          ) : type === "pdf" && url && pdfLoadFailed ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
+              <p className="text-sm text-muted-foreground max-w-md">
+                Não foi possível carregar o arquivo, tente novamente.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={retryLoadingFile}
+              >
+                <RotateCw className="w-4 h-4" /> Tentar novamente
+              </Button>
+            </div>
           ) : type === "pdf" && url ? (
             <div
               className="relative w-full h-full bg-muted"
@@ -854,6 +967,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             >
               {!pdfJsFailed ? (
                 <PdfCanvasViewer
+                  key={`${url}-${pdfRenderAttempt}`}
                   url={url}
                   zoom={pdfZoom}
                   onLoaded={() => setPdfLoaded(true)}
