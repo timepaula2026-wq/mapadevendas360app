@@ -158,6 +158,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [useFallback, setUseFallback] = useState(false);
   // Quando o pdf.js falha (CORS, arquivo corrompido), caímos para iframe/gview.
   const [pdfJsFailed, setPdfJsFailed] = useState(false);
+  // Cada nova URL (ex.: assinatura recém-gerada) merece uma nova tentativa
+  // com o renderer nativo pdf.js — senão ficamos presos no fallback em branco.
+  useEffect(() => {
+    setPdfJsFailed(false);
+    setUseFallback(false);
+    setPdfLoaded(false);
+  }, [url]);
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
   const [pdfZoom, setPdfZoom] = useState(1);
