@@ -21,8 +21,8 @@ describe("ContentViewerModal — bloqueios de gesto no PDF (iOS)", () => {
     expect(occurrences.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("usa Google Docs Viewer (gview) por padrão no iOS", () => {
-    expect(source).toMatch(/setUseFallback\(isIOS\)/);
+  it("renderiza PDF com pdf.js (canvas) e mantém gview como fallback", () => {
+    expect(source).toMatch(/PdfCanvasViewer/);
     expect(source).toMatch(/docs\.google\.com\/gview/);
   });
 
