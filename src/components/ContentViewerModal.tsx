@@ -126,6 +126,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // Zoom da imagem dentro do conteúdo
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
+  // Fechar com o botão "voltar" do celular (Android/iOS gesto) e com ESC.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    const onPop = () => onClose();
+    window.history.pushState({ viewer: true }, "");
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   // Loading state para PDF (iOS demora a renderizar o primeiro frame)
   const [pdfLoaded, setPdfLoaded] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
