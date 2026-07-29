@@ -407,16 +407,17 @@ const SectionContentList = ({
     const isOpen = !!openParents[c.id];
     const parentIdx = sequence.indexOf(c.id);
     const parentState = stateForSequence(sequence, parentIdx);
+    const markWatched = trilhaMode ? (id: string) => markCompleted(id, sectionId) : undefined;
     if (kids.length === 0) {
       return (
-        <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} />
+        <ContentRow key={c.id} c={c} onOpen={handleOpenContent} state={parentState} onMarkWatched={markWatched} />
       );
     }
     return (
       <div key={c.id} className="space-y-2">
         <div className="flex items-stretch gap-2">
           <div className="flex-1">
-            <ContentRow c={c} onOpen={handleOpenContent} state={parentState} />
+            <ContentRow c={c} onOpen={handleOpenContent} state={parentState} onMarkWatched={markWatched} />
           </div>
           <button
             onClick={() => setOpenParents((p) => ({ ...p, [c.id]: !isOpen }))}
@@ -437,7 +438,7 @@ const SectionContentList = ({
               const kIdx = sequence.indexOf(k.id);
               const kState = stateForSequence(sequence, kIdx);
               return (
-                <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} />
+                <ContentRow key={k.id} c={k} onOpen={handleOpenContent} state={kState} onMarkWatched={markWatched} />
               );
             })}
           </div>
