@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
 import { resolveTrainingUrl } from "@/lib/storageUrl";
@@ -129,6 +130,8 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const [pdfLoaded, setPdfLoaded] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
   const [useFallback, setUseFallback] = useState(false);
+  // Quando o pdf.js falha (CORS, arquivo corrompido), caímos para iframe/gview.
+  const [pdfJsFailed, setPdfJsFailed] = useState(false);
   // Zoom do PDF (1 = Fit / 100%). Controlado via wrapper com CSS transform,
   // pois o conteúdo do iframe é cross-origin e não pode ser manipulado por JS.
   const [pdfZoom, setPdfZoom] = useState(1);
@@ -241,6 +244,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   useEffect(() => {
     if (!(open && type === "pdf")) return;
     setPdfLoaded(false);
+    setPdfJsFailed(false);
     // Sempre inicia em Fit (100%) — sem zoom inicial nem corte central.
     setPdfZoom(1);
     // No iOS o renderer nativo de PDF abre travado em zoom e não rola direito.
