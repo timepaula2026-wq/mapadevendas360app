@@ -694,6 +694,20 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           className="flex-1 min-h-0 bg-muted select-none overflow-hidden"
           onContextMenu={(e) => e.preventDefault()}
         >
+          {/* Botão flutuante de fechar — sempre por cima do vídeo/PDF, respeita o notch */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar conteúdo"
+            title="Fechar"
+            className="fixed z-[120] w-12 h-12 rounded-full bg-black/75 ring-1 ring-white/40 text-white flex items-center justify-center shadow-lg active:scale-95 transition sm:hidden"
+            style={{
+              top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+              right: "calc(env(safe-area-inset-right, 0px) + 0.75rem)",
+            }}
+          >
+            <X className="w-6 h-6" />
+          </button>
           {!url && !youtubeId ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
