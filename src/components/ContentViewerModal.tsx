@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { resolveTrainingUrl, extractTrainingPath } from "@/lib/storageUrl";
 import UserContentUpload from "@/components/UserContentUpload";
@@ -95,6 +96,7 @@ const getVideoEmbed = (
 
 const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowDownload = false, allowUserUpload = false, contentId, description, onOpened, onCompleted }: ContentViewerModalProps) => {
   const { isAdmin } = useIsAdmin();
+  const { session, loading: authLoading } = useAuth();
   // Resolve private training-files URLs into short-lived signed URLs.
   // IMPORTANT: depend ONLY on the original prop `url`, never on the resolved
   // value, to avoid an infinite re-sign loop.
@@ -108,30 +110,61 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
     needsSigning ? null : originalUrl
   );
   const [signingFailed, setSigningFailed] = useState(false);
+  const [signingAttempt, setSigningAttempt] = useState(0);
+  const hasValidSession = !!session?.access_token && (!session.expires_at || session.expires_at * 1000 > Date.now() + 30_000);
   useEffect(() => {
     let active = true;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     setSigningFailed(false);
     if (!open || !originalUrl) {
       setResolvedUrl(originalUrl);
-      return;
+      return () => {
+        active = false;
+      };
     }
+    const requiresSignature = !!extractTrainingPath(originalUrl);
     // Enquanto assina, não renderiza nada apontando para a URL pública.
-    setResolvedUrl(extractTrainingPath(originalUrl) ? null : originalUrl);
-    resolveTrainingUrl(originalUrl)
+    setResolvedUrl(requiresSignature ? null : originalUrl);
+    if (!requiresSignature) return () => {
+      active = false;
+    };
+    if (authLoading) return () => {
+      active = false;
+    };
+    if (!hasValidSession) {
+      setSigningFailed(true);
+      return () => {
+        active = false;
+      };
+    }
+
+    const signingTimeout = new Promise<null>((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new Error("Tempo esgotado ao carregar o arquivo")),
+        18000
+      );
+    });
+
+    Promise.race([resolveTrainingUrl(originalUrl), signingTimeout])
       .then((u) => {
         if (!active) return;
         setResolvedUrl(u);
-        setSigningFailed(!u && !!extractTrainingPath(originalUrl));
+        setSigningFailed(!u);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Training file signing failed", error);
         if (!active) return;
         setResolvedUrl(null);
-        setSigningFailed(!!extractTrainingPath(originalUrl));
+        setSigningFailed(true);
+      })
+      .finally(() => {
+        if (timeoutId) clearTimeout(timeoutId);
       });
     return () => {
       active = false;
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [open, originalUrl]);
+  }, [open, originalUrl, authLoading, hasValidSession, signingAttempt]);
   // Use the resolved URL throughout the rest of the component.
   url = resolvedUrl;
   // "youtube" = link/embed (YouTube, Vimeo, Drive...).
@@ -759,8 +792,16 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
           ) : !url && needsSigning && signingFailed ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
               <p className="text-sm text-muted-foreground max-w-md">
-                Não foi possível preparar este arquivo. Feche e tente abrir novamente. Se continuar, peça ao administrador para reenviar o PDF.
+                Não foi possível carregar o arquivo, tente novamente.
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setSigningAttempt((attempt) => attempt + 1)}
+              >
+                <RotateCw className="w-4 h-4" /> Tentar novamente
+              </Button>
             </div>
           ) : !url && !youtubeId ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 p-6 text-center">
