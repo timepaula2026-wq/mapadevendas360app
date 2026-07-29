@@ -700,7 +700,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             onClick={onClose}
             aria-label="Fechar conteúdo"
             title="Fechar"
-            className="fixed z-[120] w-12 h-12 rounded-full bg-black/75 ring-1 ring-white/40 text-white flex items-center justify-center shadow-lg active:scale-95 transition sm:hidden"
+            className="fixed z-[200] w-14 h-14 rounded-full bg-black/80 ring-2 ring-white/60 text-white flex items-center justify-center shadow-2xl active:scale-95 transition"
             style={{
               bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
               right: "calc(env(safe-area-inset-right, 0px) + 1rem)",
