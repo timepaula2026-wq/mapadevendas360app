@@ -1,21 +1,71 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 
 const TRAINING_BUCKET = "training-files";
-const SIGN_TIMEOUT_MS = 10000;
+const REQUEST_TIMEOUT_MS = 10000;
+const AUTH_SESSION_TIMEOUT_MS = 8000;
 
-function withTimeout<T>(promise: Promise<T>, ms = SIGN_TIMEOUT_MS): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, ms = REQUEST_TIMEOUT_MS, message = "Tempo esgotado ao preparar arquivo"): Promise<T> {
   return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error("Tempo esgotado ao preparar arquivo")), ms);
+    const timer = globalThis.setTimeout(() => reject(new Error(message)), ms);
     promise.then(
       (value) => {
-        window.clearTimeout(timer);
+        globalThis.clearTimeout(timer);
         resolve(value);
       },
       (error) => {
-        window.clearTimeout(timer);
+        globalThis.clearTimeout(timer);
         reject(error);
       }
     );
+  });
+}
+
+function isUsableSession(session: Session | null): session is Session {
+  if (!session?.access_token) return false;
+  if (!session.expires_at) return true;
+  return session.expires_at * 1000 > Date.now() + 30_000;
+}
+
+async function waitForUsableSession(timeoutMs = AUTH_SESSION_TIMEOUT_MS): Promise<Session | null> {
+  try {
+    const initial = await withTimeout(
+      supabase.auth.getSession(),
+      Math.min(4000, timeoutMs),
+      "Tempo esgotado ao verificar sessão"
+    );
+    if (isUsableSession(initial.data.session)) return initial.data.session;
+  } catch (error) {
+    console.error("getSession failed before signing training file", error);
+  }
+
+  return new Promise((resolve) => {
+    let finished = false;
+    let unsubscribe: (() => void) | null = null;
+
+    const finish = (session: Session | null) => {
+      if (finished) return;
+      finished = true;
+      globalThis.clearTimeout(timer);
+      unsubscribe?.();
+      resolve(session);
+    };
+
+    const timer = globalThis.setTimeout(() => finish(null), timeoutMs);
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isUsableSession(session)) finish(session);
+    });
+    unsubscribe = () => data.subscription.unsubscribe();
+    if (finished) unsubscribe();
+
+    supabase.auth.getSession()
+      .then(({ data: sessionData }) => {
+        if (isUsableSession(sessionData.session)) finish(sessionData.session);
+      })
+      .catch(() => {
+        // O timeout acima transforma a falta de sessão em erro visível na UI.
+      });
   });
 }
 
@@ -59,6 +109,12 @@ export async function resolveTrainingUrl(
   if (!url) return null;
   const path = extractTrainingPath(url);
   if (!path) return url;
+
+  const session = await waitForUsableSession();
+  if (!session) {
+    console.error("Cannot sign training file: authenticated session is not ready or expired");
+    return null;
+  }
 
   try {
     const { data, error } = await withTimeout(
