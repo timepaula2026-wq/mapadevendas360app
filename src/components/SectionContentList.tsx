@@ -53,6 +53,7 @@ const ContentRow = ({
   c,
   onOpen,
   state = "free",
+  onMarkWatched,
 }: {
   c: SectionContent;
   onOpen: (v: {
@@ -67,11 +68,13 @@ const ContentRow = ({
     description: string | null;
   }) => void;
   state?: RowState;
+  onMarkWatched?: (id: string) => void;
 }) => {
   const isLocked = state === "locked";
   const isDone = state === "done";
   const isNext = state === "current";
   return (
+    <div className="space-y-1.5">
     <button
       onClick={() => {
         if (isLocked) return;
@@ -152,6 +155,16 @@ const ContentRow = ({
         </div>
       )}
     </button>
+      {onMarkWatched && !isLocked && !isDone && (
+        <button
+          onClick={() => onMarkWatched(c.id)}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          Marcar como assistido
+        </button>
+      )}
+    </div>
   );
 };
 
