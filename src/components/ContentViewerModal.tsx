@@ -126,6 +126,23 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   // Zoom da imagem dentro do conteúdo
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
+  // Fechar com o botão "voltar" do celular (Android/iOS gesto) e com ESC.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    const onPop = () => onClose();
+    window.history.pushState({ viewer: true }, "");
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   // Loading state para PDF (iOS demora a renderizar o primeiro frame)
   const [pdfLoaded, setPdfLoaded] = useState(false);
   // Fallback para Google Docs Viewer quando o renderer nativo demora demais no mobile
@@ -700,7 +717,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
             onClick={onClose}
             aria-label="Fechar conteúdo"
             title="Fechar"
-            className="fixed z-[120] w-12 h-12 rounded-full bg-black/75 ring-1 ring-white/40 text-white flex items-center justify-center shadow-lg active:scale-95 transition sm:hidden"
+            className="fixed z-[200] w-14 h-14 rounded-full bg-black/80 ring-2 ring-white/60 text-white flex items-center justify-center shadow-2xl active:scale-95 transition"
             style={{
               bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
               right: "calc(env(safe-area-inset-right, 0px) + 1rem)",
@@ -760,8 +777,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               <iframe
                 ref={videoIframeRef}
                 src={videoInfo.embedUrl}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 title={title}
                 style={{
                   width: mediaRotation % 180 === 0 ? "100%" : "100vh",

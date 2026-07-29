@@ -254,11 +254,14 @@ const SectionContentList = ({
     // Abordagem única do app: conteúdo de treinamento (vídeo, PDF, imagem,
     // texto) SEMPRE abre embutido no visualizador interno, com botão de fechar
     // sempre visível. Apenas links de sistemas externos abrem em nova aba.
+    // Conteúdo interno (vídeo, PDF, imagem, texto) NUNCA abre em nova aba —
+    // mesmo que o admin tenha marcado "nova aba" —, senão o usuário fica preso
+    // numa aba do navegador que não fecha no iPhone.
     const forceNewTab = isExternalLink;
 
     // Modo "Nova aba": abre direto no navegador, sem usar o visualizador interno.
     // Útil para sistemas externos com login (CRM, ERP) que bloqueiam iframes.
-    if ((v.openMode === "newtab" || forceNewTab) && rawTarget) {
+    if (forceNewTab && rawTarget) {
       const target = (await resolveTrainingUrl(rawTarget)) || rawTarget;
       const win = window.open(target, "_blank", "noopener,noreferrer");
       if (!win) {
