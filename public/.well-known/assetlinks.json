@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.app.gpu3094775.gpu05ac06cd3fbdc01af91f2f233804c71d",
+      "sha256_cert_fingerprints": [
+        "29:01:57:25:CA:C5:7C:F9:5A:7E:3C:77:4D:1B:BF:68:BD:B6:A4:4C:6A:D0:00:C0:1C:34:17:DF:04:D5:0A:08"
+      ]
+    }
+  }
+]
