@@ -268,14 +268,24 @@ const Auth = () => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: getPasswordRecoveryRedirectUrl(),
-    });
-    if (error) {
-      toast({ title: "Erro", description: translateAuthError(error.message), variant: "destructive" });
-    } else {
-      toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada para redefinir a senha." });
-      setForgotMode(false);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-recovery-email`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: JSON.stringify({ email: forgotEmail, redirectTo: getPasswordRecoveryRedirectUrl() }),
+        }
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast({ title: "Erro", description: body.error || "Falha ao enviar e-mail.", variant: "destructive" });
+      } else {
+        toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada para redefinir a senha." });
+        setForgotMode(false);
+      }
+    } catch {
+      toast({ title: "Erro", description: "Falha de conexão. Tente novamente.", variant: "destructive" });
     }
     setSubmitting(false);
     if (skipDeletedCheck) setSkipDeletedCheck(false);
