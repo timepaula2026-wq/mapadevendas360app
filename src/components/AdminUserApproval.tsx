@@ -112,6 +112,8 @@ const AdminUserApproval = () => {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkResetting, setBulkResetting] = useState(false);
+  const [bulkApproving, setBulkApproving] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editingRoles, setEditingRoles] = useState<string[]>([]);
   const [savingRoles, setSavingRoles] = useState(false);
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
@@ -343,6 +345,60 @@ const AdminUserApproval = () => {
   };
 
   const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkApprove = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const ok = window.confirm(`Aprovar ${ids.length} usuário(s) selecionado(s)?`);
+    if (!ok) return;
+    setBulkApproving(true);
+    let okCount = 0, failCount = 0;
+    for (const uid of ids) {
+      try {
+        const { data, error } = await supabase.functions.invoke("admin-set-user-access", {
+          body: { target_user_id: uid, approved: true },
+        });
+        if (error || (data as any)?.error) { failCount++; continue; }
+        await supabase.from("user_notifications").insert({
+          user_id: uid,
+          title: "Cadastro aprovado!",
+          message: "Seu cadastro foi aprovado pelo administrador. Você já pode acessar normalmente a plataforma.",
+          kind: "approval",
+        });
+        okCount++;
+      } catch { failCount++; }
+    }
+    setBulkApproving(false);
+    clearSelection();
+    fetchUsers();
+    if (failCount === 0) toast.success(`${okCount} usuário(s) aprovado(s)`);
+    else toast.warning(`${okCount} OK, ${failCount} falha(s)`);
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const ok = window.confirm(
+      `Excluir definitivamente ${ids.length} usuário(s) selecionado(s)?\n\nEsta ação é irreversível.`
+    );
+    if (!ok) return;
+    setBulkDeleting(true);
+    let okCount = 0, failCount = 0;
+    for (const uid of ids) {
+      try {
+        const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+          body: { target_user_id: uid },
+        });
+        if (error || (data as any)?.error) failCount++;
+        else okCount++;
+      } catch { failCount++; }
+    }
+    setBulkDeleting(false);
+    clearSelection();
+    fetchUsers();
+    if (failCount === 0) toast.success(`${okCount} usuário(s) excluído(s)`);
+    else toast.warning(`${okCount} OK, ${failCount} falha(s)`);
+  };
 
   const handleBulkReset = async () => {
     const ids = Array.from(selectedIds);
@@ -654,19 +710,37 @@ const AdminUserApproval = () => {
                 <Button size="sm" variant="ghost" onClick={clearSelection}>
                   Limpar
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={handleBulkReset}
-                  disabled={bulkResetting}
-                  className="gap-1 ml-auto"
-                >
-                  {bulkResetting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <KeyRound className="w-4 h-4" />
-                  )}
-                  Resetar senha em massa
-                </Button>
+                <div className="flex flex-wrap gap-2 ml-auto">
+                  <Button
+                    size="sm"
+                    onClick={handleBulkApprove}
+                    disabled={bulkApproving}
+                    className="gap-1 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {bulkApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                    Aprovar ({selectedIds.size})
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleBulkReset}
+                    disabled={bulkResetting}
+                    variant="outline"
+                    className="gap-1"
+                  >
+                    {bulkResetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+                    Resetar senha
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting}
+                    variant="destructive"
+                    className="gap-1"
+                  >
+                    {bulkDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    Excluir ({selectedIds.size})
+                  </Button>
+                </div>
               </>
             )}
           </div>
