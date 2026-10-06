@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Time Paula Batista <noreply@timepaula.com.br>",
+            from: "Time Paula Batista <noreply@mapadevendas360.com.br>",
             to: [userEmail],
             subject: "✅ Seu cadastro foi aprovado!",
             html: `
