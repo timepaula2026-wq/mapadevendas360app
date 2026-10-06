@@ -42,7 +42,9 @@ Deno.serve(async (req) => {
       user_id = data.user?.id ?? null;
     }
 
-    const admin = createClient(supabaseUrl, serviceKey);
+    const admin = createClient(supabaseUrl, serviceKey, {
+      db: { schema: "app_mobile" },
+    });
     const { data, error } = await admin
       .from("support_tickets")
       .insert({ name, email, unit, message, photo_url, user_id })
