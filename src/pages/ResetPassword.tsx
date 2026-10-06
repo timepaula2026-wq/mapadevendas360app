@@ -56,7 +56,24 @@ const ResetPassword = () => {
           return;
         }
 
-        // PKCE flow: explicitly exchange the code for a session
+        // token_hash flow (novo): verifyOtp com token_hash não consome o token no link,
+        // só consome quando esta chamada JS é feita — imune a pré-fetch de e-mail
+        const tokenHash = params.get("token_hash");
+        const type = params.get("type") as "recovery" | null;
+        if (tokenHash && type === "recovery") {
+          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
+          if (error) {
+            setExchangeError(translateResetError(error.message));
+            setChecking(false);
+            return;
+          }
+          window.history.replaceState({}, "", window.location.pathname);
+          setIsRecovery(true);
+          setChecking(false);
+          return;
+        }
+
+        // PKCE flow (legado): exchangeCodeForSession com ?code=
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {

@@ -26,29 +26,30 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // Usa a própria função edge como intermediária de redirect.
-    // Isso garante que o link do e-mail aponte para supabase.co (não mapadevendas.app),
-    // então o sistema operacional NÃO intercepta com App Links/Universal Links.
-    // O reset-redirect function redireciona (302) para mapadevendas.app/reset-password,
-    // e redirecionamentos server-side dentro do navegador não são interceptados pelo app.
-    const resetRedirectUrl = `${supabaseUrl}/functions/v1/reset-redirect`;
-
-    // Gera o link de redefinição de senha via Admin API
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
       type: "recovery",
       email: email.trim().toLowerCase(),
       options: {
-        redirectTo: resetRedirectUrl,
+        redirectTo: "https://mapadevendas.app/reset-password",
       },
     });
 
-    if (linkErr || !linkData?.properties?.action_link) {
-      console.error("generateLink error:", linkErr);
-      // Se o usuário não existe, retorna ok mesmo assim (não revelar se e-mail existe)
+    if (linkErr || !linkData?.properties?.hashed_token) {
+      console.error("generateLink error:", linkErr, JSON.stringify(linkData?.properties));
+      // Não revelar se o e-mail existe ou não
       return json({ ok: true });
     }
 
-    const recoveryLink = linkData.properties.action_link;
+    // Estratégia token_hash:
+    // - O link do e-mail aponta para reset-redirect (domínio supabase.co) com ?token_hash=
+    // - supabase.co não está no App Links/Universal Links → abre no NAVEGADOR
+    // - reset-redirect faz 302 → mapadevendas.app/reset-password?token_hash=xxx&type=recovery
+    // - Redirect server-side no browser não é interceptado pelo app
+    // - O token_hash só é consumido quando verifyOtp() é chamado no JS da página
+    // - Pré-fetches de clientes de e-mail (sem JS) NÃO consomem o token
+    const tokenHash = linkData.properties.hashed_token;
+    const recoveryLink =
+      `${supabaseUrl}/functions/v1/reset-redirect?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
 
     // Envia o email via Resend
     const emailRes = await fetch("https://api.resend.com/emails", {
