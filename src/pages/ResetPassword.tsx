@@ -135,8 +135,11 @@ const ResetPassword = () => {
     } else {
       setSuccess(true);
       toast({ title: "Senha redefinida!", description: "Sua senha foi alterada com sucesso." });
+      // Sign out the browser session so the app doesn't inherit a stale token
+      await supabase.auth.signOut();
       setTimeout(() => {
-        window.location.href = "mapadevendas://";
+        // Deep link opens the app on the login screen
+        window.location.href = "mapadevendas://auth";
       }, 2000);
     }
     setSubmitting(false);
