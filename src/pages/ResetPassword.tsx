@@ -135,7 +135,9 @@ const ResetPassword = () => {
     } else {
       setSuccess(true);
       toast({ title: "Senha redefinida!", description: "Sua senha foi alterada com sucesso." });
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => {
+        window.location.href = "mapadevendas://";
+      }, 2000);
     }
     setSubmitting(false);
   };
