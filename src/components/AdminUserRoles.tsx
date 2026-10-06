@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 interface ProfileRow {
   user_id: string;
   display_name: string | null;
-  unit: string | null;
+  units: { name: string } | null;
 }
 
 const AdminUserRoles = () => {
@@ -38,7 +38,7 @@ const AdminUserRoles = () => {
   const fetchAll = async () => {
     setLoading(true);
     const [{ data: profs }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, unit").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("user_id, display_name, units(name)").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     setProfiles((profs as ProfileRow[]) || []);
@@ -136,7 +136,7 @@ const AdminUserRoles = () => {
               </p>
               {savingId === p.user_id && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
             </div>
-            {p.unit && <p className="text-[10px] text-muted-foreground mb-2">📍 {p.unit}</p>}
+            {p.units?.name && <p className="text-[10px] text-muted-foreground mb-2">📍 {p.units.name}</p>}
             <div className="flex flex-wrap gap-1.5">
               {ROLES.map((r) => {
                 const active = userRoles.includes(r.value);
