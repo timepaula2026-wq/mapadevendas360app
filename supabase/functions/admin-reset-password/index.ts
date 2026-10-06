@@ -52,8 +52,19 @@ Deno.serve(async (req) => {
       email_confirm: true,
     });
     if (updErr) {
-      return new Response(JSON.stringify({ error: `Falha ao redefinir: ${updErr.message}` }), {
-        status: 500,
+      // Usuário pode não existir no auth (migrado sem conta real) — não conta como falha
+      const notFound = updErr.message?.toLowerCase().includes("not found") ||
+        updErr.message?.toLowerCase().includes("user not found") ||
+        updErr.status === 404 ||
+        (updErr as any)?.code === "user_not_found";
+      if (!notFound) {
+        return new Response(JSON.stringify({ error: `Falha ao redefinir: ${updErr.message}` }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Retorna ok com aviso — sem auth user, senha não pode ser redefinida
+      return new Response(JSON.stringify({ ok: true, warning: "Usuário sem conta de acesso ativo; senha não alterada." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
