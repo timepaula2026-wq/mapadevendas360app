@@ -12,6 +12,18 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Gera senha aleatória de 10 chars: letras + números
+function generatePassword(): string {
+  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let pwd = "";
+  const array = new Uint8Array(10);
+  crypto.getRandomValues(array);
+  for (const byte of array) {
+    pwd += chars[byte % chars.length];
+  }
+  return pwd;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
@@ -25,33 +37,37 @@ Deno.serve(async (req) => {
     if (!email) return json({ error: "E-mail obrigatório" }, 400);
 
     const admin = createClient(supabaseUrl, serviceKey);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: "recovery",
-      email: email.trim().toLowerCase(),
-      options: {
-        redirectTo: "https://mapadevendas.app/reset-password",
-      },
-    });
+    // Busca o usuário pelo email
+    const { data: listData, error: listErr } = await admin.auth.admin.listUsers();
+    if (listErr) {
+      console.error("listUsers error:", listErr);
+      return json({ ok: true }); // não revelar se e-mail existe
+    }
 
-    if (linkErr || !linkData?.properties?.hashed_token) {
-      console.error("generateLink error:", linkErr, JSON.stringify(linkData?.properties));
-      // Não revelar se o e-mail existe ou não
+    const user = listData?.users?.find(
+      (u) => u.email?.toLowerCase() === normalizedEmail
+    );
+
+    if (!user) {
+      // Não revelar que e-mail não existe
       return json({ ok: true });
     }
 
-    // Estratégia token_hash:
-    // - O link do e-mail aponta para reset-redirect (domínio supabase.co) com ?token_hash=
-    // - supabase.co não está no App Links/Universal Links → abre no NAVEGADOR
-    // - reset-redirect faz 302 → mapadevendas.app/reset-password?token_hash=xxx&type=recovery
-    // - Redirect server-side no browser não é interceptado pelo app
-    // - O token_hash só é consumido quando verifyOtp() é chamado no JS da página
-    // - Pré-fetches de clientes de e-mail (sem JS) NÃO consomem o token
-    const tokenHash = linkData.properties.hashed_token;
-    const recoveryLink =
-      `${supabaseUrl}/functions/v1/reset-redirect?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
+    // Gera senha aleatória e atualiza no Supabase
+    const newPassword = generatePassword();
+    const { error: updateErr } = await admin.auth.admin.updateUserById(user.id, {
+      password: newPassword,
+      user_metadata: { must_change_password: true },
+    });
 
-    // Envia o email via Resend
+    if (updateErr) {
+      console.error("updateUserById error:", updateErr);
+      return json({ error: "Falha ao redefinir senha" }, 500);
+    }
+
+    // Envia a senha por email via Resend
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -60,25 +76,27 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: "Mapa de Vendas 360 <noreply@mapadevendas360.com.br>",
-        to: [email.trim().toLowerCase()],
-        subject: "Redefinição de senha — Mapa de Vendas 360",
+        to: [normalizedEmail],
+        subject: "Sua nova senha — Mapa de Vendas 360",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
             <div style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); padding: 32px 24px; text-align: center;">
               <h1 style="color: #fff; margin: 0; font-size: 22px; font-weight: 700;">Mapa de Vendas 360</h1>
             </div>
             <div style="padding: 32px 24px;">
-              <h2 style="color: #111827; font-size: 18px; margin-bottom: 12px;">Redefinição de senha</h2>
+              <h2 style="color: #111827; font-size: 18px; margin-bottom: 12px;">Sua nova senha temporária</h2>
               <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-                Recebemos uma solicitação para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha.
+                Recebemos uma solicitação de recuperação de senha. Use a senha abaixo para entrar no aplicativo:
               </p>
-              <div style="text-align: center; margin-bottom: 24px;">
-                <a href="${recoveryLink}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;">
-                  Redefinir senha
-                </a>
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 24px;">
+                <p style="margin: 0 0 6px; color: #6b7280; font-size: 12px;">Senha temporária</p>
+                <p style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #111827; font-family: monospace;">${newPassword}</p>
               </div>
+              <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 8px;">
+                Após entrar, você será solicitado a criar uma nova senha.
+              </p>
               <p style="color: #9ca3af; font-size: 12px; line-height: 1.6; text-align: center;">
-                Este link expira em 24 horas. Se você não solicitou a redefinição, ignore este e-mail.
+                Se você não solicitou a recuperação, entre em contato com o suporte.
               </p>
             </div>
             <div style="background: #f9fafb; padding: 16px 24px; text-align: center;">
