@@ -274,7 +274,7 @@ const Auth = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          body: JSON.stringify({ email: forgotEmail, redirectTo: getPasswordRecoveryRedirectUrl() }),
+          body: JSON.stringify({ email: forgotEmail }),
         }
       );
       if (!res.ok) {

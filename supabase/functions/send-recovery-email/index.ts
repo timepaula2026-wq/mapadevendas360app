@@ -21,17 +21,24 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY")!;
 
-    const { email, redirectTo } = await req.json();
+    const { email } = await req.json();
     if (!email) return json({ error: "E-mail obrigatório" }, 400);
 
     const admin = createClient(supabaseUrl, serviceKey);
+
+    // Usa a própria função edge como intermediária de redirect.
+    // Isso garante que o link do e-mail aponte para supabase.co (não mapadevendas.app),
+    // então o sistema operacional NÃO intercepta com App Links/Universal Links.
+    // O reset-redirect function redireciona (302) para mapadevendas.app/reset-password,
+    // e redirecionamentos server-side dentro do navegador não são interceptados pelo app.
+    const resetRedirectUrl = `${supabaseUrl}/functions/v1/reset-redirect`;
 
     // Gera o link de redefinição de senha via Admin API
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
       type: "recovery",
       email: email.trim().toLowerCase(),
       options: {
-        redirectTo: redirectTo || "https://mapadevendas360.com.br/auth/callback",
+        redirectTo: resetRedirectUrl,
       },
     });
 
