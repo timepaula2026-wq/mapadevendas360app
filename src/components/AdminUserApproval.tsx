@@ -169,7 +169,7 @@ const AdminUserApproval = () => {
   const fetchUsers = async () => {
     setLoading(true);
     const [profilesRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("admin_users_view" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     if (profilesRes.error) toast.error("Erro ao carregar usuários");
