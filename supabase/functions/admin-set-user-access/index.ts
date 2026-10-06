@@ -81,6 +81,65 @@ Deno.serve(async (req) => {
         console.warn("admin-set-user-access: approved profile, auth user lookup failed", getAuthError.message);
         warning = "Cadastro aprovado, mas não foi possível conferir a confirmação do e-mail.";
       }
+
+      // Send approval email via Resend
+      const resendKey = Deno.env.get("RESEND_API_KEY");
+      const userEmail = user?.email;
+      const isPlaceholder = userEmail?.endsWith("@consultor.local");
+
+      if (resendKey && userEmail && !isPlaceholder) {
+        // Get display name from profiles
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", target_user_id)
+          .maybeSingle();
+
+        const displayName = profile?.display_name || "Consultor(a)";
+
+        const emailRes = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Time Paula Batista <noreply@timepaula.com.br>",
+            to: [userEmail],
+            subject: "✅ Seu cadastro foi aprovado!",
+            html: `
+              <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+                <h2 style="color:#1a1a1a">Olá, ${displayName}! 🎉</h2>
+                <p style="color:#444;font-size:16px">
+                  Seu cadastro no <strong>Mapa de Vendas</strong> foi aprovado pelo administrador.
+                </p>
+                <p style="color:#444;font-size:16px">
+                  Você já pode acessar normalmente a plataforma com o seu e-mail e senha cadastrados.
+                </p>
+                <div style="margin:32px 0;text-align:center">
+                  <a href="https://mapadevendas360.com.br"
+                     style="background:#6366f1;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">
+                    Acessar o App
+                  </a>
+                </div>
+                <p style="color:#888;font-size:13px">
+                  Em caso de dúvidas, entre em contato com seu gestor de unidade.
+                </p>
+                <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
+                <p style="color:#bbb;font-size:12px;text-align:center">
+                  Time Paula Batista — Mapa de Vendas 360
+                </p>
+              </div>
+            `,
+          }),
+        });
+
+        if (!emailRes.ok) {
+          const errBody = await emailRes.text();
+          console.warn("admin-set-user-access: email send failed", errBody);
+          warning = (warning ? warning + " " : "") + "Cadastro aprovado, mas o e-mail de notificação não pôde ser enviado.";
+        }
+      }
     }
 
     return new Response(JSON.stringify({ ok: true, warning }), {
