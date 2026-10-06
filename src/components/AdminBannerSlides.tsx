@@ -133,7 +133,7 @@ const AdminBannerSlides = () => {
       active: true,
     });
 
-    if (error) toast.error("Erro ao salvar slide");
+    if (error) toast.error("Erro ao salvar slide: " + error.message);
     else {
       toast.success("Slide adicionado!");
       resetForm();
