@@ -51,11 +51,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Atualiza email via REST API (mais confiável que o SDK admin)
+    // Atualiza email via função SQL (SECURITY DEFINER acessa auth.users diretamente)
     if (email && typeof email === "string") {
       const trimmed = email.trim().toLowerCase();
 
-      // Validação básica
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(trimmed)) {
         return new Response(JSON.stringify({ error: `E-mail inválido: ${trimmed}` }), {
@@ -64,26 +63,13 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Usa REST direto para update de email — mais estável
-      const authApiUrl = `${supabaseUrl}/auth/v1/admin/users/${target_user_id}`;
-      const authRes = await fetch(authApiUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": serviceKey,
-          "Authorization": `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({
-          email: trimmed,
-          email_confirm: true,
-        }),
+      const { error: rpcErr } = await admin.rpc("admin_update_auth_email", {
+        p_user_id: target_user_id,
+        p_email: trimmed,
       });
 
-      if (!authRes.ok) {
-        const errBody = await authRes.text();
-        let errMsg = errBody;
-        try { errMsg = JSON.parse(errBody)?.msg || JSON.parse(errBody)?.message || errBody; } catch { /* ok */ }
-        return new Response(JSON.stringify({ error: `Erro ao atualizar e-mail: ${errMsg}` }), {
+      if (rpcErr) {
+        return new Response(JSON.stringify({ error: `Erro ao atualizar e-mail: ${rpcErr.message}` }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
