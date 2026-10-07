@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase, Hash } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, IdCard, Headphones, Briefcase, Hash, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import logoMapaVendas from "@/assets/mapa-de-vendas-logo.png";
@@ -37,6 +37,9 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [primeiroAcessoMode, setPrimeiroAcessoMode] = useState(false);
+  const [primeiroAcessoCpf, setPrimeiroAcessoCpf] = useState("");
+  const [primeiroAcessoEmail, setPrimeiroAcessoEmail] = useState("");
   const [supportOpen, setSupportOpen] = useState(false);
   const [lastErrorReport, setLastErrorReport] = useState<string>("");
   const [returnConfirmOpen, setReturnConfirmOpen] = useState(false);
@@ -493,6 +496,40 @@ const Auth = () => {
 
   const inputClass = "w-full bg-secondary rounded-xl pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50";
 
+  const handlePrimeiroAcesso = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const emailCheck = validateEmail(primeiroAcessoEmail);
+      if (!emailCheck.valid) {
+        toast({ title: "E-mail inválido", description: emailCheck.error, variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("primeiro-acesso", {
+        body: { cpf: primeiroAcessoCpf, new_email: primeiroAcessoEmail },
+      });
+      if (error || data?.error) {
+        const msg = data?.error || error?.message || "Erro desconhecido.";
+        toast({ title: "Não foi possível continuar", description: msg, variant: "destructive" });
+      } else {
+        toast({
+          title: "E-mail definido com sucesso!",
+          description: `${data?.message || "Verifique sua caixa de entrada para criar uma senha."} ${data?.display_name ? `Olá, ${data.display_name}!` : ""}`,
+          duration: 12000,
+        });
+        setPrimeiroAcessoMode(false);
+        setPrimeiroAcessoCpf("");
+        setPrimeiroAcessoEmail("");
+        setForgotMode(true);
+        setForgotEmail(primeiroAcessoEmail);
+      }
+    } catch (err) {
+      toast({ title: "Erro", description: "Falha de conexão. Tente novamente.", variant: "destructive" });
+    }
+    setSubmitting(false);
+  };
+
   if (forgotMode) {
     return (
       <div
@@ -537,6 +574,78 @@ const Auth = () => {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             <button onClick={() => setForgotMode(false)} className="text-primary font-semibold hover:underline">
+              Voltar ao login
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (primeiroAcessoMode) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-5"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, #2a0608 0%, #120203 55%, #050102 100%)",
+        }}
+      >
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow bg-orange-500/20 border border-orange-500/40">
+              <KeyRound className="w-7 h-7 text-orange-400" />
+            </div>
+            <h1 className="text-2xl font-extrabold text-foreground">Primeiro acesso</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Informe seu CPF e um e-mail para definir sua senha
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-xs text-white/80 leading-relaxed mb-4">
+            Use este formulário se você foi cadastrado pelo administrador mas ainda não tem acesso.
+            Informe o CPF registrado e um e-mail onde receberá o link para criar sua senha.
+          </div>
+
+          <form onSubmit={handlePrimeiroAcesso} className="space-y-4">
+            <div className="relative">
+              <IdCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={primeiroAcessoCpf}
+                onChange={(e) => setPrimeiroAcessoCpf(formatCpf(e.target.value))}
+                placeholder="CPF (000.000.000-00)"
+                required
+                className={inputClass}
+                inputMode="numeric"
+              />
+            </div>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="email"
+                value={primeiroAcessoEmail}
+                onChange={(e) => setPrimeiroAcessoEmail(e.target.value)}
+                placeholder="Seu e-mail real"
+                required
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full text-white font-semibold py-3 rounded-xl transition-opacity disabled:opacity-40 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600"
+            >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              Definir e-mail e criar senha
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            <button
+              onClick={() => setPrimeiroAcessoMode(false)}
+              className="text-primary font-semibold hover:underline"
+            >
               Voltar ao login
             </button>
           </p>
@@ -689,7 +798,14 @@ const Auth = () => {
           </div>
 
           {isLogin && (
-            <div className="text-right">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setPrimeiroAcessoMode(true)}
+                className="text-xs font-semibold text-orange-400 hover:underline"
+              >
+                Primeiro acesso
+              </button>
               <button
                 type="button"
                 onClick={() => setForgotMode(true)}
