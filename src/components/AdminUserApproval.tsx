@@ -653,6 +653,17 @@ const AdminUserApproval = () => {
             className="pl-8 h-10 text-base"
           />
         </div>
+        <button
+          onClick={() => setSearch(search === "@consultor.local" ? "" : "@consultor.local")}
+          title="Filtrar usuários sem e-mail real (e-mail @consultor.local)"
+          className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors shrink-0 ${
+            search === "@consultor.local"
+              ? "bg-orange-500 text-white border-orange-500"
+              : "bg-card border-orange-500/50 text-orange-500 hover:bg-orange-500/10"
+          }`}
+        >
+          ⚠️ Sem e-mail
+        </button>
         <Button onClick={exportCSV} size="sm" variant="outline" className="gap-1">
           <Download className="w-4 h-4" /> CSV
         </Button>
@@ -790,8 +801,11 @@ const AdminUserApproval = () => {
                     </p>
                   )}
                   {u.email && (
-                    <p className="text-sm text-muted-foreground break-all">
+                    <p className={`text-sm break-all flex items-center gap-1 ${u.email.endsWith("@consultor.local") ? "text-orange-500 font-medium" : "text-muted-foreground"}`}>
                       ✉️ {u.email}
+                      {u.email.endsWith("@consultor.local") && (
+                        <span className="text-[10px] bg-orange-500/20 text-orange-500 border border-orange-500/30 rounded px-1 py-0.5 ml-1 shrink-0">e-mail não definido</span>
+                      )}
                     </p>
                   )}
                   {u.phone && (
