@@ -1,7 +1,7 @@
+import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { App as CapacitorApp } from "@capacitor/app";
@@ -48,7 +48,9 @@ import QuizzHost from "./pages/QuizzHost";
 import QuizzPlay from "./pages/QuizzPlay";
 import NotFound from "./pages/NotFound";
 import Privacy from "./pages/Privacy";
-import { Loader2 } from "lucide-react";
+import { Loader2, Clock, WifiOff } from "lucide-react";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const queryClient = new QueryClient();
 
@@ -81,9 +83,47 @@ const MobileDeepLinkHandler = () => {
   return null;
 };
 
+const OfflineBanner = () => {
+  const [offline, setOffline] = React.useState(!navigator.onLine);
+  React.useEffect(() => {
+    const onOnline = () => setOffline(false);
+    const onOffline = () => setOffline(true);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
+  if (!offline) return null;
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 bg-destructive text-destructive-foreground text-center py-2 px-4 text-sm flex items-center justify-center gap-2">
+      <WifiOff className="w-4 h-4" />
+      Sem conexão com a internet
+    </div>
+  );
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAdmin, loading } = useIsAdmin();
+  if (loading) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+    </div>
+  );
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const { approved, loading: approvalLoading, mustChangePassword, refresh } = useApprovalCheck();
+
+  useEffect(() => {
+    if (user) {
+      supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("user_id", user.id).then(() => {});
+    }
+  }, [user]);
 
   if (loading || approvalLoading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -96,7 +136,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
       <div className="bg-card border border-border rounded-2xl p-8 max-w-sm w-full space-y-4">
         <div className="w-16 h-16 mx-auto rounded-full bg-yellow-500/10 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-yellow-500" />
+          <Clock className="w-8 h-8 text-yellow-500" />
         </div>
         <h2 className="text-lg font-bold text-foreground">Aguardando aprovação</h2>
         <p className="text-sm text-muted-foreground">
@@ -124,12 +164,14 @@ const App = () => {
   }, []);
 
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <OfflineBanner />
             <MobileDeepLinkHandler />
             <AppSettingsApplier />
             <Routes>
@@ -151,7 +193,7 @@ const App = () => {
             <Route path="/cliente" element={<ProtectedRoute><AreaCliente /></ProtectedRoute>} />
             <Route path="/analise" element={<ProtectedRoute><PlataformaAnalise /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute><ChatBot /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminPanel /></AdminRoute></ProtectedRoute>} />
             <Route path="/loja" element={<ProtectedRoute><Loja /></ProtectedRoute>} />
             <Route path="/locacao" element={<ProtectedRoute><Locacao /></ProtectedRoute>} />
             <Route path="/presenca-treinamentos" element={<ProtectedRoute><PresencaTreinamentos /></ProtectedRoute>} />
@@ -175,6 +217,7 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
