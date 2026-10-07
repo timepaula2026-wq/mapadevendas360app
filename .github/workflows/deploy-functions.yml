@@ -22,5 +22,6 @@ jobs:
           supabase functions deploy send-recovery-email --project-ref iqdvawizxjglkdjyvhdr --no-verify-jwt
           supabase functions deploy reset-redirect --project-ref iqdvawizxjglkdjyvhdr --no-verify-jwt
           supabase functions deploy admin-reset-password --project-ref iqdvawizxjglkdjyvhdr
+          supabase functions deploy gestao360-webhook --project-ref iqdvawizxjglkdjyvhdr --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
