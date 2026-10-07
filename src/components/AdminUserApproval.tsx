@@ -152,7 +152,6 @@ const AdminUserApproval = () => {
           email: finalEmail,
           display_name: editForm.display_name.trim(),
           phone: editForm.phone.trim(),
-          unit: editForm.unit.trim(),
           cpf: editForm.cpf.trim(),
         },
       });
@@ -1197,13 +1196,12 @@ const AdminUserApproval = () => {
                 />
               </div>
             </div>
-            <div>
-              <Label>Unidade</Label>
-              <Input
-                value={editForm.unit}
-                onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
-              />
-            </div>
+            {editUser?.unit && (
+              <div>
+                <Label>Unidade</Label>
+                <Input value={editUser.unit} disabled className="opacity-60" />
+              </div>
+            )}
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setEditUser(null)} disabled={savingEdit}>
                 Cancelar
