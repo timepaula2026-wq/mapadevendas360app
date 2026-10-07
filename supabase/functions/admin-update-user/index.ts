@@ -83,13 +83,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Atualiza profile
+    // Atualiza profile (apenas colunas que existem na tabela)
     const profileUpdate: Record<string, unknown> = {};
-    if (email !== undefined) profileUpdate.email = String(email).trim().toLowerCase();
     if (display_name !== undefined) profileUpdate.display_name = display_name;
     if (phone !== undefined) profileUpdate.phone = phone;
-    if (unit !== undefined) profileUpdate.unit = unit;
     if (cpf !== undefined) profileUpdate.cpf = cpf;
+    // Nota: profiles não tem coluna "email" nem "unit" — email fica só no auth.users
 
     if (Object.keys(profileUpdate).length > 0) {
       const { error: pErr } = await admin
