@@ -201,10 +201,13 @@ const AdminUserApproval = () => {
     const term = search.trim().toLowerCase();
     const minDays = inactiveFilter === "any" ? 0 : parseInt(inactiveFilter, 10);
     const list = users.filter((u) => {
-      if (filter === "requests" && (u.approved || isImported(u))) return false;
-      if (filter === "imported" && !isImported(u)) return false;
-      if (filter === "approved" && !u.approved) return false;
-      if (filter === "first_access" && (u.must_change_password !== false)) return false;
+      // Quando há texto na busca, ignora o filtro de categoria e busca em todos
+      if (!term) {
+        if (filter === "requests" && (u.approved || isImported(u))) return false;
+        if (filter === "imported" && !isImported(u)) return false;
+        if (filter === "approved" && !u.approved) return false;
+        if (filter === "first_access" && (u.must_change_password !== false)) return false;
+      }
       if (minDays > 0) {
         const d = daysSince(u.last_active_at);
         if (d == null || d < minDays) return false;
