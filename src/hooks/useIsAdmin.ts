@@ -19,12 +19,17 @@ export const useIsAdmin = () => {
     }
 
     const check = async () => {
-      const { data } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      setIsAdmin(!!data);
-      setLoading(false);
+      try {
+        const { data } = await supabase.rpc("has_role", {
+          _user_id: user.id,
+          _role: "admin",
+        });
+        setIsAdmin(!!data);
+      } catch {
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
     };
 
     check();

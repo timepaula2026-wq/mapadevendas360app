@@ -27,14 +27,21 @@ export const useApprovalCheck = () => {
     }
 
     const check = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("approved, must_change_password")
-        .eq("user_id", user.id)
-        .single();
-      setApproved(data?.approved ?? false);
-      setMustChangePassword(!!data?.must_change_password);
-      setLoading(false);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("approved, must_change_password")
+          .eq("user_id", user.id)
+          .single();
+        setApproved(data?.approved ?? false);
+        setMustChangePassword(!!data?.must_change_password);
+      } catch {
+        // Em caso de erro na query, libera o loading para não travar o app
+        setApproved(false);
+        setMustChangePassword(false);
+      } finally {
+        setLoading(false);
+      }
     };
 
     check();

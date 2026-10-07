@@ -47,10 +47,15 @@ export const useUserRoles = () => {
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (!active) return;
-        const raw = (data || []).map((r: { role: string }) => r.role);
-        setRoles(expandRoles(raw));
+        if (error) {
+          console.warn("useUserRoles: erro ao buscar papéis", error.message);
+          setRoles([]);
+        } else {
+          const raw = (data || []).map((r: { role: string }) => r.role);
+          setRoles(expandRoles(raw));
+        }
         setLoading(false);
       });
 
