@@ -155,8 +155,24 @@ const AdminUserApproval = () => {
           cpf: editForm.cpf.trim(),
         },
       });
-      if (error || (data as any)?.error) {
-        toast.error((data as any)?.error || error?.message || "Erro ao salvar");
+      // Tenta extrair mensagem real do erro (Edge Function 4xx/5xx)
+      let errMsg: string | null = null;
+      if (error) {
+        // error.context pode ter o response body como texto
+        try {
+          const ctx = (error as any)?.context;
+          if (ctx) {
+            const txt = typeof ctx === "string" ? ctx : await ctx?.text?.();
+            const parsed = txt ? JSON.parse(txt) : null;
+            errMsg = parsed?.error || txt || error.message;
+          }
+        } catch { /* ignora */ }
+        errMsg = errMsg || (data as any)?.error || error.message;
+      } else if ((data as any)?.error) {
+        errMsg = (data as any).error;
+      }
+      if (errMsg) {
+        toast.error(errMsg);
         return;
       }
       toast.success("Dados atualizados");
