@@ -4,7 +4,7 @@
  * Recebe eventos do Sistema Gestão 360 e sincroniza o acesso no Mapa de Vendas.
  *
  * Eventos suportados:
- *   "consultor_iniciado"  → cria conta (ou aprova existente) + envia email com senha 123456
+ *   "consultor_iniciado"  → aprova perfil existente (cadastro é SEMPRE manual no app)
  *   "consultor_desligado" → bloqueia acesso (approved = false)
  *   "consultor_reativado" → reativa acesso (approved = true) sem redefinir senha
  *
@@ -25,8 +25,6 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const SENHA_PADRAO = "123456";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
@@ -40,65 +38,14 @@ function json(body: unknown, status = 200) {
   });
 }
 
-// Mapeia atividade → role do app_role enum
-function atividadeToRole(atividade: string | undefined, hasCpf: boolean): string {
-  const a = (atividade ?? "").toLowerCase().trim();
-  if (a === "secretaria")  return "secretaria";
-  if (a === "gestor")      return "gestor";
-  if (a === "supervisor")  return "supervisor";
-  if (a === "autorizado")  return "autorizado";
-  if (a === "iniciante")   return hasCpf ? "autorizado" : "iniciante";
-  return "iniciante"; // padrão seguro
-}
-
-async function sendWelcomeEmail(
-  resendKey: string,
-  email: string,
-  nome: string,
-  senha: string,
-) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: "Time Paula Batista <noreply@mapadevendas360.com.br>",
-      to: [email],
-      subject: "🎉 Bem-vindo ao Mapa de Vendas!",
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-          <h2 style="color:#1a1a1a">Olá, ${nome}! 🎉</h2>
-          <p style="color:#444;font-size:16px">
-            Seu acesso ao <strong>Mapa de Vendas 360</strong> foi liberado.
-            Use os dados abaixo para entrar no aplicativo:
-          </p>
-          <div style="background:#f5f5f5;border-radius:8px;padding:16px 20px;margin:20px 0">
-            <p style="margin:4px 0;color:#333"><strong>E-mail:</strong> ${email}</p>
-            <p style="margin:4px 0;color:#333"><strong>Senha:</strong> ${senha}</p>
-          </div>
-          <p style="color:#e55;font-size:14px">
-            ⚠️ Por segurança, altere sua senha no primeiro acesso.
-          </p>
-          <div style="margin:32px 0;text-align:center">
-            <a href="https://mapadevendas360.com.br"
-               style="background:#6366f1;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">
-              Acessar o App
-            </a>
-          </div>
-          <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
-          <p style="color:#bbb;font-size:12px;text-align:center">
-            Time Paula Batista — Mapa de Vendas 360
-          </p>
-        </div>
-      `,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    console.warn("gestao360-webhook: email send failed", err);
-  }
+/** Busca o user_id a partir do e-mail usando a API admin do Supabase Auth. */
+async function findUserIdByEmail(
+  admin: ReturnType<typeof createClient>,
+  emailToFind: string,
+): Promise<string | null> {
+  const { data: list } = await admin.auth.admin.listUsers();
+  const found = (list?.users ?? []).find((u) => u.email === emailToFind);
+  return found?.id ?? null;
 }
 
 Deno.serve(async (req) => {
@@ -114,13 +61,14 @@ Deno.serve(async (req) => {
       return json({ error: "Não autorizado" }, 401);
     }
   } else {
-    console.warn("gestao360-webhook: GESTAO360_WEBHOOK_SECRET não configurado — aceitando sem autenticação (configure em produção!)");
+    console.warn(
+      "gestao360-webhook: GESTAO360_WEBHOOK_SECRET não configurado — aceitando sem autenticação (configure em produção!)",
+    );
   }
 
-  const supabaseUrl  = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const resendKey    = Deno.env.get("RESEND_API_KEY") ?? "";
-  const admin        = createClient(supabaseUrl, serviceKey);
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin       = createClient(supabaseUrl, serviceKey);
 
   let body: { evento?: string; consultor?: Record<string, string> };
   try {
@@ -138,7 +86,6 @@ Deno.serve(async (req) => {
   const nome     = (consultor.nome ?? "").trim();
   const cpf      = (consultor.cpf ?? "").trim() || null;
   const unidade  = (consultor.unidade ?? "").trim() || null;
-  const atividade = consultor.atividade ?? "";
 
   // ----------------------------------------------------------------
   // EVENTO: consultor_iniciado
@@ -147,11 +94,12 @@ Deno.serve(async (req) => {
     // Cadastro no Mapa de Vendas é SEMPRE manual (a própria consultora se cadastra).
     // O webhook NÃO cria conta — apenas atualiza o perfil se a consultora
     // já tiver se cadastrado por conta própria no app.
-    const { data: existingList } = await admin.auth.admin.listUsers();
-    const existing = (existingList?.users ?? []).find(u => u.email === email);
+    const userId = await findUserIdByEmail(admin, email);
 
-    if (!existing) {
-      console.log(`gestao360-webhook: consultor_iniciado ignorado — ${email} ainda não tem conta no app (cadastro é manual)`);
+    if (!userId) {
+      console.log(
+        `gestao360-webhook: consultor_iniciado ignorado — ${email} ainda não tem conta no app (cadastro é manual)`,
+      );
       return json({ ok: true, action: "aguardando_cadastro_manual" });
     }
 
@@ -161,27 +109,20 @@ Deno.serve(async (req) => {
       display_name: nome || undefined,
       unit: unidade || undefined,
       cpf: cpf || undefined,
-    }).eq("user_id", existing.id);
+    }).eq("user_id", userId);
 
     // Garante email confirmado
-    await admin.auth.admin.updateUserById(existing.id, { email_confirm: true });
+    await admin.auth.admin.updateUserById(userId, { email_confirm: true });
 
     console.log(`gestao360-webhook: perfil existente aprovado para ${email}`);
     return json({ ok: true, action: "aprovado_existente" });
-  }
-
-  // Busca o user_id pelo email na tabela auth.users (via admin API)
-  async function findUserIdByEmail(emailToFind: string): Promise<string | null> {
-    const { data: list } = await admin.auth.admin.listUsers();
-    const found = (list?.users ?? []).find(u => u.email === emailToFind);
-    return found?.id ?? null;
   }
 
   // ----------------------------------------------------------------
   // EVENTO: consultor_desligado
   // ----------------------------------------------------------------
   if (evento === "consultor_desligado") {
-    const userId = await findUserIdByEmail(email);
+    const userId = await findUserIdByEmail(admin, email);
 
     if (!userId) {
       console.warn(`gestao360-webhook: desligamento — usuário não encontrado: ${email}`);
@@ -198,7 +139,7 @@ Deno.serve(async (req) => {
   // EVENTO: consultor_reativado
   // ----------------------------------------------------------------
   if (evento === "consultor_reativado") {
-    const userId = await findUserIdByEmail(email);
+    const userId = await findUserIdByEmail(admin, email);
 
     if (!userId) {
       return json({ ok: true, action: "nao_encontrado", message: "Usuário não existe no app" });
