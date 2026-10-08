@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     });
     const { data, error } = await admin
       .from("support_tickets")
-      .insert({ name, email, unit, message, photo_url, user_id })
+      .insert({ name, email, unit, message, photo_url, user_id, status: "aberto" })
       .select("id")
       .single();
 
