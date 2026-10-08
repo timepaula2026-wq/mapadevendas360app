@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           cpf: data?.cpf,
           atividade: data?.atividade,
           auto_approved: data?.auto_approved,
+          source: 'mapadevendas',
         },
         emailRedirectTo: getAuthEmailRedirectUrl(),
       },
