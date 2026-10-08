@@ -34,7 +34,7 @@ const ALL_ITEMS: Record<string, GridItem> = Object.fromEntries(
 
 const IconGrid = () => {
   const navigate = useNavigate();
-  const { roles: userRoles } = useUserRoles();
+  const { roles: userRoles, loading: rolesLoading } = useUserRoles();
   const { settings } = useAppSettings();
   const [orderedItems, setOrderedItems] = useState<GridItem[]>(DEFAULT_SECTION_IDS.map((id) => ALL_ITEMS[id]));
 
@@ -76,6 +76,8 @@ const IconGrid = () => {
   }, []);
 
   const isLocked = (item: GridItem) => {
+    // Enquanto os papéis ainda estão carregando, não bloqueia nenhuma tela
+    if (rolesLoading) return false;
     if (!item.allowedRoles || item.allowedRoles.length === 0) return false;
     if (userRoles.includes("admin")) return false;
     return !item.allowedRoles.some((r) => userRoles.includes(r));

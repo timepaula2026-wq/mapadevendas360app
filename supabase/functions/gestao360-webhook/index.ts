@@ -170,23 +170,25 @@ Deno.serve(async (req) => {
     return json({ ok: true, action: "aprovado_existente" });
   }
 
+  // Busca o user_id pelo email na tabela auth.users (via admin API)
+  async function findUserIdByEmail(emailToFind: string): Promise<string | null> {
+    const { data: list } = await admin.auth.admin.listUsers();
+    const found = (list?.users ?? []).find(u => u.email === emailToFind);
+    return found?.id ?? null;
+  }
+
   // ----------------------------------------------------------------
   // EVENTO: consultor_desligado
   // ----------------------------------------------------------------
   if (evento === "consultor_desligado") {
-    // Busca pelo email no profiles
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("user_id")
-      .eq("email", email)
-      .maybeSingle();
+    const userId = await findUserIdByEmail(email);
 
-    if (!profile?.user_id) {
+    if (!userId) {
       console.warn(`gestao360-webhook: desligamento — usuário não encontrado: ${email}`);
       return json({ ok: true, action: "nao_encontrado", message: "Usuário não existe no app" });
     }
 
-    await admin.from("profiles").update({ approved: false }).eq("user_id", profile.user_id);
+    await admin.from("profiles").update({ approved: false }).eq("user_id", userId);
 
     console.log(`gestao360-webhook: acesso bloqueado para ${email}`);
     return json({ ok: true, action: "acesso_bloqueado" });
@@ -196,18 +198,14 @@ Deno.serve(async (req) => {
   // EVENTO: consultor_reativado
   // ----------------------------------------------------------------
   if (evento === "consultor_reativado") {
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("user_id")
-      .eq("email", email)
-      .maybeSingle();
+    const userId = await findUserIdByEmail(email);
 
-    if (!profile?.user_id) {
+    if (!userId) {
       return json({ ok: true, action: "nao_encontrado", message: "Usuário não existe no app" });
     }
 
-    await admin.from("profiles").update({ approved: true }).eq("user_id", profile.user_id);
-    await admin.auth.admin.updateUserById(profile.user_id, { email_confirm: true });
+    await admin.from("profiles").update({ approved: true }).eq("user_id", userId);
+    await admin.auth.admin.updateUserById(userId, { email_confirm: true });
 
     console.log(`gestao360-webhook: acesso reativado para ${email}`);
     return json({ ok: true, action: "acesso_reativado" });
