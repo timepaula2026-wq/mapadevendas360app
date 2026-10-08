@@ -144,68 +144,30 @@ Deno.serve(async (req) => {
   // EVENTO: consultor_iniciado
   // ----------------------------------------------------------------
   if (evento === "consultor_iniciado") {
-    // Verifica se já existe conta com esse email
+    // Cadastro no Mapa de Vendas é SEMPRE manual (a própria consultora se cadastra).
+    // O webhook NÃO cria conta — apenas atualiza o perfil se a consultora
+    // já tiver se cadastrado por conta própria no app.
     const { data: existingList } = await admin.auth.admin.listUsers();
     const existing = (existingList?.users ?? []).find(u => u.email === email);
 
-    if (existing) {
-      // Já tem conta — apenas aprova e atualiza perfil
-      await admin.from("profiles").update({
-        approved: true,
-        display_name: nome || undefined,
-        unit: unidade || undefined,
-        cpf: cpf || undefined,
-      }).eq("user_id", existing.id);
-
-      // Garante email confirmado
-      await admin.auth.admin.updateUserById(existing.id, { email_confirm: true });
-
-      console.log(`gestao360-webhook: conta existente aprovada para ${email}`);
-      return json({ ok: true, action: "aprovado_existente" });
+    if (!existing) {
+      console.log(`gestao360-webhook: consultor_iniciado ignorado — ${email} ainda não tem conta no app (cadastro é manual)`);
+      return json({ ok: true, action: "aguardando_cadastro_manual" });
     }
 
-    // Cria nova conta com senha padrão
-    const { data: newUser, error: createError } = await admin.auth.admin.createUser({
-      email,
-      password: SENHA_PADRAO,
-      email_confirm: true,
-      user_metadata: {
-        display_name: nome,
-        unit: unidade ?? "",
-        cpf: cpf ?? "",
-        atividade,
-        auto_approved: true,
-        must_change_password: true,
-      },
-    });
-
-    if (createError || !newUser?.user) {
-      console.error("gestao360-webhook: erro ao criar usuário", createError?.message);
-      return json({ error: createError?.message ?? "Erro ao criar usuário" }, 500);
-    }
-
-    const userId = newUser.user.id;
-
-    // Atualiza perfil com must_change_password (trigger já criou o perfil)
+    // Já tem conta — apenas aprova e atualiza perfil
     await admin.from("profiles").update({
-      must_change_password: true,
       approved: true,
-    }).eq("user_id", userId);
+      display_name: nome || undefined,
+      unit: unidade || undefined,
+      cpf: cpf || undefined,
+    }).eq("user_id", existing.id);
 
-    // Garante papel correto (trigger já insere, mas reforça aqui)
-    const role = atividadeToRole(atividade, Boolean(cpf));
-    await admin.from("user_roles").upsert(
-      { user_id: userId, role },
-      { onConflict: "user_id,role", ignoreDuplicates: true }
-    );
+    // Garante email confirmado
+    await admin.auth.admin.updateUserById(existing.id, { email_confirm: true });
 
-    // Envia email de boas-vindas com senha
-    if (resendKey && email) {
-      await sendWelcomeEmail(resendKey, email, nome || "Consultor(a)", SENHA_PADRAO);
-    }
-
-    console.log(`gestao360-webhook: conta criada para ${email}, role=${role}`);
-    return json({ ok: true, action: "conta_criada", user_id: userId });
+    console.log(`gestao360-webhook: perfil existente aprovado para ${email}`);
+    return json({ ok: true, action: "aprovado_existente" });
   }
 
   // ----------------------------------------------------------------
