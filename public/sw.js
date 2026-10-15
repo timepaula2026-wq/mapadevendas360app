@@ -2,7 +2,7 @@
 // Estratégia network-first para HTML (evita ficar preso em build antigo)
 // e cache leve para assets estáticos.
 
-const CACHE_VERSION = "mapa-vendas-v1";
+const CACHE_VERSION = "mapa-vendas-v2";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/apple-touch-icon.png",
