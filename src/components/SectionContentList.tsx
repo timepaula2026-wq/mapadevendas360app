@@ -259,7 +259,9 @@ const SectionContentList = ({
     // Links externos (CRM, ERP, sistemas com login) bloqueiam iframe e deixam
     // o visualizador em branco — o usuário fica "travado". Esses sempre abrem
     // em nova aba, em qualquer dispositivo.
-    const isExternalLink = !INTERNAL_VIEWER_TYPES.includes(viewerType);
+    // Links com modo "Dentro do app" abrem no visualizador (iframe), inclusive sites próprios.
+    const isExternalLink =
+      !INTERNAL_VIEWER_TYPES.includes(viewerType) && !(viewerType === "link" && v.openMode === "iframe");
 
     // Abordagem única do app: conteúdo de treinamento (vídeo, PDF, imagem,
     // texto) SEMPRE abre embutido no visualizador interno, com botão de fechar
