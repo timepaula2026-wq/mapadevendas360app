@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Trophy, Star, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
+import SectionSwitcherBar from "@/components/SectionSwitcherBar";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 import { supabase } from "@/integrations/supabase/client";
 import { CAREER_LEVELS } from "@/lib/careerLevels";
@@ -51,6 +52,7 @@ const PlanoCarreira = () => {
       </div>
 
       <div className="px-5 mt-6">
+        <SectionSwitcherBar activeId="carreira" />
         {/* Agenda Online no topo */}
         <div className="mb-4">
           <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>

@@ -1,6 +1,7 @@
 import { ArrowLeft, Users, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
+import SectionSwitcherBar from "@/components/SectionSwitcherBar";
 import AgendaOnlineBlock from "@/components/AgendaOnlineBlock";
 
 const GestaoEquipe = () => {
@@ -21,6 +22,7 @@ const GestaoEquipe = () => {
       </div>
 
       <div className="px-5 mt-6 space-y-4">
+        <SectionSwitcherBar activeId="equipe" />
         {/* Agenda Online no topo */}
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-3">Agenda Online</h2>

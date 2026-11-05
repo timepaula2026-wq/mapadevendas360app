@@ -3,6 +3,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SectionContentList from "@/components/SectionContentList";
+import SectionSwitcherBar from "@/components/SectionSwitcherBar";
 import { DYNAMIC_ICONS } from "@/lib/iconPicker";
 
 const CustomSection = () => {
@@ -55,6 +56,7 @@ const CustomSection = () => {
       </div>
 
       <div className="px-5 mt-6">
+        {info && <SectionSwitcherBar activeId={info.id} />}
         {info && <SectionContentList sectionId={info.id} />}
       </div>
     </div>

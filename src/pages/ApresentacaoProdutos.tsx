@@ -1,6 +1,7 @@
 import { ArrowLeft, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SectionContentList from "@/components/SectionContentList";
+import SectionSwitcherBar from "@/components/SectionSwitcherBar";
 
 const ApresentacaoProdutos = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const ApresentacaoProdutos = () => {
       </div>
 
       <div className="px-5 mt-6">
+        <SectionSwitcherBar activeId="apresentacao" />
         <SectionContentList sectionId="apresentacao" />
       </div>
     </div>

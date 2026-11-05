@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
+import SectionSwitcherBar from "@/components/SectionSwitcherBar";
 import {
   PARTE1_STEPS,
   DAY1_TASKS,
@@ -253,6 +254,10 @@ const AceleradorVendas72h = () => {
           </div>
           <Progress value={pct} className="h-2.5 bg-white/20" />
         </div>
+      </div>
+
+      <div className="px-4 mt-4">
+        <SectionSwitcherBar activeId="acelerador72h" />
       </div>
 
       {isNewWeek && (

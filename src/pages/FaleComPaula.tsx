@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import SectionSwitcherBar from "@/components/SectionSwitcherBar";
 
 const categories = [
   { value: "sugestao", label: "💡 Sugestão", color: "bg-blue-500/10 text-blue-500 border-blue-500/30" },
@@ -99,6 +100,7 @@ const FaleComPaula = () => {
       </div>
 
       <div className="px-5 mt-6 space-y-5">
+        <SectionSwitcherBar activeId="paula" />
         {/* Category */}
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-2 block">Tipo da mensagem</label>
