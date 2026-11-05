@@ -1,8 +1,21 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, X, FileText, Video, Link2, Loader2, LayoutGrid } from "lucide-react";
+import { Search, X, FileText, Video, Link2, Loader2, LayoutGrid, Mic, MicOff, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import ContentViewerModal from "@/components/ContentViewerModal";
+import { toast } from "sonner";
+
+// Tipagem mínima da Web Speech API (não incluída nos tipos padrão do TS/DOM)
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((e: any) => void) | null;
+  onerror: ((e: any) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
 
 const GRID_SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante", route: "/trilha" },
@@ -60,14 +73,88 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
     youtubeId: string | null;
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [listening, setListening] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const speechSupported =
+    typeof window !== "undefined" && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
       setQuery("");
       setResults([]);
+    } else {
+      recognitionRef.current?.stop();
+      setListening(false);
     }
   }, [open]);
+
+  const handleAskAI = async (q: string) => {
+    if (!q.trim()) return;
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-navigate", {
+        body: { query: q },
+      });
+      if (error) throw error;
+
+      if (data?.kind === "section" || data?.kind === "training") {
+        navigate(data.route);
+        onClose();
+        return;
+      }
+
+      if (data?.kind === "content") {
+        const viewerType = inferViewerType({
+          id: data.id,
+          title: data.label,
+          type: data.type,
+          section: "",
+          url: data.url,
+          youtube_id: data.youtube_id,
+        });
+        const viewerUrl = data.url || (data.youtube_id ? `https://www.youtube.com/watch?v=${data.youtube_id}` : null);
+        setViewer({ title: data.label, type: viewerType, url: viewerUrl, youtubeId: data.youtube_id || null });
+        onClose();
+        return;
+      }
+
+      toast.info("Não encontrei nada sobre isso. Tente descrever de outro jeito.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não consegui buscar agora. Tente de novo.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const toggleMic = () => {
+    if (!speechSupported) {
+      toast.error("Seu navegador não tem suporte a busca por voz.");
+      return;
+    }
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition: SpeechRecognitionLike = new SpeechRecognitionCtor();
+    recognition.lang = "pt-BR";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (e: any) => {
+      const transcript = e.results?.[0]?.[0]?.transcript || "";
+      setQuery(transcript);
+      if (transcript.trim()) handleAskAI(transcript);
+    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  };
 
   useEffect(() => {
     if (query.length < 2) {
@@ -184,13 +271,38 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar arquivos, vídeos, links..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAskAI(query);
+            }}
+            placeholder="Diga ou digite o que você precisa..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
           />
+          {speechSupported && (
+            <button
+              onClick={toggleMic}
+              className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                listening ? "bg-primary text-primary-foreground animate-pulse" : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Falar"
+            >
+              {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+          )}
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {query.trim().length >= 2 && (
+          <button
+            onClick={() => handleAskAI(query)}
+            disabled={aiLoading}
+            className="mt-2 flex items-center justify-center gap-2 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 rounded-lg py-2 transition-colors disabled:opacity-60"
+          >
+            {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            Levar direto para "{query}"
+          </button>
+        )}
 
         {/* Results */}
         <div className="mt-4 space-y-1 overflow-y-auto max-h-[70vh]">

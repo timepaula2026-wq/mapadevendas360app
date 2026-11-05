@@ -23,6 +23,7 @@ Seu papel é ajudar consultores e clientes com dúvidas sobre:
 
 **Funcionalidades do App Mapa de Vendas:**
 - Trilha do Iniciante: módulos de onboarding para novos consultores
+- Acelerador 72h: checklist interativo do plano de ação dos 3 primeiros dias
 - Central de Vendas & CRM: gestão de vendas e clientes
 - Treinamentos: vídeos, PDFs e materiais de capacitação
 - Plano de Carreira: níveis e metas de progressão
