@@ -41,6 +41,7 @@ import Comissao from "./pages/Comissao";
 import EscolaLideres from "./pages/EscolaLideres";
 import TermoCorrespondente from "./pages/TermoCorrespondente";
 import Planejamento from "./pages/Planejamento";
+import AceleradorVendas72h from "./pages/AceleradorVendas72h";
 import CustomSection from "./pages/CustomSection";
 import Quizz from "./pages/Quizz";
 import QuizzEdit from "./pages/QuizzEdit";
@@ -205,6 +206,7 @@ const App = () => {
             <Route path="/lideres" element={<ProtectedRoute><EscolaLideres /></ProtectedRoute>} />
             <Route path="/termo-correspondente" element={<ProtectedRoute><TermoCorrespondente /></ProtectedRoute>} />
             <Route path="/planejamento" element={<ProtectedRoute><Planejamento /></ProtectedRoute>} />
+            <Route path="/acelerador-72h" element={<ProtectedRoute><AceleradorVendas72h /></ProtectedRoute>} />
             <Route path="/c/:slug" element={<ProtectedRoute><CustomSection /></ProtectedRoute>} />
             <Route path="/quizz" element={<ProtectedRoute><Quizz /></ProtectedRoute>} />
             <Route path="/quizz/edit/:id" element={<ProtectedRoute><QuizzEdit /></ProtectedRoute>} />

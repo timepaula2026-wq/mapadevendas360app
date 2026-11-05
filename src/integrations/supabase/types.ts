@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      acelerador72h_progress: {
+        Row: {
+          created_at: string
+          data_inicio: string | null
+          day1: Json
+          day2: Json
+          day3: Json
+          essenciais: Json
+          id: string
+          nome: string | null
+          steps: Json
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          data_inicio?: string | null
+          day1?: Json
+          day2?: Json
+          day3?: Json
+          essenciais?: Json
+          id?: string
+          nome?: string | null
+          steps?: Json
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          data_inicio?: string | null
+          day1?: Json
+          day2?: Json
+          day3?: Json
+          essenciais?: Json
+          id?: string
+          nome?: string | null
+          steps?: Json
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           background_color: string

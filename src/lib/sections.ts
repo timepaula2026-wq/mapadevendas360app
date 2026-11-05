@@ -1,5 +1,6 @@
 export const DEFAULT_GRID_SECTIONS = [
   { id: "trilha", label: "Trilha do Iniciante", iconName: "Rocket", route: "/trilha" },
+  { id: "acelerador72h", label: "Acelerador 72h", iconName: "Zap", route: "/acelerador-72h" },
   { id: "vendas", label: "Central de Vendas & CRM", iconName: "BarChart3", route: "/vendas" },
   { id: "ferramentas", label: "Acessos de Ferramentas", iconName: "Wrench", route: "/ferramentas" },
   { id: "treinamentos", label: "Treinamentos", iconName: "GraduationCap", route: "/trainings" },
