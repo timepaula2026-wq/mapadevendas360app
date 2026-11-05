@@ -811,7 +811,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                 )}
               </Button>
             )}
-            {url && !isInternalViewerType && (
+            {url && (!isInternalViewerType || type === "pdf") && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -820,7 +820,7 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
                   const win = window.open(url, "_blank", "noopener,noreferrer");
                   if (!win) window.location.href = url;
                 }}
-                title="Abrir em nova aba"
+                title="Abrir em nova aba (tela cheia)"
                 aria-label="Abrir em nova aba"
               >
                 <ExternalLink className="w-4 h-4" />

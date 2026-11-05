@@ -52,22 +52,18 @@ const IconGrid = () => {
           route?: string | null; is_custom?: boolean | null;
           allowed_roles?: string[] | null;
         }>)
-          .filter((d) => d.visible && (ALL_ITEMS[d.id] || d.is_custom))
+          .filter((d) => d.visible)
           .map((d) => {
-            if (d.is_custom) {
-              const Icon = (d.icon_name && DYNAMIC_ICONS[d.icon_name]) || DYNAMIC_ICONS.Sparkles;
-              return {
-                id: d.id,
-                label: d.custom_label || d.id,
-                icon: Icon,
-                color: "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]",
-                route: d.route || `/c/${d.id}`,
-                allowedRoles: d.allowed_roles || [],
-              } as GridItem;
-            }
             const base = ALL_ITEMS[d.id];
-            const Icon = (d.icon_name && DYNAMIC_ICONS[d.icon_name]) || base.icon;
-            return { ...base, icon: Icon, label: d.custom_label || base.label, route: d.route || base.route, allowedRoles: d.allowed_roles || [] };
+            const Icon = (d.icon_name && DYNAMIC_ICONS[d.icon_name]) || base?.icon || DYNAMIC_ICONS.Sparkles;
+            return {
+              id: d.id,
+              label: d.custom_label || base?.label || d.id,
+              icon: Icon,
+              color: base?.color || "from-[hsl(348,70%,35%)] to-[hsl(340,65%,25%)]",
+              route: d.route || base?.route || `/c/${d.id}`,
+              allowedRoles: d.allowed_roles || [],
+            } as GridItem;
           });
         setOrderedItems(visible);
       }
