@@ -82,7 +82,7 @@ const SortableIconItem = ({
 
   return (
     <div ref={setNodeRef} style={style} className="bg-card border border-border rounded-lg mb-1.5">
-      <div className="flex items-center gap-3 py-2.5 px-3">
+      <div className="flex items-center gap-2 py-2.5 px-3 flex-wrap">
         <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none">
           <GripVertical className="w-4 h-4" />
         </button>
@@ -92,11 +92,11 @@ const SortableIconItem = ({
           </div>
         )}
         {editing ? (
-          <>
+          <div className="flex items-center gap-2 flex-1 min-w-[160px]">
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="h-8 text-sm flex-1"
+              className="h-8 text-sm flex-1 min-w-0"
               autoFocus
             />
             <button
@@ -119,14 +119,14 @@ const SortableIconItem = ({
             >
               <X className="w-4 h-4" />
             </button>
-          </>
+          </div>
         ) : (
           <>
             <button
               type="button"
               onClick={() => onToggleExpand?.(item.id)}
               disabled={!onToggleExpand}
-              className={`flex items-center gap-1.5 flex-1 min-w-0 text-left ${onToggleExpand ? "cursor-pointer" : ""}`}
+              className={`flex items-center gap-1.5 flex-1 min-w-[120px] overflow-hidden text-left ${onToggleExpand ? "cursor-pointer" : ""}`}
             >
               {onToggleExpand && (
                 expanded ? (
@@ -135,7 +135,7 @@ const SortableIconItem = ({
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 )
               )}
-              <span className={`text-sm truncate ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
+              <span className={`text-sm truncate min-w-0 ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
                 {getSectionLabel(item)}
               </span>
               {item.is_custom && <span className="text-[10px] uppercase tracking-wide text-primary shrink-0">novo</span>}
@@ -144,18 +144,20 @@ const SortableIconItem = ({
               )}
               {badge && <span className="shrink-0">{badge}</span>}
             </button>
-            <button onClick={() => setShowRoles((s) => !s)} className="text-muted-foreground hover:text-foreground shrink-0" title="Permissões">
-              <ShieldCheck className="w-4 h-4" />
-            </button>
-            <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-foreground shrink-0" title="Renomear">
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button onClick={() => onToggleVisibility(item.id)} className="text-muted-foreground hover:text-foreground shrink-0" title={item.visible ? "Ocultar" : "Mostrar"}>
-              {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            </button>
-            <button onClick={() => onDelete(item.id)} className="text-destructive hover:opacity-80 shrink-0" title="Excluir da grade">
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2.5 shrink-0 ml-auto">
+              <button onClick={() => setShowRoles((s) => !s)} className="text-muted-foreground hover:text-foreground shrink-0" title="Permissões">
+                <ShieldCheck className="w-4 h-4" />
+              </button>
+              <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-foreground shrink-0" title="Renomear">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => onToggleVisibility(item.id)} className="text-muted-foreground hover:text-foreground shrink-0" title={item.visible ? "Ocultar" : "Mostrar"}>
+                {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+              <button onClick={() => onDelete(item.id)} className="text-destructive hover:opacity-80 shrink-0" title="Excluir da grade">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </>
         )}
       </div>
