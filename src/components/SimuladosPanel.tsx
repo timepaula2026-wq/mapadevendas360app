@@ -105,7 +105,7 @@ const SimuladosPanel = ({ onStart }: Props) => {
         </div>
         <h2 className="text-lg font-bold text-foreground">Simulados de Vendas</h2>
         <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-1">
-          Treine cenários reais com cliente IA. Use voz, texto, áudio ou vídeo. A IA dá feedback ao final.
+          Treine cenários reais com um cliente simulado. Responda por voz ou texto e receba feedback ao final.
         </p>
       </div>
 
@@ -136,7 +136,7 @@ const SimuladosPanel = ({ onStart }: Props) => {
               <Upload className="w-4 h-4" />
             )}
             <span className="flex-1">
-              {loading ? "Lendo PDF..." : "Carregar PDF/roteiro (será base dos cenários)"}
+              {loading ? "Lendo PDF..." : "Carregar PDF/roteiro (as perguntas dele entram nos simulados)"}
             </span>
             <input
               type="file"
@@ -156,11 +156,10 @@ const SimuladosPanel = ({ onStart }: Props) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {SCENARIOS.map((s) => {
           const Icon = s.icon;
-          const supports = s.key === "prospeccao" || s.key === "objecoes";
           return (
             <button
               key={s.key}
-              onClick={() => onStart(s, supports ? roteiro ?? undefined : undefined)}
+              onClick={() => onStart(s, roteiro ?? undefined)}
               className="group relative overflow-hidden rounded-2xl border border-border bg-card text-left hover:border-primary transition-all active:scale-[0.98]"
             >
               <div className="relative aspect-[16/9] overflow-hidden">
@@ -184,7 +183,7 @@ const SimuladosPanel = ({ onStart }: Props) => {
                   <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
                     ▶ Iniciar simulado
                   </span>
-                  {supports && roteiro && (
+                  {roteiro && (
                     <span className="inline-flex items-center gap-1 text-[10px] text-primary/80">
                       <FileText className="w-3 h-3" /> roteiro
                     </span>

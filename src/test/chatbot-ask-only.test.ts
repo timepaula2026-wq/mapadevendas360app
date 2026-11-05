@@ -10,12 +10,14 @@ describe("ChatBot route /chatbot (IA do Consórcio)", () => {
     expect(source).toContain("🎯 Vendedor IA");
   });
 
-  it("bloqueia envio, voz e simulados quando a IA não está liberada", () => {
-    expect(source.match(/requireAi\(\)/g)?.length).toBeGreaterThanOrEqual(4);
+  it("só exige assinatura para gerar imagem; o resto funciona no modo gratuito", () => {
+    expect(source.match(/requireAi\(\)/g)?.length).toBe(1);
+    expect(source).toContain("offlineAnswer");
+    expect(source).toContain("offlineScenarioReply");
   });
 
-  it("mostra o aviso de assinatura quando a IA está desligada", () => {
+  it("mostra o aviso de modo gratuito quando a IA está desligada", () => {
     expect(source).toContain("!AI_ENABLED");
-    expect(source).toContain("AI_LOCKED_MESSAGE");
+    expect(source).toContain("Modo gratuito");
   });
 });

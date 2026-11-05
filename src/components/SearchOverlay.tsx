@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import ContentViewerModal from "@/components/ContentViewerModal";
 import { toast } from "sonner";
-import { requireAi } from "@/lib/aiAccess";
+import { AI_ENABLED } from "@/lib/aiAccess";
+import { localSearch, LocalHit } from "@/lib/localSearch";
 
 // Tipagem mínima da Web Speech API (não incluída nos tipos padrão do TS/DOM)
 type SpeechRecognitionLike = {
@@ -18,25 +19,6 @@ type SpeechRecognitionLike = {
   stop: () => void;
 };
 
-const GRID_SECTIONS = [
-  { id: "trilha", label: "Trilha do Iniciante", route: "/trilha" },
-  { id: "vendas", label: "Central de Vendas & CRM", route: "/vendas" },
-  { id: "ferramentas", label: "Acessos de Ferramentas", route: "/ferramentas" },
-  { id: "treinamentos", label: "Treinamentos", route: "/trainings" },
-  { id: "carreira", label: "Plano de Carreira", route: "/carreira" },
-  { id: "apresentacao", label: "Apresentação de Produtos", route: "/apresentacao" },
-  { id: "sorteios", label: "Sorteios & Comunicados", route: "/sorteios" },
-  { id: "credito", label: "Liberação de Crédito", route: "/credito" },
-  { id: "jornada", label: "Jornada Impacto", route: "/jornada" },
-  { id: "equipe", label: "Gestão de Equipe", route: "/equipe" },
-  { id: "cliente", label: "Área do Cliente", route: "/cliente" },
-  { id: "administrativo", label: "Administrativo", route: "/administrativo" },
-  { id: "analise", label: "Plataforma de Análise", route: "/analise" },
-  { id: "loja", label: "Loja", route: "/loja" },
-  { id: "locacao", label: "Locação de Materiais", route: "/locacao" },
-  { id: "presenca", label: "Presença Treinamentos", route: "/presenca-treinamentos" },
-  { id: "comissao", label: "Calculadora de Comissão", route: "/vendas?calc=1" },
-];
 
 interface SearchResult {
   id: string;
@@ -46,7 +28,19 @@ interface SearchResult {
   url?: string | null;
   youtube_id?: string | null;
   route?: string | null;
+  subtitle?: string;
 }
+
+const hitToResult = (h: LocalHit): SearchResult => ({
+  id: h.id,
+  title: h.title,
+  type: h.kind === "content" ? h.type || "link" : "section",
+  section: h.kind === "section" ? "Seção" : h.kind === "tab" ? "Aba" : "Material",
+  subtitle: h.subtitle,
+  url: h.url,
+  youtube_id: h.youtube_id,
+  route: h.kind === "content" ? null : h.route,
+});
 
 interface SearchOverlayProps {
   open: boolean;
@@ -93,8 +87,20 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
 
   const handleAskAI = async (q: string) => {
     if (!q.trim()) return;
-    if (!requireAi()) return;
     setAiLoading(true);
+    if (!AI_ENABLED) {
+      // Sem IA: abre o melhor resultado da busca inteligente local
+      try {
+        const [best] = await localSearch(q, 1);
+        if (best) handleOpen(hitToResult(best));
+        else toast.info("Não encontrei nada sobre isso. Tente outras palavras.");
+      } catch {
+        toast.error("Não consegui buscar agora. Tente de novo.");
+      } finally {
+        setAiLoading(false);
+      }
+      return;
+    }
     try {
       const { data, error } = await supabase.functions.invoke("ai-navigate", {
         body: { query: q },
@@ -166,59 +172,13 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
 
     const timeout = setTimeout(async () => {
       setLoading(true);
-      const searchTerm = `%${query}%`;
-
-      const [sectionRes, contentRes] = await Promise.all([
-        supabase
-          .from("section_contents")
-          .select("id, title, type, section_id, url, youtube_id")
-          .ilike("title", searchTerm)
-          .limit(10),
-        supabase
-          .from("content_items")
-          .select("id, title, type, training_id, url, youtube_id")
-          .ilike("title", searchTerm)
-          .limit(10),
-      ]);
-
-      const mapped: SearchResult[] = [];
-
-      // Search grid sections locally
-      const lowerQuery = query.toLowerCase();
-      GRID_SECTIONS.filter((s) => s.label.toLowerCase().includes(lowerQuery)).forEach((s) => {
-        mapped.push({
-          id: `section-${s.id}`,
-          title: s.label,
-          type: "section",
-          section: "Aba",
-          route: s.route,
-        });
-      });
-
-      // DB results
-      (sectionRes.data || []).forEach((r) => {
-        mapped.push({
-          id: r.id,
-          title: r.title,
-          type: r.type,
-          section: "Seção",
-          url: r.url,
-          youtube_id: r.youtube_id,
-        });
-      });
-      (contentRes.data || []).forEach((r) => {
-        mapped.push({
-          id: r.id,
-          title: r.title,
-          type: r.type,
-          section: "Treinamento",
-          url: r.url,
-          youtube_id: r.youtube_id,
-        });
-      });
-
-      setResults(mapped);
-      setLoading(false);
+      try {
+        const hits = await localSearch(query, 20);
+        setResults(hits.map(hitToResult));
+      } catch {
+        setResults([]);
+      }
+      setLoading(false)
     }, 300);
 
     return () => clearTimeout(timeout);
@@ -331,7 +291,7 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{r.title}</p>
-                <p className="text-[10px] text-muted-foreground">{r.section} · {r.type}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{r.section}{r.subtitle && r.subtitle !== r.section ? ` · ${r.subtitle}` : ""}</p>
               </div>
             </button>
           ))}

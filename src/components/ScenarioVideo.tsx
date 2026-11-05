@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Loader2, Film, SkipForward, RotateCcw, FileText, ImageIcon, CheckCircle2 } from "lucide-react";
-import { ScenarioKey } from "./SimuladosPanel";
-import { requireAi } from "@/lib/aiAccess";
+import { ScenarioKey, SCENARIOS } from "./SimuladosPanel";
+import { AI_ENABLED } from "@/lib/aiAccess";
+import { OFFLINE_VIDEOS } from "@/lib/iaOffline";
 
 interface Scene {
   title: string;
@@ -73,7 +74,17 @@ const ScenarioVideo = ({ scenarioKey, roteiro }: Props) => {
 
   const generate = async () => {
     if (loading) return;
-    if (!requireAi()) return;
+    if (!AI_ENABLED) {
+      // Modo gratuito: storyboard pronto com a foto do cenário + narração por voz do navegador
+      const v = OFFLINE_VIDEOS[scenarioKey];
+      const img = SCENARIOS.find((s) => s.key === scenarioKey)?.image ?? null;
+      window.speechSynthesis?.cancel();
+      setError(null);
+      setStage("done");
+      setIdx(0);
+      setData({ title: v.title, scenes: v.scenes.map((s) => ({ ...s, imageUrl: img })) });
+      return;
+    }
     setLoading(true);
     setError(null);
     setStage("script");
@@ -140,7 +151,8 @@ const ScenarioVideo = ({ scenarioKey, roteiro }: Props) => {
             try { localStorage.setItem(STORAGE_PREFIX + scenarioKey, JSON.stringify(ev.video)); } catch {}
           }
         } else if (ev.type === "error") {
-          throw new Error(ev.error);
+          setError(ev.error || "Erro ao gerar vídeo");
+          setStage("idle");
         }
       };
 
@@ -243,7 +255,7 @@ const ScenarioVideo = ({ scenarioKey, roteiro }: Props) => {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-foreground">Vídeo do cenário</p>
             <p className="text-[10px] text-muted-foreground">
-              IA monta roteiro + storyboard com narração
+              {AI_ENABLED ? "IA monta roteiro + storyboard com narração" : "Dicas do cenário em 3 cenas com narração"}
             </p>
           </div>
           <button
@@ -252,7 +264,7 @@ const ScenarioVideo = ({ scenarioKey, roteiro }: Props) => {
             className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50 inline-flex items-center gap-1.5"
           >
             {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-            {loading ? "Gerando..." : "Gerar vídeo"}
+            {loading ? "Gerando..." : AI_ENABLED ? "Gerar vídeo" : "Ver vídeo"}
           </button>
         </div>
         {loading && <div className="mt-3"><ProgressPanel /></div>}
@@ -335,14 +347,14 @@ const ScenarioVideo = ({ scenarioKey, roteiro }: Props) => {
         >
           <SkipForward className="w-3.5 h-3.5" />
         </button>
-        <button
+        {AI_ENABLED && <button
           onClick={generate}
           disabled={loading}
           className="text-[10px] text-muted-foreground hover:text-foreground px-2"
           title="Regerar"
         >
           {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "↻"}
-        </button>
+        </button>}
       </div>
     </div>
   );
