@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { GripVertical, Loader2, Eye, EyeOff, Pencil, Trash2, Check, X, Plus, Sparkles, ShieldCheck, ChevronDown } from "lucide-react";
+import { GripVertical, Loader2, Eye, EyeOff, Pencil, Trash2, Check, X, Plus, Sparkles, ShieldCheck, ChevronDown, ChevronRight } from "lucide-react";
+import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -45,12 +46,20 @@ const SortableIconItem = ({
   onRename,
   onDelete,
   onUpdateRoles,
+  badge,
+  expanded,
+  onToggleExpand,
+  expandedContent,
 }: {
   item: IconOrder;
   onToggleVisibility: (id: string) => void;
   onRename: (id: string, label: string) => Promise<void>;
   onDelete: (id: string) => void;
   onUpdateRoles: (id: string, roles: string[]) => Promise<void>;
+  badge?: ReactNode;
+  expanded?: boolean;
+  onToggleExpand?: (id: string) => void;
+  expandedContent?: ReactNode;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = {
@@ -113,13 +122,28 @@ const SortableIconItem = ({
           </>
         ) : (
           <>
-            <span className={`text-sm flex-1 ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
-              {getSectionLabel(item)}
-              {item.is_custom && <span className="ml-2 text-[10px] uppercase tracking-wide text-primary">novo</span>}
-              {currentRoles.length > 0 && (
-                <span className="ml-2 text-[10px] text-muted-foreground">🔒 {currentRoles.length}</span>
+            <button
+              type="button"
+              onClick={() => onToggleExpand?.(item.id)}
+              disabled={!onToggleExpand}
+              className={`flex items-center gap-1.5 flex-1 min-w-0 text-left ${onToggleExpand ? "cursor-pointer" : ""}`}
+            >
+              {onToggleExpand && (
+                expanded ? (
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                )
               )}
-            </span>
+              <span className={`text-sm truncate ${item.visible ? "text-foreground" : "text-muted-foreground line-through"}`}>
+                {getSectionLabel(item)}
+              </span>
+              {item.is_custom && <span className="text-[10px] uppercase tracking-wide text-primary shrink-0">novo</span>}
+              {currentRoles.length > 0 && (
+                <span className="text-[10px] text-muted-foreground shrink-0">🔒 {currentRoles.length}</span>
+              )}
+              {badge && <span className="shrink-0">{badge}</span>}
+            </button>
             <button onClick={() => setShowRoles((s) => !s)} className="text-muted-foreground hover:text-foreground shrink-0" title="Permissões">
               <ShieldCheck className="w-4 h-4" />
             </button>
@@ -160,11 +184,26 @@ const SortableIconItem = ({
           </div>
         </div>
       )}
+      {expanded && expandedContent && (
+        <div className="border-t border-border">{expandedContent}</div>
+      )}
     </div>
   );
 };
 
-const AdminIconOrder = ({ onChange }: { onChange?: () => void } = {}) => {
+const AdminIconOrder = ({
+  onChange,
+  expandedId,
+  onToggleExpand,
+  renderBadge,
+  renderExpanded,
+}: {
+  onChange?: () => void;
+  expandedId?: string | null;
+  onToggleExpand?: (id: string) => void;
+  renderBadge?: (item: IconOrder) => ReactNode;
+  renderExpanded?: (item: IconOrder) => ReactNode;
+} = {}) => {
   const [items, setItems] = useState<IconOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -386,6 +425,10 @@ const AdminIconOrder = ({ onChange }: { onChange?: () => void } = {}) => {
               onRename={handleRename}
               onDelete={handleDelete}
               onUpdateRoles={handleUpdateRoles}
+              badge={renderBadge?.(item)}
+              expanded={expandedId === item.id}
+              onToggleExpand={onToggleExpand}
+              expandedContent={onToggleExpand ? renderExpanded?.(item) : undefined}
             />
           ))}
         </SortableContext>

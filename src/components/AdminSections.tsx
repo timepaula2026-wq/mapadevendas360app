@@ -24,7 +24,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/compressImage";
 import AdminIconOrder from "@/components/AdminIconOrder";
-import { DEFAULT_GRID_SECTIONS, DEFAULT_SECTION_LABELS } from "@/lib/sections";
 import {
   DndContext,
   closestCenter,
@@ -97,7 +96,6 @@ const AdminSections = () => {
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
-  const [sections, setSections] = useState<{ id: string; label: string }[]>(DEFAULT_GRID_SECTIONS.map(({ id, label }) => ({ id, label })));
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedTab, setExpandedTab] = useState<string | null>(null);
   const [tabsBySection, setTabsBySection] = useState<Record<string, SectionTab[]>>({});
@@ -131,26 +129,6 @@ const AdminSections = () => {
   const [contentOpenMode, setContentOpenMode] = useState<"iframe" | "newtab">("iframe");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const fetchSections = async () => {
-    const { data } = await supabase
-      .from("icon_grid_order")
-      .select("id, sort_order, visible, custom_label, is_custom")
-      .order("sort_order", { ascending: true });
-    if (data && data.length > 0) {
-      const merged = (data as Array<{
-        id: string; sort_order: number; visible: boolean;
-        custom_label?: string | null; is_custom?: boolean | null;
-      }>)
-        .filter((d) => d.visible)
-        .map((d) => ({ id: d.id, label: d.custom_label || DEFAULT_SECTION_LABELS[d.id] || d.id }));
-      if (merged.length > 0) setSections(merged);
-    }
-  };
-
-  useEffect(() => {
-    fetchSections();
-  }, []);
 
   const fetchTabs = async (sectionId: string) => {
     const { data } = await supabase
@@ -741,42 +719,10 @@ const AdminSections = () => {
     }
   };
 
-  return (
-    <div className="space-y-2">
-      <details className="bg-card border border-border rounded-xl overflow-hidden mb-3" open>
-        <summary className="cursor-pointer p-3 text-sm font-medium text-foreground hover:bg-secondary/50">
-          Ordem e nomes dos ícones da tela inicial
-        </summary>
-        <div className="p-3 border-t border-border">
-          <AdminIconOrder onChange={fetchSections} />
-        </div>
-      </details>
-      <p className="text-xs text-muted-foreground mb-3">
-        Cada seção tem abas (temas). Adicione conteúdos dentro de cada aba. O nome exibido é o mesmo configurado acima.
-      </p>
-      {sections.map((section) => (
-        <div key={section.id} className="bg-card border border-border rounded-xl overflow-hidden">
-          <button
-            onClick={() => toggleSection(section.id)}
-            className="w-full flex items-center justify-between p-3 hover:bg-secondary/50 transition-colors"
-          >
-            <span className="text-sm font-medium text-foreground">{section.label}</span>
-            <div className="flex items-center gap-2">
-              {tabsBySection[section.id] && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  {tabsBySection[section.id].length} abas
-                </span>
-              )}
-              {expandedSection === section.id ? (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              )}
-            </div>
-          </button>
-
-          {expandedSection === section.id && (
-            <div className="border-t border-border p-3 space-y-2">
+  const renderContentPanel = (sectionId: string) => {
+    const section = { id: sectionId };
+    return (
+            <div className="p-3 space-y-2">
               {/* Conteúdos órfãos (sem aba) */}
               {(orphansBySection[section.id]?.length ?? 0) > 0 && (
                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-2 space-y-2 mb-2">
@@ -1608,9 +1554,27 @@ const AdminSections = () => {
                 </Button>
               </div>
             </div>
-          )}
-        </div>
-      ))}
+    );
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground mb-3">
+        Arraste pra reordenar, clique no nome pra editar, no olho pra ocultar/mostrar. Clique numa seção para abrir e gerenciar suas abas e conteúdos.
+      </p>
+      <AdminIconOrder
+        onChange={() => {}}
+        expandedId={expandedSection}
+        onToggleExpand={toggleSection}
+        renderBadge={(item) =>
+          tabsBySection[item.id] ? (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+              {tabsBySection[item.id].length} abas
+            </span>
+          ) : null
+        }
+        renderExpanded={(item) => renderContentPanel(item.id)}
+      />
     </div>
   );
 };
