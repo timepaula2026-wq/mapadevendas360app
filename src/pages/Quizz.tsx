@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { requireAi } from "@/lib/aiAccess";
 
 interface Quiz {
   id: string;
@@ -53,6 +54,7 @@ const Quizz = () => {
 
   const generateWithAI = async () => {
     if (!user || !aiTopic.trim()) return;
+    if (!requireAi()) return;
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-quiz", {

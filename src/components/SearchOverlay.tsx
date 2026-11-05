@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import ContentViewerModal from "@/components/ContentViewerModal";
 import { toast } from "sonner";
+import { requireAi } from "@/lib/aiAccess";
 
 // Tipagem mínima da Web Speech API (não incluída nos tipos padrão do TS/DOM)
 type SpeechRecognitionLike = {
@@ -92,6 +93,7 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
 
   const handleAskAI = async (q: string) => {
     if (!q.trim()) return;
+    if (!requireAi()) return;
     setAiLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-navigate", {

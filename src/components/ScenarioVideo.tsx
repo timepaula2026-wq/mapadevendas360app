@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Loader2, Film, SkipForward, RotateCcw, FileText, ImageIcon, CheckCircle2 } from "lucide-react";
 import { ScenarioKey } from "./SimuladosPanel";
+import { requireAi } from "@/lib/aiAccess";
 
 interface Scene {
   title: string;
@@ -72,6 +73,7 @@ const ScenarioVideo = ({ scenarioKey, roteiro }: Props) => {
 
   const generate = async () => {
     if (loading) return;
+    if (!requireAi()) return;
     setLoading(true);
     setError(null);
     setStage("script");

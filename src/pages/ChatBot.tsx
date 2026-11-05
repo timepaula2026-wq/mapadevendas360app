@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare, Mic, MicOff, Volume2, VolumeX, X, Sparkles, Settings2, Square, Play } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, ImageIcon, MessageSquare, Mic, MicOff, Volume2, VolumeX, X, Sparkles, Settings2, Square, Play, Lock } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import SimuladosPanel, { Scenario, ScenarioKey } from "@/components/SimuladosPanel";
 import ScenarioVideo from "@/components/ScenarioVideo";
+import { AI_ENABLED, AI_LOCKED_MESSAGE, requireAi } from "@/lib/aiAccess";
 
 type Msg = { role: "user" | "assistant"; content: string; imageUrl?: string };
 
@@ -212,6 +213,7 @@ const ChatBot = () => {
   };
 
   const startListening = () => {
+    if (!requireAi()) return;
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       toast.error("Reconhecimento de voz não suportado neste navegador");
@@ -245,6 +247,7 @@ const ChatBot = () => {
   };
 
   const startScenario = (s: Scenario, r?: { name: string; text: string }) => {
+    if (!requireAi()) return;
     window.speechSynthesis?.cancel();
     setScenario(s);
     setRoteiro(r ?? null);
@@ -266,6 +269,7 @@ const ChatBot = () => {
 
   const sendText = async (text: string) => {
     if (!text.trim() || loading) return;
+    if (!requireAi()) return;
     setInput("");
     const userMsg: Msg = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
@@ -303,6 +307,7 @@ const ChatBot = () => {
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
+    if (!requireAi()) return;
     setInput("");
 
     // In scenario mode, always use chat (no image generation)
@@ -511,6 +516,16 @@ const ChatBot = () => {
           >
             🎯 Vendedor IA
           </button>
+        </div>
+      )}
+
+      {!AI_ENABLED && (
+        <div className="mx-4 mt-3 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2.5 shrink-0">
+          <Lock className="w-4 h-4 text-primary shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-foreground">Recurso exclusivo para assinantes</p>
+            <p className="text-[11px] text-muted-foreground">{AI_LOCKED_MESSAGE}</p>
+          </div>
         </div>
       )}
 
