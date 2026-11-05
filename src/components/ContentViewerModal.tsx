@@ -223,6 +223,9 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   const rotateMedia = () => setMediaRotation((r) => (r + 90) % 360);
   const isMediaType = isVideoType || type === "image";
 
+  // Baixar PDF (com marca d'água) — feedback visual pra não parecer travado em conexões lentas
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
   // Estado de "consumiu o conteúdo" (rolou o PDF até o fim ou viu o vídeo todo)
   const [completedFlag, setCompletedFlag] = useState(false);
   const completedRef = useRef(false);
@@ -574,11 +577,13 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
   };
 
   const handleDownload = async () => {
-    if (!url) return;
+    if (!url || downloadingPdf) return;
     const safeName = (title || "arquivo").replace(/\.pdf$/i, "") + ".pdf";
 
     // Fallback: abre a URL direta em nova aba (último recurso quando o fetch
     // falha por CORS ou o navegador bloqueia o download programático).
+    // Precisa ser chamado de forma síncrona com o clique (sem await antes)
+    // em navegadores mobile, senão o bloqueador de pop-up barra o window.open.
     const openDirect = () => {
       const win = window.open(url, "_blank", "noopener,noreferrer");
       if (!win) {
@@ -587,8 +592,26 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
       }
     };
 
+    setDownloadingPdf(true);
+    const loadingToast = toast.loading("Preparando PDF para baixar…");
+
+    // Em conexões móveis mais lentas o fetch + marca d'água pode demorar ou
+    // travar sem nunca rejeitar — por isso tem um limite de tempo: se passar
+    // disso, caímos direto no link original em vez de parecer que travou.
+    const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
+      new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error("timeout")), ms);
+        p.then((v) => {
+          clearTimeout(t);
+          resolve(v);
+        }).catch((e) => {
+          clearTimeout(t);
+          reject(e);
+        });
+      });
+
     try {
-      const res = await fetch(url, { mode: "cors" });
+      const res = await withTimeout(fetch(url, { mode: "cors" }), 20000);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const original = await res.arrayBuffer();
 
@@ -632,21 +655,25 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
         const win = window.open(blobUrl, "_blank", "noopener,noreferrer");
         if (!win) window.location.href = blobUrl;
         setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-        return;
+        toast.success("PDF aberto numa nova aba — toque em Compartilhar para salvar");
+      } else {
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = safeName;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        toast.success("PDF baixado!");
       }
-
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = safeName;
-      a.rel = "noopener";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (err) {
       console.error("Falha ao baixar PDF com marca d'água:", err);
       toast.message("Abrindo PDF em nova aba para download…");
       openDirect();
+    } finally {
+      toast.dismiss(loadingToast);
+      setDownloadingPdf(false);
     }
   };
 
@@ -769,8 +796,19 @@ const ContentViewerModal = ({ open, onClose, title, type, url, youtubeId, allowD
               </Button>
             )}
             {type === "pdf" && url && allowDownload && (
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload} title="Baixar">
-                <Download className="w-4 h-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleDownload}
+                disabled={downloadingPdf}
+                title="Baixar"
+              >
+                {downloadingPdf ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
               </Button>
             )}
             {url && !isInternalViewerType && (
