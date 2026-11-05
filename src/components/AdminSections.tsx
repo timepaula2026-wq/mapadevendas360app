@@ -142,7 +142,7 @@ const AdminSections = () => {
         id: string; sort_order: number; visible: boolean;
         custom_label?: string | null; is_custom?: boolean | null;
       }>)
-        .filter((d) => d.visible && (DEFAULT_SECTION_LABELS[d.id] || d.is_custom))
+        .filter((d) => d.visible)
         .map((d) => ({ id: d.id, label: d.custom_label || DEFAULT_SECTION_LABELS[d.id] || d.id }));
       if (merged.length > 0) setSections(merged);
     }
