@@ -27,9 +27,17 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ROLES } from "@/lib/roles";
+import { CAREER_LEVELS, CAREER_LEVEL_LABELS } from "@/lib/careerLevels";
 import { Label } from "@/components/ui/label";
 import { Pencil } from "lucide-react";
 import { validateEmail } from "@/lib/emailValidation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface UserProfile {
   id: string;
@@ -44,6 +52,7 @@ interface UserProfile {
   cpf: string | null;
   email: string | null;
   must_change_password: boolean | null;
+  category: string | null;
 }
 
 const ROLE_LABELS_PT: Record<string, string> = {
@@ -115,6 +124,8 @@ const AdminUserApproval = () => {
   const [bulkApproving, setBulkApproving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editingRoles, setEditingRoles] = useState<string[]>([]);
+  const [editingCategory, setEditingCategory] = useState<string>("");
+  const [savingCategory, setSavingCategory] = useState(false);
   const [savingRoles, setSavingRoles] = useState(false);
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
   const [editForm, setEditForm] = useState({
@@ -532,6 +543,7 @@ const AdminUserApproval = () => {
     setDetails(null);
     setDetailsLoading(true);
     setEditingRoles(rolesByUser[u.user_id] || []);
+    setEditingCategory(u.category || "");
     try {
       const [trainingsRes, progressRes, certsRes, planRes] = await Promise.all([
         supabase
@@ -600,6 +612,29 @@ const AdminUserApproval = () => {
       toast.error(e?.message || "Erro ao salvar papéis");
     } finally {
       setSavingRoles(false);
+    }
+  };
+
+  const saveCategory = async () => {
+    if (!selected || !editingCategory) return;
+    setSavingCategory(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ category: editingCategory as any })
+        .eq("user_id", selected.user_id);
+      if (error) throw error;
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.user_id === selected.user_id ? { ...u, category: editingCategory } : u
+        )
+      );
+      setSelected((prev) => (prev ? { ...prev, category: editingCategory } : prev));
+      toast.success("Nível de carreira atualizado");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao salvar nível de carreira");
+    } finally {
+      setSavingCategory(false);
     }
   };
 
@@ -1019,9 +1054,15 @@ const AdminUserApproval = () => {
                     <span className="font-medium text-right">{selected.unit || "—"}</span>
                   </div>
                   <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Categoria (papéis)</span>
+                    <span className="text-muted-foreground">Papéis (acesso)</span>
                     <span className="font-medium text-right">
                       {(rolesByUser[selected.user_id] || []).map((r) => ROLE_LABELS_PT[r] || r).join(", ") || "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Nível de carreira</span>
+                    <span className="font-medium text-right">
+                      {selected.category ? CAREER_LEVEL_LABELS[selected.category] || selected.category : "—"}
                     </span>
                   </div>
                   {selected.cpf && (
@@ -1075,6 +1116,37 @@ const AdminUserApproval = () => {
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       "Salvar papéis"
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* Nível do Plano de Carreira */}
+              {selected && (
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <h4 className="text-sm font-semibold mb-2">Nível de carreira (Plano de Carreira)</h4>
+                  <Select value={editingCategory} onValueChange={setEditingCategory}>
+                    <SelectTrigger className="text-xs">
+                      <SelectValue placeholder="Selecione o nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CAREER_LEVELS.map((l) => (
+                        <SelectItem key={l.value} value={l.value}>
+                          {l.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    className="mt-3 w-full"
+                    onClick={saveCategory}
+                    disabled={savingCategory || !editingCategory}
+                  >
+                    {savingCategory ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Salvar nível de carreira"
                     )}
                   </Button>
                 </div>
